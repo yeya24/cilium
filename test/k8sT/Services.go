@@ -966,6 +966,7 @@ var _ = Describe("K8sServicesTest", func() {
 		}
 
 		SkipItIf(helpers.RunsWithoutKubeProxy, "Tests NodePort (kube-proxy)", func() {
+			Expect("FOO").Should(BeNil(), "testing stuff")
 			testNodePort(false)
 		})
 
