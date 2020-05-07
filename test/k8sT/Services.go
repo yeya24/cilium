@@ -892,22 +892,24 @@ var _ = Describe("K8sServicesTest", func() {
 				GinkgoPrint("Skipping externalTrafficPolicy=Local test from external node")
 			}
 
-			// Checks that requests to k8s2 succeed, while requests to k8s1 are dropped
+			// Checks that requests to k8s2 succeed, while external requests to k8s1 are dropped
 			err = kubectl.Get(helpers.DefaultNamespace, "service test-nodeport-local-k8s2").Unmarshal(&data)
 			Expect(err).Should(BeNil(), "Can not retrieve service")
 
 			httpURL = getHTTPLink(k8s2IP, data.Spec.Ports[0].NodePort)
 			tftpURL = getTFTPLink(k8s2IP, data.Spec.Ports[1].NodePort)
 			doRequests(httpURL, count, k8s1Name)
-			doRequests(httpURL, count, k8s2Name)
 			doRequests(tftpURL, count, k8s1Name)
+			doRequests(httpURL, count, k8s2Name)
 			doRequests(tftpURL, count, k8s2Name)
 
 			httpURL = getHTTPLink(k8s1IP, data.Spec.Ports[0].NodePort)
 			tftpURL = getTFTPLink(k8s1IP, data.Spec.Ports[1].NodePort)
-			failRequests(httpURL, count, k8s1Name)
+			// Local requests should be load-balanced
+			doRequests(httpURL, count, k8s1Name)
+			doRequests(tftpURL, count, k8s1Name)
+			// Requests from another node are not
 			failRequests(httpURL, count, k8s2Name)
-			failRequests(tftpURL, count, k8s1Name)
 			failRequests(tftpURL, count, k8s2Name)
 		}
 
