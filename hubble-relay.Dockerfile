@@ -9,7 +9,7 @@ RUN apk --update add ca-certificates
 FROM docker.io/library/golang:1.14.2 as gops
 RUN go get -d github.com/google/gops && \
     cd /go/src/github.com/google/gops && \
-    git checkout -b v0.3.6 v0.3.6 && \
+    git checkout -b v0.3.8 v0.3.8 && \
     git --no-pager remote -v && \
     git --no-pager log -1 && \
     CGO_ENABLED=0 go install && \

@@ -37,7 +37,7 @@ require (
 	github.com/google/go-cmp v0.3.1
 	github.com/google/gofuzz v1.1.0
 	github.com/google/gopacket v1.1.17
-	github.com/google/gops v0.3.6
+	github.com/google/gops v0.3.8
 	github.com/gorilla/mux v1.7.0
 	github.com/hashicorp/consul/api v1.2.0
 	github.com/hashicorp/go-immutable-radix v1.1.0
