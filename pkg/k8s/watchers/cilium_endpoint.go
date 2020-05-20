@@ -78,6 +78,7 @@ func (k *K8sWatcher) ciliumEndpointsInit(ciliumNPClient *k8s.K8sCiliumClient, as
 					if ciliumEndpoint == nil {
 						return
 					}
+					log.Infof("aanm cep delete %s %s %s/%s", ciliumEndpoint.GetUID(), ciliumEndpoint.GetResourceVersion(), ciliumEndpoint.GetNamespace(), ciliumEndpoint.GetName())
 					valid = true
 					k.endpointDeleted(ciliumEndpoint)
 				},
