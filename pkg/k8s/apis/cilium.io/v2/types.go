@@ -260,7 +260,9 @@ func (r *CiliumNetworkPolicy) Parse() (api.Rules, error) {
 	if r.Spec != nil {
 		if err := r.Spec.Sanitize(); err != nil {
 			return nil, fmt.Errorf("Invalid CiliumNetworkPolicy spec: %s", err)
-
+		}
+		if namespace != "" && r.Spec.NodeSelector.LabelSelector != nil {
+			return nil, fmt.Errorf("NodeSelector is only valid in CiliumClusterwideNetworkPolicy")
 		}
 		cr := k8sCiliumUtils.ParseToCiliumRule(namespace, name, uid, r.Spec)
 		retRules = append(retRules, cr)
@@ -270,6 +272,9 @@ func (r *CiliumNetworkPolicy) Parse() (api.Rules, error) {
 			if err := rule.Sanitize(); err != nil {
 				return nil, fmt.Errorf("Invalid CiliumNetworkPolicy specs: %s", err)
 
+			}
+			if namespace != "" && rule.NodeSelector.LabelSelector != nil {
+				return nil, fmt.Errorf("NodeSelector is only valid in CiliumClusterwideNetworkPolicy")
 			}
 			cr := k8sCiliumUtils.ParseToCiliumRule(namespace, name, uid, rule)
 			retRules = append(retRules, cr)

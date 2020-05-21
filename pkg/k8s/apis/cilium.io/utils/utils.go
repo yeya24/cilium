@@ -100,8 +100,15 @@ func getEndpointSelector(namespace string, labelSelector *slim_metav1.LabelSelec
 	return es
 }
 
+func matchesPodInit(epSelector api.EndpointSelector) bool {
+	if epSelector.LabelSelector == nil {
+		return false
+	}
+	return epSelector.HasKey(podInitLbl)
+}
+
 func parseToCiliumIngressRule(namespace string, inRule, retRule *api.Rule) {
-	matchesInit := retRule.EndpointSelector.HasKey(podInitLbl)
+	matchesInit := matchesPodInit(retRule.EndpointSelector)
 
 	if inRule.Ingress != nil {
 		retRule.Ingress = make([]api.IngressRule, len(inRule.Ingress))
@@ -145,7 +152,7 @@ func parseToCiliumIngressRule(namespace string, inRule, retRule *api.Rule) {
 }
 
 func parseToCiliumEgressRule(namespace string, inRule, retRule *api.Rule) {
-	matchesInit := retRule.EndpointSelector.HasKey(podInitLbl)
+	matchesInit := matchesPodInit(retRule.EndpointSelector)
 
 	if inRule.Egress != nil {
 		retRule.Egress = make([]api.EgressRule, len(inRule.Egress))
@@ -240,6 +247,8 @@ func ParseToCiliumRule(namespace, name string, uid types.UID, r *api.Rule) *api.
 			}
 			retRule.EndpointSelector.AddMatch(podPrefixLbl, namespace)
 		}
+	} else if r.NodeSelector.LabelSelector != nil {
+		retRule.NodeSelector = api.NewESFromK8sLabelSelector("", r.NodeSelector.LabelSelector)
 	}
 
 	parseToCiliumIngressRule(namespace, r, retRule)
