@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"reflect"
 
 	"github.com/cilium/cilium/pkg/labels"
 )
@@ -101,39 +102,16 @@ func (r *Rule) MarshalJSON() ([]byte, error) {
 		buf.Write(jsonValue)
 	}
 
-	if r.Ingress != nil {
-		jsonValue, err := json.Marshal(r.Ingress)
+	v := reflect.Indirect(reflect.ValueOf(r))
+	types := v.Type()
+	for i := 2; i < v.NumField(); i++ {
+		jsonValue, err := json.Marshal(v.Field(i).Interface())
 		if err != nil {
 			return nil, err
 		}
-		buf.Write([]byte(`,"ingress":`))
-		buf.Write(jsonValue)
-	}
-
-	if r.Egress != nil {
-		jsonValue, err := json.Marshal(r.Egress)
-		if err != nil {
-			return nil, err
-		}
-		buf.Write([]byte(`,"egress":`))
-		buf.Write(jsonValue)
-	}
-
-	if r.Labels != nil {
-		jsonValue, err := json.Marshal(r.Labels)
-		if err != nil {
-			return nil, err
-		}
-		buf.Write([]byte(`,"labels":`))
-		buf.Write(jsonValue)
-	}
-
-	if r.Description != "" {
-		jsonValue, err := json.Marshal(r.Description)
-		if err != nil {
-			return nil, err
-		}
-		buf.Write([]byte(`,"description":`))
+		buf.Write([]byte(`,"`))
+		buf.WriteString(types.Field(i).Name)
+		buf.Write([]byte(`":`))
 		buf.Write(jsonValue)
 	}
 
