@@ -16,8 +16,9 @@ import (
 )
 
 type flowHandler struct {
-	flows   *prometheus.CounterVec
-	context *api.ContextOptions
+	flows     *prometheus.CounterVec
+	flowsSize *prometheus.CounterVec
+	context   *api.ContextOptions
 }
 
 func (h *flowHandler) Init(registry *prometheus.Registry, options api.Options) error {
@@ -36,7 +37,13 @@ func (h *flowHandler) Init(registry *prometheus.Registry, options api.Options) e
 		Help:      "Total number of flows processed",
 	}, labels)
 
-	registry.MustRegister(h.flows)
+	h.flowsSize = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: api.DefaultPrometheusNamespace,
+		Name:      "flows_size_bytes_total",
+		Help:      "Total number of bytes of flows processed",
+	}, labels)
+
+	registry.MustRegister(h.flows, h.flowsSize)
 	return nil
 }
 
@@ -78,4 +85,5 @@ func (h *flowHandler) ProcessFlow(ctx context.Context, flow *flowpb.Flow) {
 	labels = append(labels, h.context.GetLabelValues(flow)...)
 
 	h.flows.WithLabelValues(labels...).Inc()
+	h.flowsSize.WithLabelValues(labels...).Add(float64(flow.Size))
 }

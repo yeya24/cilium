@@ -211,6 +211,7 @@ func (p *Parser) Decode(data []byte, decoded *pb.Flow) error {
 	decoded.Interface = decodeNetworkInterface(tn, dbg)
 	decoded.ProxyPort = decodeProxyPort(dbg)
 	decoded.Summary = summary
+	decoded.Size = tn.OrigLen
 
 	return nil
 }
