@@ -15,7 +15,7 @@ import (
 // specific network interface, subnet, or VPC. Flow log data for a monitored
 // network interface is recorded as flow log records, which are log events
 // consisting of fields that describe the traffic flow. For more information, see
-// Flow Log Records
+// Flow log records
 // (https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html#flow-log-records)
 // in the Amazon Virtual Private Cloud User Guide. When publishing to CloudWatch
 // Logs, flow log records are published to a log group, and each network interface
@@ -30,7 +30,7 @@ func (c *Client) CreateFlowLogs(ctx context.Context, params *CreateFlowLogsInput
 		params = &CreateFlowLogsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateFlowLogs", params, optFns, addOperationCreateFlowLogsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateFlowLogs", params, optFns, c.addOperationCreateFlowLogsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -54,14 +54,8 @@ type CreateFlowLogsInput struct {
 	// This member is required.
 	ResourceType types.FlowLogsResourceType
 
-	// The type of traffic to log. You can log traffic that the resource accepts or
-	// rejects, or all traffic.
-	//
-	// This member is required.
-	TrafficType types.TrafficType
-
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency of
-	// the request. For more information, see How to Ensure Idempotency
+	// the request. For more information, see How to ensure idempotency
 	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html).
 	ClientToken *string
 
@@ -70,15 +64,18 @@ type CreateFlowLogsInput struct {
 	// s3, do not specify DeliverLogsPermissionArn or LogGroupName.
 	DeliverLogsPermissionArn *string
 
+	// The destination options.
+	DestinationOptions *types.DestinationOptionsRequest
+
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
 	// UnauthorizedOperation.
 	DryRun *bool
 
-	// Specifies the destination to which the flow log data is to be published. Flow
-	// log data can be published to a CloudWatch Logs log group or an Amazon S3 bucket.
-	// The value specified for this parameter depends on the value specified for
+	// The destination to which the flow log data is to be published. Flow log data can
+	// be published to a CloudWatch Logs log group or an Amazon S3 bucket. The value
+	// specified for this parameter depends on the value specified for
 	// LogDestinationType. If LogDestinationType is not specified or cloud-watch-logs,
 	// specify the Amazon Resource Name (ARN) of the CloudWatch Logs log group. For
 	// example, to publish to a log group called my-logs, specify
@@ -92,20 +89,20 @@ type CreateFlowLogsInput struct {
 	// This is a reserved term.
 	LogDestination *string
 
-	// Specifies the type of destination to which the flow log data is to be published.
-	// Flow log data can be published to CloudWatch Logs or Amazon S3. To publish flow
-	// log data to CloudWatch Logs, specify cloud-watch-logs. To publish flow log data
-	// to Amazon S3, specify s3. If you specify LogDestinationType as s3, do not
-	// specify DeliverLogsPermissionArn or LogGroupName. Default: cloud-watch-logs
+	// The type of destination to which the flow log data is to be published. Flow log
+	// data can be published to CloudWatch Logs or Amazon S3. To publish flow log data
+	// to CloudWatch Logs, specify cloud-watch-logs. To publish flow log data to Amazon
+	// S3, specify s3. If you specify LogDestinationType as s3, do not specify
+	// DeliverLogsPermissionArn or LogGroupName. Default: cloud-watch-logs
 	LogDestinationType types.LogDestinationType
 
 	// The fields to include in the flow log record, in the order in which they should
-	// appear. For a list of available fields, see Flow Log Records
+	// appear. For a list of available fields, see Flow log records
 	// (https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html#flow-log-records).
 	// If you omit this parameter, the flow log is created using the default format. If
 	// you specify this parameter, you must specify at least one field. Specify the
-	// fields using the ${field-id} format, separated by spaces. For the AWS CLI, use
-	// single quotation marks (' ') to surround the parameter value.
+	// fields using the ${field-id} format, separated by spaces. For the CLI, surround
+	// this parameter value with single quotes on Linux or double quotes on Windows.
 	LogFormat *string
 
 	// The name of a new or existing CloudWatch Logs log group where Amazon EC2
@@ -124,6 +121,12 @@ type CreateFlowLogsInput struct {
 
 	// The tags to apply to the flow logs.
 	TagSpecifications []types.TagSpecification
+
+	// The type of traffic to log. You can log traffic that the resource accepts or
+	// rejects, or all traffic.
+	TrafficType types.TrafficType
+
+	noSmithyDocumentSerde
 }
 
 type CreateFlowLogsOutput struct {
@@ -140,9 +143,11 @@ type CreateFlowLogsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateFlowLogsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateFlowLogsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateFlowLogs{}, middleware.After)
 	if err != nil {
 		return err

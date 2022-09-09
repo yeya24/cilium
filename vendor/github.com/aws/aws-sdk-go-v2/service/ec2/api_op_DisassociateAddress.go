@@ -14,14 +14,18 @@ import (
 // associated with. An Elastic IP address is for use in either the EC2-Classic
 // platform or in a VPC. For more information, see Elastic IP Addresses
 // (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html)
-// in the Amazon Elastic Compute Cloud User Guide. This is an idempotent operation.
-// If you perform the operation more than once, Amazon EC2 doesn't return an error.
+// in the Amazon Elastic Compute Cloud User Guide. We are retiring EC2-Classic on
+// August 15, 2022. We recommend that you migrate from EC2-Classic to a VPC. For
+// more information, see Migrate from EC2-Classic to a VPC
+// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/vpc-migrate.html) in the
+// Amazon Elastic Compute Cloud User Guide. This is an idempotent operation. If you
+// perform the operation more than once, Amazon EC2 doesn't return an error.
 func (c *Client) DisassociateAddress(ctx context.Context, params *DisassociateAddressInput, optFns ...func(*Options)) (*DisassociateAddressOutput, error) {
 	if params == nil {
 		params = &DisassociateAddressInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DisassociateAddress", params, optFns, addOperationDisassociateAddressMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DisassociateAddress", params, optFns, c.addOperationDisassociateAddressMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -44,14 +48,18 @@ type DisassociateAddressInput struct {
 
 	// [EC2-Classic] The Elastic IP address. Required for EC2-Classic.
 	PublicIp *string
+
+	noSmithyDocumentSerde
 }
 
 type DisassociateAddressOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDisassociateAddressMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDisassociateAddressMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDisassociateAddress{}, middleware.After)
 	if err != nil {
 		return err

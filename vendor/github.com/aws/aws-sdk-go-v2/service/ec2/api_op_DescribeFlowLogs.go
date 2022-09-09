@@ -20,7 +20,7 @@ func (c *Client) DescribeFlowLogs(ctx context.Context, params *DescribeFlowLogsI
 		params = &DescribeFlowLogsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeFlowLogs", params, optFns, addOperationDescribeFlowLogsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeFlowLogs", params, optFns, c.addOperationDescribeFlowLogsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -77,6 +77,8 @@ type DescribeFlowLogsInput struct {
 
 	// The token for the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeFlowLogsOutput struct {
@@ -90,9 +92,11 @@ type DescribeFlowLogsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeFlowLogsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeFlowLogsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeFlowLogs{}, middleware.After)
 	if err != nil {
 		return err
@@ -200,12 +204,13 @@ func NewDescribeFlowLogsPaginator(client DescribeFlowLogsAPIClient, params *Desc
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeFlowLogsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeFlowLogs page.
@@ -232,7 +237,10 @@ func (p *DescribeFlowLogsPaginator) NextPage(ctx context.Context, optFns ...func
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

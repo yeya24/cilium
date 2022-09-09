@@ -11,13 +11,17 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Describes the ClassicLink status of one or more VPCs.
+// Describes the ClassicLink status of one or more VPCs. We are retiring
+// EC2-Classic on August 15, 2022. We recommend that you migrate from EC2-Classic
+// to a VPC. For more information, see Migrate from EC2-Classic to a VPC
+// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/vpc-migrate.html) in the
+// Amazon Elastic Compute Cloud User Guide.
 func (c *Client) DescribeVpcClassicLink(ctx context.Context, params *DescribeVpcClassicLinkInput, optFns ...func(*Options)) (*DescribeVpcClassicLinkOutput, error) {
 	if params == nil {
 		params = &DescribeVpcClassicLinkInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeVpcClassicLink", params, optFns, addOperationDescribeVpcClassicLinkMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeVpcClassicLink", params, optFns, c.addOperationDescribeVpcClassicLinkMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -53,6 +57,8 @@ type DescribeVpcClassicLinkInput struct {
 
 	// One or more VPCs for which you want to describe the ClassicLink status.
 	VpcIds []string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeVpcClassicLinkOutput struct {
@@ -62,9 +68,11 @@ type DescribeVpcClassicLinkOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeVpcClassicLinkMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeVpcClassicLinkMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeVpcClassicLink{}, middleware.After)
 	if err != nil {
 		return err

@@ -18,7 +18,7 @@ func (c *Client) GetManagedPrefixListEntries(ctx context.Context, params *GetMan
 		params = &GetManagedPrefixListEntriesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "GetManagedPrefixListEntries", params, optFns, addOperationGetManagedPrefixListEntriesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "GetManagedPrefixListEntries", params, optFns, c.addOperationGetManagedPrefixListEntriesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -51,6 +51,8 @@ type GetManagedPrefixListEntriesInput struct {
 	// The version of the prefix list for which to return the entries. The default is
 	// the current version.
 	TargetVersion *int64
+
+	noSmithyDocumentSerde
 }
 
 type GetManagedPrefixListEntriesOutput struct {
@@ -64,9 +66,11 @@ type GetManagedPrefixListEntriesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationGetManagedPrefixListEntriesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationGetManagedPrefixListEntriesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpGetManagedPrefixListEntries{}, middleware.After)
 	if err != nil {
 		return err
@@ -180,12 +184,13 @@ func NewGetManagedPrefixListEntriesPaginator(client GetManagedPrefixListEntriesA
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *GetManagedPrefixListEntriesPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next GetManagedPrefixListEntries page.
@@ -212,7 +217,10 @@ func (p *GetManagedPrefixListEntriesPaginator) NextPage(ctx context.Context, opt
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

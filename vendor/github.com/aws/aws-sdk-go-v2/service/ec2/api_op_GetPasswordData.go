@@ -36,7 +36,7 @@ func (c *Client) GetPasswordData(ctx context.Context, params *GetPasswordDataInp
 		params = &GetPasswordDataInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "GetPasswordData", params, optFns, addOperationGetPasswordDataMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "GetPasswordData", params, optFns, c.addOperationGetPasswordDataMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -58,6 +58,8 @@ type GetPasswordDataInput struct {
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
 	// UnauthorizedOperation.
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type GetPasswordDataOutput struct {
@@ -74,9 +76,11 @@ type GetPasswordDataOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationGetPasswordDataMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationGetPasswordDataMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpGetPasswordData{}, middleware.After)
 	if err != nil {
 		return err
@@ -207,8 +211,17 @@ func NewPasswordDataAvailableWaiter(client GetPasswordDataAPIClient, optFns ...f
 // is the maximum wait duration the waiter will wait. The maxWaitDur is required
 // and must be greater than zero.
 func (w *PasswordDataAvailableWaiter) Wait(ctx context.Context, params *GetPasswordDataInput, maxWaitDur time.Duration, optFns ...func(*PasswordDataAvailableWaiterOptions)) error {
+	_, err := w.WaitForOutput(ctx, params, maxWaitDur, optFns...)
+	return err
+}
+
+// WaitForOutput calls the waiter function for PasswordDataAvailable waiter and
+// returns the output of the successful operation. The maxWaitDur is the maximum
+// wait duration the waiter will wait. The maxWaitDur is required and must be
+// greater than zero.
+func (w *PasswordDataAvailableWaiter) WaitForOutput(ctx context.Context, params *GetPasswordDataInput, maxWaitDur time.Duration, optFns ...func(*PasswordDataAvailableWaiterOptions)) (*GetPasswordDataOutput, error) {
 	if maxWaitDur <= 0 {
-		return fmt.Errorf("maximum wait time for waiter must be greater than zero")
+		return nil, fmt.Errorf("maximum wait time for waiter must be greater than zero")
 	}
 
 	options := w.options
@@ -221,7 +234,7 @@ func (w *PasswordDataAvailableWaiter) Wait(ctx context.Context, params *GetPassw
 	}
 
 	if options.MinDelay > options.MaxDelay {
-		return fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
+		return nil, fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
 	}
 
 	ctx, cancelFn := context.WithTimeout(ctx, maxWaitDur)
@@ -249,10 +262,10 @@ func (w *PasswordDataAvailableWaiter) Wait(ctx context.Context, params *GetPassw
 
 		retryable, err := options.Retryable(ctx, params, out, err)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if !retryable {
-			return nil
+			return out, nil
 		}
 
 		remainingTime -= time.Since(start)
@@ -265,16 +278,16 @@ func (w *PasswordDataAvailableWaiter) Wait(ctx context.Context, params *GetPassw
 			attempt, options.MinDelay, options.MaxDelay, remainingTime,
 		)
 		if err != nil {
-			return fmt.Errorf("error computing waiter delay, %w", err)
+			return nil, fmt.Errorf("error computing waiter delay, %w", err)
 		}
 
 		remainingTime -= delay
 		// sleep for the delay amount before invoking a request
 		if err := smithytime.SleepWithContext(ctx, delay); err != nil {
-			return fmt.Errorf("request cancelled while waiting, %w", err)
+			return nil, fmt.Errorf("request cancelled while waiting, %w", err)
 		}
 	}
-	return fmt.Errorf("exceeded max wait time for PasswordDataAvailable waiter")
+	return nil, fmt.Errorf("exceeded max wait time for PasswordDataAvailable waiter")
 }
 
 func passwordDataAvailableStateRetryable(ctx context.Context, input *GetPasswordDataInput, output *GetPasswordDataOutput, err error) (bool, error) {

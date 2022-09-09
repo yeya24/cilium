@@ -18,7 +18,7 @@ func (c *Client) DescribeVpcEndpoints(ctx context.Context, params *DescribeVpcEn
 		params = &DescribeVpcEndpointsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeVpcEndpoints", params, optFns, addOperationDescribeVpcEndpointsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeVpcEndpoints", params, optFns, c.addOperationDescribeVpcEndpointsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -39,30 +39,32 @@ type DescribeVpcEndpointsInput struct {
 
 	// One or more filters.
 	//
-	// * service-name - The name of the service.
-	//
-	// * vpc-id - The
-	// ID of the VPC in which the endpoint resides.
-	//
-	// * vpc-endpoint-id - The ID of the
-	// endpoint.
-	//
-	// * vpc-endpoint-state - The state of the endpoint (pendingAcceptance |
-	// pending | available | deleting | deleted | rejected | failed).
+	// * ip-address-type - The IP address type (ipv4 | ipv6).
 	//
 	// *
-	// vpc-endpoint-type - The type of VPC endpoint (Interface | Gateway |
-	// GatewayLoadBalancer).
+	// service-name - The name of the service.
 	//
-	// * tag: - The key/value combination of a tag assigned to
-	// the resource. Use the tag key in the filter name and the tag value as the filter
-	// value. For example, to find all resources that have a tag with the key Owner and
-	// the value TeamA, specify tag:Owner for the filter name and TeamA for the filter
-	// value.
+	// * vpc-id - The ID of the VPC in which
+	// the endpoint resides.
 	//
-	// * tag-key - The key of a tag assigned to the resource. Use this filter
-	// to find all resources assigned a tag with a specific key, regardless of the tag
-	// value.
+	// * vpc-endpoint-id - The ID of the endpoint.
+	//
+	// *
+	// vpc-endpoint-state - The state of the endpoint (pendingAcceptance | pending |
+	// available | deleting | deleted | rejected | failed).
+	//
+	// * vpc-endpoint-type - The
+	// type of VPC endpoint (Interface | Gateway | GatewayLoadBalancer).
+	//
+	// * tag: - The
+	// key/value combination of a tag assigned to the resource. Use the tag key in the
+	// filter name and the tag value as the filter value. For example, to find all
+	// resources that have a tag with the key Owner and the value TeamA, specify
+	// tag:Owner for the filter name and TeamA for the filter value.
+	//
+	// * tag-key - The
+	// key of a tag assigned to the resource. Use this filter to find all resources
+	// assigned a tag with a specific key, regardless of the tag value.
 	Filters []types.Filter
 
 	// The maximum number of items to return for this request. The request returns a
@@ -76,6 +78,8 @@ type DescribeVpcEndpointsInput struct {
 
 	// One or more endpoint IDs.
 	VpcEndpointIds []string
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of DescribeVpcEndpoints.
@@ -90,9 +94,11 @@ type DescribeVpcEndpointsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeVpcEndpointsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeVpcEndpointsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeVpcEndpoints{}, middleware.After)
 	if err != nil {
 		return err
@@ -202,12 +208,13 @@ func NewDescribeVpcEndpointsPaginator(client DescribeVpcEndpointsAPIClient, para
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeVpcEndpointsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeVpcEndpoints page.
@@ -234,7 +241,10 @@ func (p *DescribeVpcEndpointsPaginator) NextPage(ctx context.Context, optFns ...
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 
