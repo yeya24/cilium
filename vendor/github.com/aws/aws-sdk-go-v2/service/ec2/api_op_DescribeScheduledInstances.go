@@ -12,13 +12,17 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Describes the specified Scheduled Instances or all your Scheduled Instances.
+// Describes the specified Scheduled Instances or all your Scheduled Instances. We
+// are retiring EC2-Classic on August 15, 2022. We recommend that you migrate from
+// EC2-Classic to a VPC. For more information, see Migrate from EC2-Classic to a
+// VPC (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/vpc-migrate.html) in
+// the Amazon Elastic Compute Cloud User Guide.
 func (c *Client) DescribeScheduledInstances(ctx context.Context, params *DescribeScheduledInstancesInput, optFns ...func(*Options)) (*DescribeScheduledInstancesOutput, error) {
 	if params == nil {
 		params = &DescribeScheduledInstancesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeScheduledInstances", params, optFns, addOperationDescribeScheduledInstancesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeScheduledInstances", params, optFns, c.addOperationDescribeScheduledInstancesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -64,6 +68,8 @@ type DescribeScheduledInstancesInput struct {
 
 	// The time period for the first schedule to start.
 	SlotStartTimeRange *types.SlotStartTimeRangeRequest
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of DescribeScheduledInstances.
@@ -78,9 +84,11 @@ type DescribeScheduledInstancesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeScheduledInstancesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeScheduledInstancesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeScheduledInstances{}, middleware.After)
 	if err != nil {
 		return err
@@ -192,12 +200,13 @@ func NewDescribeScheduledInstancesPaginator(client DescribeScheduledInstancesAPI
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeScheduledInstancesPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeScheduledInstances page.
@@ -224,7 +233,10 @@ func (p *DescribeScheduledInstancesPaginator) NextPage(ctx context.Context, optF
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

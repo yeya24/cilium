@@ -14,13 +14,17 @@ import (
 // Describes one or more of the Reserved Instances that you purchased. For more
 // information about Reserved Instances, see Reserved Instances
 // (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/concepts-on-demand-reserved-instances.html)
-// in the Amazon EC2 User Guide.
+// in the Amazon EC2 User Guide. We are retiring EC2-Classic on August 15, 2022. We
+// recommend that you migrate from EC2-Classic to a VPC. For more information, see
+// Migrate from EC2-Classic to a VPC
+// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/vpc-migrate.html) in the
+// Amazon Elastic Compute Cloud User Guide.
 func (c *Client) DescribeReservedInstances(ctx context.Context, params *DescribeReservedInstancesInput, optFns ...func(*Options)) (*DescribeReservedInstancesOutput, error) {
 	if params == nil {
 		params = &DescribeReservedInstancesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeReservedInstances", params, optFns, addOperationDescribeReservedInstancesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeReservedInstances", params, optFns, c.addOperationDescribeReservedInstancesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -105,6 +109,8 @@ type DescribeReservedInstancesInput struct {
 	// One or more Reserved Instance IDs. Default: Describes all your Reserved
 	// Instances, or only those otherwise specified.
 	ReservedInstancesIds []string
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output for DescribeReservedInstances.
@@ -115,9 +121,11 @@ type DescribeReservedInstancesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeReservedInstancesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeReservedInstancesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeReservedInstances{}, middleware.After)
 	if err != nil {
 		return err

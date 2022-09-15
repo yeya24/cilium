@@ -18,7 +18,7 @@ func (c *Client) DescribePublicIpv4Pools(ctx context.Context, params *DescribePu
 		params = &DescribePublicIpv4PoolsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribePublicIpv4Pools", params, optFns, addOperationDescribePublicIpv4PoolsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribePublicIpv4Pools", params, optFns, c.addOperationDescribePublicIpv4PoolsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -52,6 +52,8 @@ type DescribePublicIpv4PoolsInput struct {
 
 	// The IDs of the address pools.
 	PoolIds []string
+
+	noSmithyDocumentSerde
 }
 
 type DescribePublicIpv4PoolsOutput struct {
@@ -65,9 +67,11 @@ type DescribePublicIpv4PoolsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribePublicIpv4PoolsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribePublicIpv4PoolsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribePublicIpv4Pools{}, middleware.After)
 	if err != nil {
 		return err
@@ -177,12 +181,13 @@ func NewDescribePublicIpv4PoolsPaginator(client DescribePublicIpv4PoolsAPIClient
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribePublicIpv4PoolsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribePublicIpv4Pools page.
@@ -209,7 +214,10 @@ func (p *DescribePublicIpv4PoolsPaginator) NextPage(ctx context.Context, optFns 
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 
