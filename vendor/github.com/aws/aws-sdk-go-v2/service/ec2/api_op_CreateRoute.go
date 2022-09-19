@@ -10,12 +10,11 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Creates a route in a route table within a VPC. You must specify one of the
-// following targets: internet gateway or virtual private gateway, NAT instance,
-// NAT gateway, VPC peering connection, network interface, egress-only internet
-// gateway, or transit gateway. When determining how to route traffic, we use the
-// route with the most specific match. For example, traffic is destined for the
-// IPv4 address 192.0.2.3, and the route table includes the following two IPv4
+// Creates a route in a route table within a VPC. You must specify either a
+// destination CIDR block or a prefix list ID. You must also specify exactly one of
+// the resources from the parameter list. When determining how to route traffic, we
+// use the route with the most specific match. For example, traffic is destined for
+// the IPv4 address 192.0.2.3, and the route table includes the following two IPv4
 // routes:
 //
 // * 192.0.2.0/24 (goes to some target A)
@@ -26,7 +25,7 @@ import (
 // Both routes apply to the traffic destined for 192.0.2.3. However, the
 // second route in the list covers a smaller number of IP addresses and is
 // therefore more specific, so we use that route to determine where to target the
-// traffic. For more information about route tables, see Route Tables
+// traffic. For more information about route tables, see Route tables
 // (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html) in the
 // Amazon Virtual Private Cloud User Guide.
 func (c *Client) CreateRoute(ctx context.Context, params *CreateRouteInput, optFns ...func(*Options)) (*CreateRouteOutput, error) {
@@ -34,7 +33,7 @@ func (c *Client) CreateRoute(ctx context.Context, params *CreateRouteInput, optF
 		params = &CreateRouteInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateRoute", params, optFns, addOperationCreateRouteMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateRoute", params, optFns, c.addOperationCreateRouteMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -54,6 +53,9 @@ type CreateRouteInput struct {
 	// The ID of the carrier gateway. You can only use this option when the VPC
 	// contains a subnet which is associated with a Wavelength Zone.
 	CarrierGatewayId *string
+
+	// The Amazon Resource Name (ARN) of the core network.
+	CoreNetworkArn *string
 
 	// The IPv4 CIDR address block used for the destination match. Routing decisions
 	// are based on the most specific match. We modify the specified CIDR block to its
@@ -101,6 +103,8 @@ type CreateRouteInput struct {
 
 	// The ID of a VPC peering connection.
 	VpcPeeringConnectionId *string
+
+	noSmithyDocumentSerde
 }
 
 type CreateRouteOutput struct {
@@ -110,9 +114,11 @@ type CreateRouteOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateRouteMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateRouteMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateRoute{}, middleware.After)
 	if err != nil {
 		return err
