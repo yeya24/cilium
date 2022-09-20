@@ -21,7 +21,7 @@ func (c *Client) CreateNetworkInterface(ctx context.Context, params *CreateNetwo
 		params = &CreateNetworkInterfaceInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateNetworkInterface", params, optFns, addOperationCreateNetworkInterfaceMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateNetworkInterface", params, optFns, c.addOperationCreateNetworkInterfaceMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -56,11 +56,18 @@ type CreateNetworkInterfaceInput struct {
 	// The IDs of one or more security groups.
 	Groups []string
 
-	// Indicates the type of network interface. To create an Elastic Fabric Adapter
-	// (EFA), specify efa. For more information, see  Elastic Fabric Adapter
-	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/efa.html) in the Amazon
-	// Elastic Compute Cloud User Guide.
+	// The type of network interface. The default is interface. The only supported
+	// values are efa and trunk.
 	InterfaceType types.NetworkInterfaceCreationType
+
+	// The number of IPv4 prefixes that Amazon Web Services automatically assigns to
+	// the network interface. You cannot use this option if you use the Ipv4 Prefixes
+	// option.
+	Ipv4PrefixCount *int32
+
+	// One or more IPv4 prefixes assigned to the network interface. You cannot use this
+	// option if you use the Ipv4PrefixCount option.
+	Ipv4Prefixes []types.Ipv4PrefixSpecificationRequest
 
 	// The number of IPv6 addresses to assign to a network interface. Amazon EC2
 	// automatically selects the IPv6 addresses from the subnet range. You can't use
@@ -73,6 +80,15 @@ type CreateNetworkInterfaceInput struct {
 	// subnet. You can't use this option if you're specifying a number of IPv6
 	// addresses.
 	Ipv6Addresses []types.InstanceIpv6Address
+
+	// The number of IPv6 prefixes that Amazon Web Services automatically assigns to
+	// the network interface. You cannot use this option if you use the Ipv6Prefixes
+	// option.
+	Ipv6PrefixCount *int32
+
+	// One or more IPv6 prefixes assigned to the network interface. You cannot use this
+	// option if you use the Ipv6PrefixCount option.
+	Ipv6Prefixes []types.Ipv6PrefixSpecificationRequest
 
 	// The primary private IPv4 address of the network interface. If you don't specify
 	// an IPv4 address, Amazon EC2 selects one for you from the subnet's IPv4 CIDR
@@ -96,6 +112,8 @@ type CreateNetworkInterfaceInput struct {
 
 	// The tags to apply to the new network interface.
 	TagSpecifications []types.TagSpecification
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of CreateNetworkInterface.
@@ -110,9 +128,11 @@ type CreateNetworkInterfaceOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateNetworkInterfaceMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateNetworkInterfaceMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateNetworkInterface{}, middleware.After)
 	if err != nil {
 		return err

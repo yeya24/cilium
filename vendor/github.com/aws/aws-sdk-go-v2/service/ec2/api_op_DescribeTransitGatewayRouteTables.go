@@ -19,7 +19,7 @@ func (c *Client) DescribeTransitGatewayRouteTables(ctx context.Context, params *
 		params = &DescribeTransitGatewayRouteTablesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeTransitGatewayRouteTables", params, optFns, addOperationDescribeTransitGatewayRouteTablesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeTransitGatewayRouteTables", params, optFns, c.addOperationDescribeTransitGatewayRouteTablesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -65,6 +65,8 @@ type DescribeTransitGatewayRouteTablesInput struct {
 
 	// The IDs of the transit gateway route tables.
 	TransitGatewayRouteTableIds []string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeTransitGatewayRouteTablesOutput struct {
@@ -78,9 +80,11 @@ type DescribeTransitGatewayRouteTablesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeTransitGatewayRouteTablesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeTransitGatewayRouteTablesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeTransitGatewayRouteTables{}, middleware.After)
 	if err != nil {
 		return err
@@ -191,12 +195,13 @@ func NewDescribeTransitGatewayRouteTablesPaginator(client DescribeTransitGateway
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeTransitGatewayRouteTablesPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeTransitGatewayRouteTables page.
@@ -223,7 +228,10 @@ func (p *DescribeTransitGatewayRouteTablesPaginator) NextPage(ctx context.Contex
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

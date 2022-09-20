@@ -20,7 +20,7 @@ func (c *Client) DeleteLaunchTemplateVersions(ctx context.Context, params *Delet
 		params = &DeleteLaunchTemplateVersionsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DeleteLaunchTemplateVersions", params, optFns, addOperationDeleteLaunchTemplateVersionsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DeleteLaunchTemplateVersions", params, optFns, c.addOperationDeleteLaunchTemplateVersionsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -43,13 +43,15 @@ type DeleteLaunchTemplateVersionsInput struct {
 	// UnauthorizedOperation.
 	DryRun *bool
 
-	// The ID of the launch template. You must specify either the launch template ID or
-	// launch template name in the request.
+	// The ID of the launch template. You must specify either the LaunchTemplateId or
+	// the LaunchTemplateName, but not both.
 	LaunchTemplateId *string
 
-	// The name of the launch template. You must specify either the launch template ID
-	// or launch template name in the request.
+	// The name of the launch template. You must specify either the LaunchTemplateName
+	// or the LaunchTemplateId, but not both.
 	LaunchTemplateName *string
+
+	noSmithyDocumentSerde
 }
 
 type DeleteLaunchTemplateVersionsOutput struct {
@@ -62,9 +64,11 @@ type DeleteLaunchTemplateVersionsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDeleteLaunchTemplateVersionsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDeleteLaunchTemplateVersionsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDeleteLaunchTemplateVersions{}, middleware.After)
 	if err != nil {
 		return err
