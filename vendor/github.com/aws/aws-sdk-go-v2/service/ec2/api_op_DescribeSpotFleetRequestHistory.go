@@ -15,13 +15,16 @@ import (
 // Describes the events for the specified Spot Fleet request during the specified
 // time. Spot Fleet events are delayed by up to 30 seconds before they can be
 // described. This ensures that you can query by the last evaluated time and not
-// miss a recorded event. Spot Fleet events are available for 48 hours.
+// miss a recorded event. Spot Fleet events are available for 48 hours. For more
+// information, see Monitor fleet events using Amazon EventBridge
+// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/fleet-monitor.html) in the
+// Amazon EC2 User Guide for Linux Instances.
 func (c *Client) DescribeSpotFleetRequestHistory(ctx context.Context, params *DescribeSpotFleetRequestHistoryInput, optFns ...func(*Options)) (*DescribeSpotFleetRequestHistoryOutput, error) {
 	if params == nil {
 		params = &DescribeSpotFleetRequestHistoryInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeSpotFleetRequestHistory", params, optFns, addOperationDescribeSpotFleetRequestHistoryMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeSpotFleetRequestHistory", params, optFns, c.addOperationDescribeSpotFleetRequestHistoryMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -61,6 +64,8 @@ type DescribeSpotFleetRequestHistoryInput struct {
 
 	// The token for the next set of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of DescribeSpotFleetRequestHistory.
@@ -87,9 +92,11 @@ type DescribeSpotFleetRequestHistoryOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeSpotFleetRequestHistoryMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeSpotFleetRequestHistoryMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeSpotFleetRequestHistory{}, middleware.After)
 	if err != nil {
 		return err

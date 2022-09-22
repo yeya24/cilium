@@ -18,7 +18,7 @@ func (c *Client) DescribeClientVpnRoutes(ctx context.Context, params *DescribeCl
 		params = &DescribeClientVpnRoutesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeClientVpnRoutes", params, optFns, addOperationDescribeClientVpnRoutesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeClientVpnRoutes", params, optFns, c.addOperationDescribeClientVpnRoutesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -60,6 +60,8 @@ type DescribeClientVpnRoutesInput struct {
 
 	// The token to retrieve the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeClientVpnRoutesOutput struct {
@@ -73,9 +75,11 @@ type DescribeClientVpnRoutesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeClientVpnRoutesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeClientVpnRoutesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeClientVpnRoutes{}, middleware.After)
 	if err != nil {
 		return err
@@ -189,12 +193,13 @@ func NewDescribeClientVpnRoutesPaginator(client DescribeClientVpnRoutesAPIClient
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeClientVpnRoutesPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeClientVpnRoutes page.
@@ -221,7 +226,10 @@ func (p *DescribeClientVpnRoutesPaginator) NextPage(ctx context.Context, optFns 
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

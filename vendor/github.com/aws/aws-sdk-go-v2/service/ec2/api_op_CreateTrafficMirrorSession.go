@@ -26,7 +26,7 @@ func (c *Client) CreateTrafficMirrorSession(ctx context.Context, params *CreateT
 		params = &CreateTrafficMirrorSessionInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateTrafficMirrorSession", params, optFns, addOperationCreateTrafficMirrorSessionMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateTrafficMirrorSession", params, optFns, c.addOperationCreateTrafficMirrorSessionMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ type CreateTrafficMirrorSessionInput struct {
 	TrafficMirrorTargetId *string
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency of
-	// the request. For more information, see How to Ensure Idempotency
+	// the request. For more information, see How to ensure idempotency
 	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	ClientToken *string
 
@@ -90,12 +90,14 @@ type CreateTrafficMirrorSessionInput struct {
 	// VXLAN protocol, see RFC 7348 (https://tools.ietf.org/html/rfc7348). If you do
 	// not specify a VirtualNetworkId, an account-wide unique id is chosen at random.
 	VirtualNetworkId *int32
+
+	noSmithyDocumentSerde
 }
 
 type CreateTrafficMirrorSessionOutput struct {
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency of
-	// the request. For more information, see How to Ensure Idempotency
+	// the request. For more information, see How to ensure idempotency
 	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	ClientToken *string
 
@@ -104,9 +106,11 @@ type CreateTrafficMirrorSessionOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateTrafficMirrorSessionMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateTrafficMirrorSessionMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateTrafficMirrorSession{}, middleware.After)
 	if err != nil {
 		return err

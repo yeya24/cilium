@@ -21,11 +21,11 @@ import (
 // prefix-list | route-table | route-table-association | security-group | subnet |
 // subnet-cidr-block-association | vpc | vpc-cidr-block-association | vpc-endpoint
 // | vpc-peering-connection | vpn-connection | vpn-gateway. This setting applies to
-// the IAM user who makes the request; it does not apply to the entire AWS account.
-// By default, an IAM user defaults to the same settings as the root user. If
-// you're using this action as the root user, then these settings apply to the
-// entire account, unless an IAM user explicitly overrides these settings for
-// themselves. For more information, see Resource IDs
+// the IAM user who makes the request; it does not apply to the entire Amazon Web
+// Services account. By default, an IAM user defaults to the same settings as the
+// root user. If you're using this action as the root user, then these settings
+// apply to the entire account, unless an IAM user explicitly overrides these
+// settings for themselves. For more information, see Resource IDs
 // (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/resource-ids.html) in the
 // Amazon Elastic Compute Cloud User Guide. Resources created with longer IDs are
 // visible to all IAM roles and users, regardless of these settings and provided
@@ -36,7 +36,7 @@ func (c *Client) ModifyIdFormat(ctx context.Context, params *ModifyIdFormatInput
 		params = &ModifyIdFormatInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ModifyIdFormat", params, optFns, addOperationModifyIdFormatMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ModifyIdFormat", params, optFns, c.addOperationModifyIdFormatMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -65,14 +65,18 @@ type ModifyIdFormatInput struct {
 	//
 	// This member is required.
 	UseLongIds *bool
+
+	noSmithyDocumentSerde
 }
 
 type ModifyIdFormatOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationModifyIdFormatMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationModifyIdFormatMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpModifyIdFormat{}, middleware.After)
 	if err != nil {
 		return err

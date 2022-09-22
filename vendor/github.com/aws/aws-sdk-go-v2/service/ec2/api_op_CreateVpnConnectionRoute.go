@@ -13,15 +13,15 @@ import (
 // Creates a static route associated with a VPN connection between an existing
 // virtual private gateway and a VPN customer gateway. The static route allows
 // traffic to be routed from the virtual private gateway to the VPN customer
-// gateway. For more information, see AWS Site-to-Site VPN
-// (https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html) in the AWS
-// Site-to-Site VPN User Guide.
+// gateway. For more information, see Amazon Web Services Site-to-Site VPN
+// (https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html) in the Amazon Web
+// Services Site-to-Site VPN User Guide.
 func (c *Client) CreateVpnConnectionRoute(ctx context.Context, params *CreateVpnConnectionRouteInput, optFns ...func(*Options)) (*CreateVpnConnectionRouteOutput, error) {
 	if params == nil {
 		params = &CreateVpnConnectionRouteInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateVpnConnectionRoute", params, optFns, addOperationCreateVpnConnectionRouteMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateVpnConnectionRoute", params, optFns, c.addOperationCreateVpnConnectionRouteMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -43,14 +43,18 @@ type CreateVpnConnectionRouteInput struct {
 	//
 	// This member is required.
 	VpnConnectionId *string
+
+	noSmithyDocumentSerde
 }
 
 type CreateVpnConnectionRouteOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateVpnConnectionRouteMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateVpnConnectionRouteMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateVpnConnectionRoute{}, middleware.After)
 	if err != nil {
 		return err
