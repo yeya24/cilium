@@ -15,13 +15,17 @@ import (
 // addresses. An Elastic IP address is for use in either the EC2-Classic platform
 // or in a VPC. For more information, see Elastic IP Addresses
 // (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html)
-// in the Amazon Elastic Compute Cloud User Guide.
+// in the Amazon Elastic Compute Cloud User Guide. We are retiring EC2-Classic. We
+// recommend that you migrate from EC2-Classic to a VPC. For more information, see
+// Migrate from EC2-Classic to a VPC
+// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/vpc-migrate.html) in the
+// Amazon Elastic Compute Cloud User Guide.
 func (c *Client) DescribeAddresses(ctx context.Context, params *DescribeAddressesInput, optFns ...func(*Options)) (*DescribeAddressesOutput, error) {
 	if params == nil {
 		params = &DescribeAddressesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeAddresses", params, optFns, addOperationDescribeAddressesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeAddresses", params, optFns, c.addOperationDescribeAddressesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -58,34 +62,37 @@ type DescribeAddressesInput struct {
 	//
 	// *
 	// network-border-group - A unique set of Availability Zones, Local Zones, or
-	// Wavelength Zones from where AWS advertises IP addresses.
-	//
-	// * network-interface-id
-	// - [EC2-VPC] The ID of the network interface that the address is associated with,
-	// if any.
-	//
-	// * network-interface-owner-id - The AWS account ID of the owner.
+	// Wavelength Zones from where Amazon Web Services advertises IP addresses.
 	//
 	// *
-	// private-ip-address - [EC2-VPC] The private IP address associated with the
-	// Elastic IP address.
+	// network-interface-id - [EC2-VPC] The ID of the network interface that the
+	// address is associated with, if any.
 	//
-	// * public-ip - The Elastic IP address, or the carrier IP
-	// address.
+	// * network-interface-owner-id - The Amazon
+	// Web Services account ID of the owner.
 	//
-	// * tag: - The key/value combination of a tag assigned to the resource.
-	// Use the tag key in the filter name and the tag value as the filter value. For
-	// example, to find all resources that have a tag with the key Owner and the value
-	// TeamA, specify tag:Owner for the filter name and TeamA for the filter value.
+	// * private-ip-address - [EC2-VPC] The
+	// private IP address associated with the Elastic IP address.
 	//
-	// *
-	// tag-key - The key of a tag assigned to the resource. Use this filter to find all
-	// resources assigned a tag with a specific key, regardless of the tag value.
+	// * public-ip - The
+	// Elastic IP address, or the carrier IP address.
+	//
+	// * tag: - The key/value
+	// combination of a tag assigned to the resource. Use the tag key in the filter
+	// name and the tag value as the filter value. For example, to find all resources
+	// that have a tag with the key Owner and the value TeamA, specify tag:Owner for
+	// the filter name and TeamA for the filter value.
+	//
+	// * tag-key - The key of a tag
+	// assigned to the resource. Use this filter to find all resources assigned a tag
+	// with a specific key, regardless of the tag value.
 	Filters []types.Filter
 
 	// One or more Elastic IP addresses. Default: Describes all your Elastic IP
 	// addresses.
 	PublicIps []string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeAddressesOutput struct {
@@ -95,9 +102,11 @@ type DescribeAddressesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeAddressesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeAddressesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeAddresses{}, middleware.After)
 	if err != nil {
 		return err

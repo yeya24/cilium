@@ -25,7 +25,7 @@ func (c *Client) CreateTrafficMirrorFilter(ctx context.Context, params *CreateTr
 		params = &CreateTrafficMirrorFilterInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateTrafficMirrorFilter", params, optFns, addOperationCreateTrafficMirrorFilterMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateTrafficMirrorFilter", params, optFns, c.addOperationCreateTrafficMirrorFilterMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (c *Client) CreateTrafficMirrorFilter(ctx context.Context, params *CreateTr
 type CreateTrafficMirrorFilterInput struct {
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency of
-	// the request. For more information, see How to Ensure Idempotency
+	// the request. For more information, see How to ensure idempotency
 	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	ClientToken *string
 
@@ -53,12 +53,14 @@ type CreateTrafficMirrorFilterInput struct {
 
 	// The tags to assign to a Traffic Mirror filter.
 	TagSpecifications []types.TagSpecification
+
+	noSmithyDocumentSerde
 }
 
 type CreateTrafficMirrorFilterOutput struct {
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency of
-	// the request. For more information, see How to Ensure Idempotency
+	// the request. For more information, see How to ensure idempotency
 	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	ClientToken *string
 
@@ -67,9 +69,11 @@ type CreateTrafficMirrorFilterOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateTrafficMirrorFilterMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateTrafficMirrorFilterMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateTrafficMirrorFilter{}, middleware.After)
 	if err != nil {
 		return err

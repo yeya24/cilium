@@ -19,7 +19,7 @@ func (c *Client) DescribeLocalGatewayRouteTables(ctx context.Context, params *De
 		params = &DescribeLocalGatewayRouteTablesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeLocalGatewayRouteTables", params, optFns, addOperationDescribeLocalGatewayRouteTablesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeLocalGatewayRouteTables", params, optFns, c.addOperationDescribeLocalGatewayRouteTablesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -42,13 +42,19 @@ type DescribeLocalGatewayRouteTablesInput struct {
 	// * local-gateway-id - The ID of a local gateway.
 	//
 	// *
-	// local-gateway-route-table-id - The ID of a local gateway route table.
+	// local-gateway-route-table-arn - The Amazon Resource Name (ARN) of the local
+	// gateway route table.
+	//
+	// * local-gateway-route-table-id - The ID of a local gateway
+	// route table.
+	//
+	// * outpost-arn - The Amazon Resource Name (ARN) of the Outpost.
 	//
 	// *
-	// outpost-arn - The Amazon Resource Name (ARN) of the Outpost.
+	// owner-id - The ID of the Amazon Web Services account that owns the local gateway
+	// route table.
 	//
-	// * state - The
-	// state of the local gateway route table.
+	// * state - The state of the local gateway route table.
 	Filters []types.Filter
 
 	// The IDs of the local gateway route tables.
@@ -60,6 +66,8 @@ type DescribeLocalGatewayRouteTablesInput struct {
 
 	// The token for the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeLocalGatewayRouteTablesOutput struct {
@@ -73,9 +81,11 @@ type DescribeLocalGatewayRouteTablesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeLocalGatewayRouteTablesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeLocalGatewayRouteTablesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeLocalGatewayRouteTables{}, middleware.After)
 	if err != nil {
 		return err
@@ -186,12 +196,13 @@ func NewDescribeLocalGatewayRouteTablesPaginator(client DescribeLocalGatewayRout
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeLocalGatewayRouteTablesPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeLocalGatewayRouteTables page.
@@ -218,7 +229,10 @@ func (p *DescribeLocalGatewayRouteTablesPaginator) NextPage(ctx context.Context,
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 
