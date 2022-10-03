@@ -11,13 +11,19 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Creates a static route for the specified local gateway route table.
+// Creates a static route for the specified local gateway route table. You must
+// specify one of the following targets:
+//
+// * LocalGatewayVirtualInterfaceGroupId
+//
+// *
+// NetworkInterfaceId
 func (c *Client) CreateLocalGatewayRoute(ctx context.Context, params *CreateLocalGatewayRouteInput, optFns ...func(*Options)) (*CreateLocalGatewayRouteOutput, error) {
 	if params == nil {
 		params = &CreateLocalGatewayRouteInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateLocalGatewayRoute", params, optFns, addOperationCreateLocalGatewayRouteMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateLocalGatewayRoute", params, optFns, c.addOperationCreateLocalGatewayRouteMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -40,16 +46,19 @@ type CreateLocalGatewayRouteInput struct {
 	// This member is required.
 	LocalGatewayRouteTableId *string
 
-	// The ID of the virtual interface group.
-	//
-	// This member is required.
-	LocalGatewayVirtualInterfaceGroupId *string
-
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
 	// UnauthorizedOperation.
 	DryRun *bool
+
+	// The ID of the virtual interface group.
+	LocalGatewayVirtualInterfaceGroupId *string
+
+	// The ID of the network interface.
+	NetworkInterfaceId *string
+
+	noSmithyDocumentSerde
 }
 
 type CreateLocalGatewayRouteOutput struct {
@@ -59,9 +68,11 @@ type CreateLocalGatewayRouteOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateLocalGatewayRouteMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateLocalGatewayRouteMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateLocalGatewayRoute{}, middleware.After)
 	if err != nil {
 		return err
