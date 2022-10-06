@@ -19,7 +19,7 @@ func (c *Client) DescribeLocalGateways(ctx context.Context, params *DescribeLoca
 		params = &DescribeLocalGatewaysInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeLocalGateways", params, optFns, addOperationDescribeLocalGatewaysMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeLocalGateways", params, optFns, c.addOperationDescribeLocalGatewaysMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -38,26 +38,20 @@ type DescribeLocalGatewaysInput struct {
 	DryRun *bool
 
 	// One or more filters.
-	Filters []types.Filter
-
-	// One or more filters.
 	//
 	// * local-gateway-id - The ID of a local gateway.
 	//
 	// *
-	// local-gateway-route-table-id - The ID of the local gateway route table.
+	// outpost-arn - The Amazon Resource Name (ARN) of the Outpost.
 	//
-	// *
-	// local-gateway-route-table-virtual-interface-group-association-id - The ID of the
-	// association.
+	// * owner-id - The
+	// ID of the Amazon Web Services account that owns the local gateway.
 	//
-	// * local-gateway-route-table-virtual-interface-group-id - The ID of
-	// the virtual interface group.
-	//
-	// * outpost-arn - The Amazon Resource Name (ARN) of
-	// the Outpost.
-	//
-	// * state - The state of the association.
+	// * state -
+	// The state of the association.
+	Filters []types.Filter
+
+	// The IDs of the local gateways.
 	LocalGatewayIds []string
 
 	// The maximum number of results to return with a single call. To retrieve the
@@ -66,6 +60,8 @@ type DescribeLocalGatewaysInput struct {
 
 	// The token for the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeLocalGatewaysOutput struct {
@@ -79,9 +75,11 @@ type DescribeLocalGatewaysOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeLocalGatewaysMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeLocalGatewaysMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeLocalGateways{}, middleware.After)
 	if err != nil {
 		return err
@@ -190,12 +188,13 @@ func NewDescribeLocalGatewaysPaginator(client DescribeLocalGatewaysAPIClient, pa
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeLocalGatewaysPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeLocalGateways page.
@@ -222,7 +221,10 @@ func (p *DescribeLocalGatewaysPaginator) NextPage(ctx context.Context, optFns ..
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 
