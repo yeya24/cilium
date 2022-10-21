@@ -11,8 +11,11 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Stops an Amazon EBS-backed instance. You can use the Stop action to hibernate an
-// instance if the instance is enabled for hibernation
+// Stops an Amazon EBS-backed instance. For more information, see Stop and start
+// your instance
+// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html) in the
+// Amazon EC2 User Guide. You can use the Stop action to hibernate an instance if
+// the instance is enabled for hibernation
 // (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Hibernate.html#enabling-hibernation)
 // and it meets the hibernation prerequisites
 // (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Hibernate.html#hibernating-prerequisites).
@@ -21,11 +24,7 @@ import (
 // Amazon EC2 User Guide. We don't charge usage for a stopped instance, or data
 // transfer fees; however, your root partition Amazon EBS volume remains and
 // continues to persist your data, and you are charged for Amazon EBS volume usage.
-// Every time you start your Windows instance, Amazon EC2 charges you for a full
-// instance hour. If you stop and restart your Windows instance, a new instance
-// hour begins and Amazon EC2 charges you for another full instance hour even if
-// you are still within the same 60-minute period when it was stopped. Every time
-// you start your Linux instance, Amazon EC2 charges a one-minute minimum for
+// Every time you start your instance, Amazon EC2 charges a one-minute minimum for
 // instance usage, and thereafter charges per second for instance usage. You can't
 // stop or hibernate instance store-backed instances. You can't use the Stop action
 // to hibernate Spot Instances, but you can specify that Amazon EC2 should
@@ -48,7 +47,7 @@ import (
 // in the Amazon EC2 User Guide. When you stop an instance, we attempt to shut it
 // down forcibly after a short while. If your instance appears stuck in the
 // stopping state after a period of time, there may be an issue with the underlying
-// host computer. For more information, see Troubleshooting stopping your instance
+// host computer. For more information, see Troubleshoot stopping your instance
 // (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/TroubleshootingInstancesStopping.html)
 // in the Amazon EC2 User Guide.
 func (c *Client) StopInstances(ctx context.Context, params *StopInstancesInput, optFns ...func(*Options)) (*StopInstancesOutput, error) {
@@ -56,7 +55,7 @@ func (c *Client) StopInstances(ctx context.Context, params *StopInstancesInput, 
 		params = &StopInstancesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "StopInstances", params, optFns, addOperationStopInstancesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "StopInstances", params, optFns, c.addOperationStopInstancesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -91,6 +90,8 @@ type StopInstancesInput struct {
 	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Hibernate.html) in the
 	// Amazon EC2 User Guide. Default: false
 	Hibernate *bool
+
+	noSmithyDocumentSerde
 }
 
 type StopInstancesOutput struct {
@@ -100,9 +101,11 @@ type StopInstancesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationStopInstancesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationStopInstancesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpStopInstances{}, middleware.After)
 	if err != nil {
 		return err

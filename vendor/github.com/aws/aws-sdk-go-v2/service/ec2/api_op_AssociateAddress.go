@@ -34,13 +34,17 @@ import (
 // once, Amazon EC2 doesn't return an error, and you may be charged for each time
 // the Elastic IP address is remapped to the same instance. For more information,
 // see the Elastic IP Addresses section of Amazon EC2 Pricing
-// (http://aws.amazon.com/ec2/pricing/).
+// (http://aws.amazon.com/ec2/pricing/). We are retiring EC2-Classic. We recommend
+// that you migrate from EC2-Classic to a VPC. For more information, see Migrate
+// from EC2-Classic to a VPC
+// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/vpc-migrate.html) in the
+// Amazon Elastic Compute Cloud User Guide.
 func (c *Client) AssociateAddress(ctx context.Context, params *AssociateAddressInput, optFns ...func(*Options)) (*AssociateAddressOutput, error) {
 	if params == nil {
 		params = &AssociateAddressInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "AssociateAddress", params, optFns, addOperationAssociateAddressMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "AssociateAddress", params, optFns, c.addOperationAssociateAddressMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -88,6 +92,8 @@ type AssociateAddressInput struct {
 	// [EC2-Classic] The Elastic IP address to associate with the instance. This is
 	// required for EC2-Classic.
 	PublicIp *string
+
+	noSmithyDocumentSerde
 }
 
 type AssociateAddressOutput struct {
@@ -98,9 +104,11 @@ type AssociateAddressOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationAssociateAddressMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationAssociateAddressMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpAssociateAddress{}, middleware.After)
 	if err != nil {
 		return err
