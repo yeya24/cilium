@@ -19,7 +19,7 @@ func (c *Client) SearchTransitGatewayMulticastGroups(ctx context.Context, params
 		params = &SearchTransitGatewayMulticastGroupsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "SearchTransitGatewayMulticastGroups", params, optFns, addOperationSearchTransitGatewayMulticastGroupsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "SearchTransitGatewayMulticastGroups", params, optFns, c.addOperationSearchTransitGatewayMulticastGroupsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -60,14 +60,10 @@ type SearchTransitGatewayMulticastGroupsInput struct {
 	// * source-type - The source type. Valid
 	// values are igmp | static.
 	//
-	// * state - The state of the subnet association. Valid
-	// values are associated | associated | disassociated | disassociating.
+	// * subnet-id - The ID of the subnet.
 	//
 	// *
-	// subnet-id - The ID of the subnet.
-	//
-	// * transit-gateway-attachment-id - The id of
-	// the transit gateway attachment.
+	// transit-gateway-attachment-id - The id of the transit gateway attachment.
 	Filters []types.Filter
 
 	// The maximum number of results to return with a single call. To retrieve the
@@ -79,6 +75,8 @@ type SearchTransitGatewayMulticastGroupsInput struct {
 
 	// The ID of the transit gateway multicast domain.
 	TransitGatewayMulticastDomainId *string
+
+	noSmithyDocumentSerde
 }
 
 type SearchTransitGatewayMulticastGroupsOutput struct {
@@ -92,9 +90,11 @@ type SearchTransitGatewayMulticastGroupsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationSearchTransitGatewayMulticastGroupsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationSearchTransitGatewayMulticastGroupsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpSearchTransitGatewayMulticastGroups{}, middleware.After)
 	if err != nil {
 		return err
@@ -205,12 +205,13 @@ func NewSearchTransitGatewayMulticastGroupsPaginator(client SearchTransitGateway
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *SearchTransitGatewayMulticastGroupsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next SearchTransitGatewayMulticastGroups page.
@@ -237,7 +238,10 @@ func (p *SearchTransitGatewayMulticastGroupsPaginator) NextPage(ctx context.Cont
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

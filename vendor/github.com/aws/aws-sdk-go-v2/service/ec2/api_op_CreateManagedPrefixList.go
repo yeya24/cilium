@@ -14,14 +14,12 @@ import (
 
 // Creates a managed prefix list. You can specify one or more entries for the
 // prefix list. Each entry consists of a CIDR block and an optional description.
-// You must specify the maximum number of entries for the prefix list. The maximum
-// number of entries cannot be changed later.
 func (c *Client) CreateManagedPrefixList(ctx context.Context, params *CreateManagedPrefixListInput, optFns ...func(*Options)) (*CreateManagedPrefixListOutput, error) {
 	if params == nil {
 		params = &CreateManagedPrefixListInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateManagedPrefixList", params, optFns, addOperationCreateManagedPrefixListMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateManagedPrefixList", params, optFns, c.addOperationCreateManagedPrefixListMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -66,6 +64,8 @@ type CreateManagedPrefixListInput struct {
 
 	// The tags to apply to the prefix list during creation.
 	TagSpecifications []types.TagSpecification
+
+	noSmithyDocumentSerde
 }
 
 type CreateManagedPrefixListOutput struct {
@@ -75,9 +75,11 @@ type CreateManagedPrefixListOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateManagedPrefixListMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateManagedPrefixListMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateManagedPrefixList{}, middleware.After)
 	if err != nil {
 		return err
