@@ -13,27 +13,16 @@ import (
 
 // Creates a VPC endpoint for a specified service. An endpoint enables you to
 // create a private connection between your VPC and the service. The service may be
-// provided by AWS, an AWS Marketplace Partner, or another AWS account. For more
-// information, see VPC Endpoints
-// (https://docs.aws.amazon.com/vpc/latest/userguide/vpc-endpoints.html) in the
-// Amazon Virtual Private Cloud User Guide. A gateway endpoint serves as a target
-// for a route in your route table for traffic destined for the AWS service. You
-// can specify an endpoint policy to attach to the endpoint, which will control
-// access to the service from your VPC. You can also specify the VPC route tables
-// that use the endpoint. An interface endpoint is a network interface in your
-// subnet that serves as an endpoint for communicating with the specified service.
-// You can specify the subnets in which to create an endpoint, and the security
-// groups to associate with the endpoint network interface. A GatewayLoadBalancer
-// endpoint is a network interface in your subnet that serves an endpoint for
-// communicating with a Gateway Load Balancer that you've configured as a VPC
-// endpoint service. Use DescribeVpcEndpointServices to get a list of supported
-// services.
+// provided by Amazon Web Services, an Amazon Web Services Marketplace Partner, or
+// another Amazon Web Services account. For more information, see the Amazon Web
+// Services PrivateLink Guide
+// (https://docs.aws.amazon.com/vpc/latest/privatelink/).
 func (c *Client) CreateVpcEndpoint(ctx context.Context, params *CreateVpcEndpointInput, optFns ...func(*Options)) (*CreateVpcEndpointOutput, error) {
 	if params == nil {
 		params = &CreateVpcEndpointInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateVpcEndpoint", params, optFns, addOperationCreateVpcEndpointMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateVpcEndpoint", params, optFns, c.addOperationCreateVpcEndpointMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -58,15 +47,21 @@ type CreateVpcEndpointInput struct {
 	VpcId *string
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency of
-	// the request. For more information, see How to Ensure Idempotency
+	// the request. For more information, see How to ensure idempotency
 	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	ClientToken *string
+
+	// The DNS options for the endpoint.
+	DnsOptions *types.DnsOptionsSpecification
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
 	// UnauthorizedOperation.
 	DryRun *bool
+
+	// The IP address type for the endpoint.
+	IpAddressType types.IpAddressType
 
 	// (Interface and gateway endpoints) A policy to attach to the endpoint that
 	// controls access to the service. The policy must be in valid JSON format. If this
@@ -103,6 +98,8 @@ type CreateVpcEndpointInput struct {
 
 	// The type of endpoint. Default: Gateway
 	VpcEndpointType types.VpcEndpointType
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of CreateVpcEndpoint.
@@ -117,9 +114,11 @@ type CreateVpcEndpointOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateVpcEndpointMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateVpcEndpointMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateVpcEndpoint{}, middleware.After)
 	if err != nil {
 		return err

@@ -18,7 +18,7 @@ func (c *Client) DisableTransitGatewayRouteTablePropagation(ctx context.Context,
 		params = &DisableTransitGatewayRouteTablePropagationInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DisableTransitGatewayRouteTablePropagation", params, optFns, addOperationDisableTransitGatewayRouteTablePropagationMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DisableTransitGatewayRouteTablePropagation", params, optFns, c.addOperationDisableTransitGatewayRouteTablePropagationMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -30,11 +30,6 @@ func (c *Client) DisableTransitGatewayRouteTablePropagation(ctx context.Context,
 
 type DisableTransitGatewayRouteTablePropagationInput struct {
 
-	// The ID of the attachment.
-	//
-	// This member is required.
-	TransitGatewayAttachmentId *string
-
 	// The ID of the propagation route table.
 	//
 	// This member is required.
@@ -45,6 +40,14 @@ type DisableTransitGatewayRouteTablePropagationInput struct {
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
 	// UnauthorizedOperation.
 	DryRun *bool
+
+	// The ID of the attachment.
+	TransitGatewayAttachmentId *string
+
+	// The ID of the route table announcement.
+	TransitGatewayRouteTableAnnouncementId *string
+
+	noSmithyDocumentSerde
 }
 
 type DisableTransitGatewayRouteTablePropagationOutput struct {
@@ -54,9 +57,11 @@ type DisableTransitGatewayRouteTablePropagationOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDisableTransitGatewayRouteTablePropagationMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDisableTransitGatewayRouteTablePropagationMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDisableTransitGatewayRouteTablePropagation{}, middleware.After)
 	if err != nil {
 		return err
