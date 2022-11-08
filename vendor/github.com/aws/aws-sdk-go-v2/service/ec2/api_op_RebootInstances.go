@@ -15,7 +15,7 @@ import (
 // if the instances are valid and belong to you. Requests to reboot terminated
 // instances are ignored. If an instance does not cleanly shut down within a few
 // minutes, Amazon EC2 performs a hard reboot. For more information about
-// troubleshooting, see Getting console output and rebooting instances
+// troubleshooting, see Troubleshoot an unreachable instance
 // (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-console.html) in
 // the Amazon EC2 User Guide.
 func (c *Client) RebootInstances(ctx context.Context, params *RebootInstancesInput, optFns ...func(*Options)) (*RebootInstancesOutput, error) {
@@ -23,7 +23,7 @@ func (c *Client) RebootInstances(ctx context.Context, params *RebootInstancesInp
 		params = &RebootInstancesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "RebootInstances", params, optFns, addOperationRebootInstancesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "RebootInstances", params, optFns, c.addOperationRebootInstancesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -45,14 +45,18 @@ type RebootInstancesInput struct {
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
 	// UnauthorizedOperation.
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type RebootInstancesOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationRebootInstancesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationRebootInstancesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpRebootInstances{}, middleware.After)
 	if err != nil {
 		return err
