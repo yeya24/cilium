@@ -19,7 +19,7 @@ func (c *Client) ModifyLaunchTemplate(ctx context.Context, params *ModifyLaunchT
 		params = &ModifyLaunchTemplateInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ModifyLaunchTemplate", params, optFns, addOperationModifyLaunchTemplateMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ModifyLaunchTemplate", params, optFns, c.addOperationModifyLaunchTemplateMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (c *Client) ModifyLaunchTemplate(ctx context.Context, params *ModifyLaunchT
 type ModifyLaunchTemplateInput struct {
 
 	// Unique, case-sensitive identifier you provide to ensure the idempotency of the
-	// request. For more information, see Ensuring Idempotency
+	// request. For more information, see Ensuring idempotency
 	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	// Constraint: Maximum 128 ASCII characters.
 	ClientToken *string
@@ -46,13 +46,15 @@ type ModifyLaunchTemplateInput struct {
 	// UnauthorizedOperation.
 	DryRun *bool
 
-	// The ID of the launch template. You must specify either the launch template ID or
-	// launch template name in the request.
+	// The ID of the launch template. You must specify either the LaunchTemplateId or
+	// the LaunchTemplateName, but not both.
 	LaunchTemplateId *string
 
-	// The name of the launch template. You must specify either the launch template ID
-	// or launch template name in the request.
+	// The name of the launch template. You must specify either the LaunchTemplateName
+	// or the LaunchTemplateId, but not both.
 	LaunchTemplateName *string
+
+	noSmithyDocumentSerde
 }
 
 type ModifyLaunchTemplateOutput struct {
@@ -62,9 +64,11 @@ type ModifyLaunchTemplateOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationModifyLaunchTemplateMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationModifyLaunchTemplateMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpModifyLaunchTemplate{}, middleware.After)
 	if err != nil {
 		return err
