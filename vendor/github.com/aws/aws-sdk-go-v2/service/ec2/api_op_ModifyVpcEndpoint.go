@@ -6,21 +6,21 @@ import (
 	"context"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
 	"github.com/aws/aws-sdk-go-v2/aws/signer/v4"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
 // Modifies attributes of a specified VPC endpoint. The attributes that you can
 // modify depend on the type of VPC endpoint (interface, gateway, or Gateway Load
-// Balancer). For more information, see VPC Endpoints
-// (https://docs.aws.amazon.com/vpc/latest/userguide/vpc-endpoints.html) in the
-// Amazon Virtual Private Cloud User Guide.
+// Balancer). For more information, see the Amazon Web Services PrivateLink Guide
+// (https://docs.aws.amazon.com/vpc/latest/privatelink/).
 func (c *Client) ModifyVpcEndpoint(ctx context.Context, params *ModifyVpcEndpointInput, optFns ...func(*Options)) (*ModifyVpcEndpointOutput, error) {
 	if params == nil {
 		params = &ModifyVpcEndpointInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ModifyVpcEndpoint", params, optFns, addOperationModifyVpcEndpointMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ModifyVpcEndpoint", params, optFns, c.addOperationModifyVpcEndpointMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -50,11 +50,17 @@ type ModifyVpcEndpointInput struct {
 	// only one subnet.
 	AddSubnetIds []string
 
+	// The DNS options for the endpoint.
+	DnsOptions *types.DnsOptionsSpecification
+
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
 	// UnauthorizedOperation.
 	DryRun *bool
+
+	// The IP address type for the endpoint.
+	IpAddressType types.IpAddressType
 
 	// (Interface and gateway endpoints) A policy to attach to the endpoint that
 	// controls access to the service. The policy must be in valid JSON format.
@@ -78,6 +84,8 @@ type ModifyVpcEndpointInput struct {
 	// (Gateway endpoint) Specify true to reset the policy document to the default
 	// policy. The default policy allows full access to the service.
 	ResetPolicy *bool
+
+	noSmithyDocumentSerde
 }
 
 type ModifyVpcEndpointOutput struct {
@@ -87,9 +95,11 @@ type ModifyVpcEndpointOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationModifyVpcEndpointMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationModifyVpcEndpointMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpModifyVpcEndpoint{}, middleware.After)
 	if err != nil {
 		return err
