@@ -25,7 +25,7 @@ func (c *Client) DescribeSpotPriceHistory(ctx context.Context, params *DescribeS
 		params = &DescribeSpotPriceHistoryInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeSpotPriceHistory", params, optFns, addOperationDescribeSpotPriceHistoryMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeSpotPriceHistory", params, optFns, c.addOperationDescribeSpotPriceHistoryMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -90,6 +90,8 @@ type DescribeSpotPriceHistoryInput struct {
 	// The date and time, up to the past 90 days, from which to start retrieving the
 	// price history data, in UTC format (for example, YYYY-MM-DDTHH:MM:SSZ).
 	StartTime *time.Time
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of DescribeSpotPriceHistory.
@@ -104,9 +106,11 @@ type DescribeSpotPriceHistoryOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeSpotPriceHistoryMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeSpotPriceHistoryMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeSpotPriceHistory{}, middleware.After)
 	if err != nil {
 		return err
@@ -217,12 +221,13 @@ func NewDescribeSpotPriceHistoryPaginator(client DescribeSpotPriceHistoryAPIClie
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeSpotPriceHistoryPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeSpotPriceHistory page.
@@ -249,7 +254,10 @@ func (p *DescribeSpotPriceHistoryPaginator) NextPage(ctx context.Context, optFns
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

@@ -24,7 +24,7 @@ func (c *Client) DescribeReservedInstancesModifications(ctx context.Context, par
 		params = &DescribeReservedInstancesModificationsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeReservedInstancesModifications", params, optFns, addOperationDescribeReservedInstancesModificationsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeReservedInstancesModifications", params, optFns, c.addOperationDescribeReservedInstancesModificationsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -88,6 +88,8 @@ type DescribeReservedInstancesModificationsInput struct {
 
 	// IDs for the submitted modification request.
 	ReservedInstancesModificationIds []string
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of DescribeReservedInstancesModifications.
@@ -102,9 +104,11 @@ type DescribeReservedInstancesModificationsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeReservedInstancesModificationsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeReservedInstancesModificationsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeReservedInstancesModifications{}, middleware.After)
 	if err != nil {
 		return err
@@ -208,12 +212,13 @@ func NewDescribeReservedInstancesModificationsPaginator(client DescribeReservedI
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeReservedInstancesModificationsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeReservedInstancesModifications page.
@@ -234,7 +239,10 @@ func (p *DescribeReservedInstancesModificationsPaginator) NextPage(ctx context.C
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 
