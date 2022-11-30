@@ -18,7 +18,7 @@ func (c *Client) DescribeTransitGatewayMulticastDomains(ctx context.Context, par
 		params = &DescribeTransitGatewayMulticastDomainsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeTransitGatewayMulticastDomains", params, optFns, addOperationDescribeTransitGatewayMulticastDomainsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeTransitGatewayMulticastDomains", params, optFns, c.addOperationDescribeTransitGatewayMulticastDomainsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -58,6 +58,8 @@ type DescribeTransitGatewayMulticastDomainsInput struct {
 
 	// The ID of the transit gateway multicast domain.
 	TransitGatewayMulticastDomainIds []string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeTransitGatewayMulticastDomainsOutput struct {
@@ -71,9 +73,11 @@ type DescribeTransitGatewayMulticastDomainsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeTransitGatewayMulticastDomainsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeTransitGatewayMulticastDomainsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeTransitGatewayMulticastDomains{}, middleware.After)
 	if err != nil {
 		return err
@@ -184,12 +188,13 @@ func NewDescribeTransitGatewayMulticastDomainsPaginator(client DescribeTransitGa
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeTransitGatewayMulticastDomainsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeTransitGatewayMulticastDomains page.
@@ -216,7 +221,10 @@ func (p *DescribeTransitGatewayMulticastDomainsPaginator) NextPage(ctx context.C
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

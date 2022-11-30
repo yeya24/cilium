@@ -14,13 +14,17 @@ import (
 // Restores an Elastic IP address that was previously moved to the EC2-VPC platform
 // back to the EC2-Classic platform. You cannot move an Elastic IP address that was
 // originally allocated for use in EC2-VPC. The Elastic IP address must not be
-// associated with an instance or network interface.
+// associated with an instance or network interface. We are retiring EC2-Classic.
+// We recommend that you migrate from EC2-Classic to a VPC. For more information,
+// see Migrate from EC2-Classic to a VPC
+// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/vpc-migrate.html) in the
+// Amazon Elastic Compute Cloud User Guide.
 func (c *Client) RestoreAddressToClassic(ctx context.Context, params *RestoreAddressToClassicInput, optFns ...func(*Options)) (*RestoreAddressToClassicOutput, error) {
 	if params == nil {
 		params = &RestoreAddressToClassicInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "RestoreAddressToClassic", params, optFns, addOperationRestoreAddressToClassicMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "RestoreAddressToClassic", params, optFns, c.addOperationRestoreAddressToClassicMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -42,6 +46,8 @@ type RestoreAddressToClassicInput struct {
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
 	// UnauthorizedOperation.
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type RestoreAddressToClassicOutput struct {
@@ -54,9 +60,11 @@ type RestoreAddressToClassicOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationRestoreAddressToClassicMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationRestoreAddressToClassicMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpRestoreAddressToClassic{}, middleware.After)
 	if err != nil {
 		return err
