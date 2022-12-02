@@ -19,7 +19,7 @@ func (c *Client) DescribeInstanceTypes(ctx context.Context, params *DescribeInst
 		params = &DescribeInstanceTypesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeInstanceTypes", params, optFns, addOperationDescribeInstanceTypesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeInstanceTypes", params, optFns, c.addOperationDescribeInstanceTypesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -109,8 +109,12 @@ type DescribeInstanceTypesInput struct {
 	// for the local instance storage disks (hdd | ssd).
 	//
 	// *
+	// instance-storage-info.encryption-support - Indicates whether data is encrypted
+	// at rest (required | supported | unsupported).
+	//
+	// *
 	// instance-storage-info.nvme-support - Indicates whether non-volatile memory
-	// express (NVMe) is supported for instance store (required | supported) |
+	// express (NVMe) is supported for instance store (required | supported |
 	// unsupported).
 	//
 	// * instance-storage-info.total-size-in-gb - The total amount of
@@ -137,18 +141,26 @@ type DescribeInstanceTypesInput struct {
 	// (ENA) is supported or required (required | supported | unsupported).
 	//
 	// *
-	// network-info.ipv4-addresses-per-interface - The maximum number of private IPv4
-	// addresses per network interface.
+	// network-info.encryption-in-transit-supported - Indicates whether the instance
+	// type automatically encrypts in-transit traffic between instances (true |
+	// false).
 	//
-	// * network-info.ipv6-addresses-per-interface -
-	// The maximum number of private IPv6 addresses per network interface.
+	// * network-info.ipv4-addresses-per-interface - The maximum number of
+	// private IPv4 addresses per network interface.
 	//
 	// *
-	// network-info.ipv6-supported - Indicates whether the instance type supports IPv6
-	// (true | false).
+	// network-info.ipv6-addresses-per-interface - The maximum number of private IPv6
+	// addresses per network interface.
 	//
-	// * network-info.maximum-network-interfaces - The maximum number
-	// of network interfaces per instance.
+	// * network-info.ipv6-supported - Indicates
+	// whether the instance type supports IPv6 (true | false).
+	//
+	// *
+	// network-info.maximum-network-cards - The maximum number of network cards per
+	// instance.
+	//
+	// * network-info.maximum-network-interfaces - The maximum number of
+	// network interfaces per instance.
 	//
 	// * network-info.network-performance - The
 	// network performance (for example, "25 Gigabit").
@@ -201,6 +213,8 @@ type DescribeInstanceTypesInput struct {
 
 	// The token to retrieve the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeInstanceTypesOutput struct {
@@ -216,9 +230,11 @@ type DescribeInstanceTypesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeInstanceTypesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeInstanceTypesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeInstanceTypes{}, middleware.After)
 	if err != nil {
 		return err
@@ -328,12 +344,13 @@ func NewDescribeInstanceTypesPaginator(client DescribeInstanceTypesAPIClient, pa
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeInstanceTypesPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeInstanceTypes page.
@@ -360,7 +377,10 @@ func (p *DescribeInstanceTypesPaginator) NextPage(ctx context.Context, optFns ..
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 
