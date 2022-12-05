@@ -18,7 +18,7 @@ func (c *Client) DescribeImportSnapshotTasks(ctx context.Context, params *Descri
 		params = &DescribeImportSnapshotTasksInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeImportSnapshotTasks", params, optFns, addOperationDescribeImportSnapshotTasksMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeImportSnapshotTasks", params, optFns, c.addOperationDescribeImportSnapshotTasksMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -48,6 +48,8 @@ type DescribeImportSnapshotTasksInput struct {
 
 	// A token that indicates the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeImportSnapshotTasksOutput struct {
@@ -62,9 +64,11 @@ type DescribeImportSnapshotTasksOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeImportSnapshotTasksMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeImportSnapshotTasksMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeImportSnapshotTasks{}, middleware.After)
 	if err != nil {
 		return err
@@ -175,12 +179,13 @@ func NewDescribeImportSnapshotTasksPaginator(client DescribeImportSnapshotTasksA
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeImportSnapshotTasksPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeImportSnapshotTasks page.
@@ -207,7 +212,10 @@ func (p *DescribeImportSnapshotTasksPaginator) NextPage(ctx context.Context, opt
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 
