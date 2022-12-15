@@ -39,7 +39,7 @@ func (c *Client) ModifyFleet(ctx context.Context, params *ModifyFleetInput, optF
 		params = &ModifyFleetInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ModifyFleet", params, optFns, addOperationModifyFleetMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ModifyFleet", params, optFns, c.addOperationModifyFleetMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -56,6 +56,9 @@ type ModifyFleetInput struct {
 	// This member is required.
 	FleetId *string
 
+	// Reserved.
+	Context *string
+
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
@@ -71,18 +74,23 @@ type ModifyFleetInput struct {
 
 	// The size of the EC2 Fleet.
 	TargetCapacitySpecification *types.TargetCapacitySpecificationRequest
+
+	noSmithyDocumentSerde
 }
 
 type ModifyFleetOutput struct {
 
-	// Is true if the request succeeds, and an error otherwise.
+	// If the request succeeds, the response returns true. If the request fails, no
+	// response is returned, and instead an error message is returned.
 	Return *bool
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationModifyFleetMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationModifyFleetMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpModifyFleet{}, middleware.After)
 	if err != nil {
 		return err

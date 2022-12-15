@@ -24,7 +24,7 @@ func (c *Client) DescribeScheduledInstanceAvailability(ctx context.Context, para
 		params = &DescribeScheduledInstanceAvailabilityInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeScheduledInstanceAvailability", params, optFns, addOperationDescribeScheduledInstanceAvailabilityMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeScheduledInstanceAvailability", params, optFns, c.addOperationDescribeScheduledInstanceAvailabilityMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -83,6 +83,8 @@ type DescribeScheduledInstanceAvailabilityInput struct {
 
 	// The token for the next set of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of DescribeScheduledInstanceAvailability.
@@ -97,9 +99,11 @@ type DescribeScheduledInstanceAvailabilityOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeScheduledInstanceAvailabilityMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeScheduledInstanceAvailabilityMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeScheduledInstanceAvailability{}, middleware.After)
 	if err != nil {
 		return err
@@ -214,12 +218,13 @@ func NewDescribeScheduledInstanceAvailabilityPaginator(client DescribeScheduledI
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeScheduledInstanceAvailabilityPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeScheduledInstanceAvailability page.
@@ -246,7 +251,10 @@ func (p *DescribeScheduledInstanceAvailabilityPaginator) NextPage(ctx context.Co
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 
