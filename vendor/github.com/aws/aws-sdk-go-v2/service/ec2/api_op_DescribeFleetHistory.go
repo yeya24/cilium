@@ -16,15 +16,15 @@ import (
 // Fleet events are delayed by up to 30 seconds before they can be described. This
 // ensures that you can query by the last evaluated time and not miss a recorded
 // event. EC2 Fleet events are available for 48 hours. For more information, see
-// Monitoring your EC2 Fleet
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-fleet.html#monitor-ec2-fleet)
-// in the Amazon EC2 User Guide.
+// Monitor fleet events using Amazon EventBridge
+// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/fleet-monitor.html) in the
+// Amazon EC2 User Guide.
 func (c *Client) DescribeFleetHistory(ctx context.Context, params *DescribeFleetHistoryInput, optFns ...func(*Options)) (*DescribeFleetHistoryOutput, error) {
 	if params == nil {
 		params = &DescribeFleetHistoryInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeFleetHistory", params, optFns, addOperationDescribeFleetHistoryMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeFleetHistory", params, optFns, c.addOperationDescribeFleetHistoryMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -63,6 +63,8 @@ type DescribeFleetHistoryInput struct {
 
 	// The token for the next set of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeFleetHistoryOutput struct {
@@ -87,9 +89,11 @@ type DescribeFleetHistoryOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeFleetHistoryMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeFleetHistoryMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeFleetHistory{}, middleware.After)
 	if err != nil {
 		return err

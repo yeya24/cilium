@@ -21,7 +21,7 @@ func (c *Client) CreateClientVpnRoute(ctx context.Context, params *CreateClientV
 		params = &CreateClientVpnRouteInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateClientVpnRoute", params, optFns, addOperationCreateClientVpnRouteMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateClientVpnRoute", params, optFns, c.addOperationCreateClientVpnRouteMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -47,10 +47,11 @@ type CreateClientVpnRouteInput struct {
 	// route for a peered VPC, enter the peered VPC's IPv4 CIDR range
 	//
 	// * To add a route
-	// for an on-premises network, enter the AWS Site-to-Site VPN connection's IPv4
-	// CIDR range
+	// for an on-premises network, enter the Amazon Web Services Site-to-Site VPN
+	// connection's IPv4 CIDR range
 	//
-	// * To add a route for the local network, enter the client CIDR range
+	// * To add a route for the local network, enter the
+	// client CIDR range
 	//
 	// This member is required.
 	DestinationCidrBlock *string
@@ -63,7 +64,7 @@ type CreateClientVpnRouteInput struct {
 	TargetVpcSubnetId *string
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency of
-	// the request. For more information, see How to Ensure Idempotency
+	// the request. For more information, see How to ensure idempotency
 	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	ClientToken *string
 
@@ -75,6 +76,8 @@ type CreateClientVpnRouteInput struct {
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
 	// UnauthorizedOperation.
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type CreateClientVpnRouteOutput struct {
@@ -84,9 +87,11 @@ type CreateClientVpnRouteOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateClientVpnRouteMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateClientVpnRouteMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateClientVpnRoute{}, middleware.After)
 	if err != nil {
 		return err
