@@ -21,7 +21,7 @@ func (c *Client) ExportImage(ctx context.Context, params *ExportImageInput, optF
 		params = &ExportImageInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ExportImage", params, optFns, addOperationExportImageMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ExportImage", params, optFns, c.addOperationExportImageMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -43,9 +43,8 @@ type ExportImageInput struct {
 	// This member is required.
 	ImageId *string
 
-	// Information about the destination Amazon S3 bucket. The bucket must exist and
-	// grant WRITE and READ_ACP permissions to the AWS account
-	// vm-import-export@amazon.com.
+	// The Amazon S3 bucket for the destination image. The destination bucket must
+	// exist.
 	//
 	// This member is required.
 	S3ExportLocation *types.ExportTaskS3LocationRequest
@@ -69,6 +68,8 @@ type ExportImageInput struct {
 
 	// The tags to apply to the export image task during creation.
 	TagSpecifications []types.TagSpecification
+
+	noSmithyDocumentSerde
 }
 
 type ExportImageOutput struct {
@@ -107,9 +108,11 @@ type ExportImageOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationExportImageMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationExportImageMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpExportImage{}, middleware.After)
 	if err != nil {
 		return err

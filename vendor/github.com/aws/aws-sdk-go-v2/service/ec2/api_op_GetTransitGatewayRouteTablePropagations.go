@@ -19,7 +19,7 @@ func (c *Client) GetTransitGatewayRouteTablePropagations(ctx context.Context, pa
 		params = &GetTransitGatewayRouteTablePropagationsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "GetTransitGatewayRouteTablePropagations", params, optFns, addOperationGetTransitGatewayRouteTablePropagationsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "GetTransitGatewayRouteTablePropagations", params, optFns, c.addOperationGetTransitGatewayRouteTablePropagationsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -60,6 +60,8 @@ type GetTransitGatewayRouteTablePropagationsInput struct {
 
 	// The token for the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type GetTransitGatewayRouteTablePropagationsOutput struct {
@@ -73,9 +75,11 @@ type GetTransitGatewayRouteTablePropagationsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationGetTransitGatewayRouteTablePropagationsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationGetTransitGatewayRouteTablePropagationsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpGetTransitGatewayRouteTablePropagations{}, middleware.After)
 	if err != nil {
 		return err
@@ -189,12 +193,13 @@ func NewGetTransitGatewayRouteTablePropagationsPaginator(client GetTransitGatewa
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *GetTransitGatewayRouteTablePropagationsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next GetTransitGatewayRouteTablePropagations page.
@@ -221,7 +226,10 @@ func (p *GetTransitGatewayRouteTablePropagationsPaginator) NextPage(ctx context.
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 
