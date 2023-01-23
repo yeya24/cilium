@@ -26,7 +26,7 @@ func (c *Client) CreatePlacementGroup(ctx context.Context, params *CreatePlaceme
 		params = &CreatePlacementGroupInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreatePlacementGroup", params, optFns, addOperationCreatePlacementGroupMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreatePlacementGroup", params, optFns, c.addOperationCreatePlacementGroupMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -51,23 +51,35 @@ type CreatePlacementGroupInput struct {
 	// The number of partitions. Valid only when Strategy is set to partition.
 	PartitionCount *int32
 
+	// Determines how placement groups spread instances.
+	//
+	// * Host – You can use host
+	// only with Outpost placement groups.
+	//
+	// * Rack – No usage restrictions.
+	SpreadLevel types.SpreadLevel
+
 	// The placement strategy.
 	Strategy types.PlacementStrategy
 
 	// The tags to apply to the new placement group.
 	TagSpecifications []types.TagSpecification
+
+	noSmithyDocumentSerde
 }
 
 type CreatePlacementGroupOutput struct {
 
-	// Describes a placement group.
+	// Information about the placement group.
 	PlacementGroup *types.PlacementGroup
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreatePlacementGroupMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreatePlacementGroupMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreatePlacementGroup{}, middleware.After)
 	if err != nil {
 		return err

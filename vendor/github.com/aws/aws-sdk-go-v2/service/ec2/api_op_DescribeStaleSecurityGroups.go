@@ -13,15 +13,15 @@ import (
 )
 
 // [VPC only] Describes the stale security group rules for security groups in a
-// specified VPC. Rules are stale when they reference a deleted security group in a
-// peer VPC, or a security group in a peer VPC for which the VPC peering connection
-// has been deleted.
+// specified VPC. Rules are stale when they reference a deleted security group in
+// the same VPC or in a peer VPC, or if they reference a security group in a peer
+// VPC for which the VPC peering connection has been deleted.
 func (c *Client) DescribeStaleSecurityGroups(ctx context.Context, params *DescribeStaleSecurityGroupsInput, optFns ...func(*Options)) (*DescribeStaleSecurityGroupsOutput, error) {
 	if params == nil {
 		params = &DescribeStaleSecurityGroupsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeStaleSecurityGroups", params, optFns, addOperationDescribeStaleSecurityGroupsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeStaleSecurityGroups", params, optFns, c.addOperationDescribeStaleSecurityGroupsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -51,6 +51,8 @@ type DescribeStaleSecurityGroupsInput struct {
 	// The token for the next set of items to return. (You received this token from a
 	// prior call.)
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeStaleSecurityGroupsOutput struct {
@@ -64,9 +66,11 @@ type DescribeStaleSecurityGroupsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeStaleSecurityGroupsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeStaleSecurityGroupsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeStaleSecurityGroups{}, middleware.After)
 	if err != nil {
 		return err
@@ -180,12 +184,13 @@ func NewDescribeStaleSecurityGroupsPaginator(client DescribeStaleSecurityGroupsA
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeStaleSecurityGroupsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeStaleSecurityGroups page.
@@ -212,7 +217,10 @@ func (p *DescribeStaleSecurityGroupsPaginator) NextPage(ctx context.Context, opt
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

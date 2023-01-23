@@ -13,9 +13,9 @@ import (
 
 // Creates a security group. A security group acts as a virtual firewall for your
 // instance to control inbound and outbound traffic. For more information, see
-// Amazon EC2 Security Groups
+// Amazon EC2 security groups
 // (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-network-security.html)
-// in the Amazon Elastic Compute Cloud User Guide and Security Groups for Your VPC
+// in the Amazon Elastic Compute Cloud User Guide and Security groups for your VPC
 // (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_SecurityGroups.html)
 // in the Amazon Virtual Private Cloud User Guide. When you create a security
 // group, you specify a friendly name of your choice. You can have a security group
@@ -31,13 +31,17 @@ import (
 // AuthorizeSecurityGroupEgress, RevokeSecurityGroupIngress, and
 // RevokeSecurityGroupEgress. For more information about VPC security group limits,
 // see Amazon VPC Limits
-// (https://docs.aws.amazon.com/vpc/latest/userguide/amazon-vpc-limits.html).
+// (https://docs.aws.amazon.com/vpc/latest/userguide/amazon-vpc-limits.html). We
+// are retiring EC2-Classic. We recommend that you migrate from EC2-Classic to a
+// VPC. For more information, see Migrate from EC2-Classic to a VPC
+// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/vpc-migrate.html) in the
+// Amazon Elastic Compute Cloud User Guide.
 func (c *Client) CreateSecurityGroup(ctx context.Context, params *CreateSecurityGroupInput, optFns ...func(*Options)) (*CreateSecurityGroupOutput, error) {
 	if params == nil {
 		params = &CreateSecurityGroupInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateSecurityGroup", params, optFns, addOperationCreateSecurityGroupMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateSecurityGroup", params, optFns, c.addOperationCreateSecurityGroupMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -74,6 +78,8 @@ type CreateSecurityGroupInput struct {
 
 	// [EC2-VPC] The ID of the VPC. Required for EC2-VPC.
 	VpcId *string
+
+	noSmithyDocumentSerde
 }
 
 type CreateSecurityGroupOutput struct {
@@ -86,9 +92,11 @@ type CreateSecurityGroupOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateSecurityGroupMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateSecurityGroupMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateSecurityGroup{}, middleware.After)
 	if err != nil {
 		return err
