@@ -15,13 +15,13 @@ import (
 // Adds an ingress authorization rule to a Client VPN endpoint. Ingress
 // authorization rules act as firewall rules that grant access to networks. You
 // must configure ingress authorization rules to enable clients to access resources
-// in AWS or on-premises networks.
+// in Amazon Web Services or on-premises networks.
 func (c *Client) AuthorizeClientVpnIngress(ctx context.Context, params *AuthorizeClientVpnIngressInput, optFns ...func(*Options)) (*AuthorizeClientVpnIngressOutput, error) {
 	if params == nil {
 		params = &AuthorizeClientVpnIngressInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "AuthorizeClientVpnIngress", params, optFns, addOperationAuthorizeClientVpnIngressMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "AuthorizeClientVpnIngress", params, optFns, c.addOperationAuthorizeClientVpnIngressMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ type AuthorizeClientVpnIngressInput struct {
 	AuthorizeAllGroups *bool
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency of
-	// the request. For more information, see How to Ensure Idempotency
+	// the request. For more information, see How to ensure idempotency
 	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	ClientToken *string
 
@@ -67,6 +67,8 @@ type AuthorizeClientVpnIngressInput struct {
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
 	// UnauthorizedOperation.
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type AuthorizeClientVpnIngressOutput struct {
@@ -76,9 +78,11 @@ type AuthorizeClientVpnIngressOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationAuthorizeClientVpnIngressMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationAuthorizeClientVpnIngressMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpAuthorizeClientVpnIngress{}, middleware.After)
 	if err != nil {
 		return err

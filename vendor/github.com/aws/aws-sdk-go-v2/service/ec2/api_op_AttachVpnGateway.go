@@ -12,15 +12,15 @@ import (
 )
 
 // Attaches a virtual private gateway to a VPC. You can attach one virtual private
-// gateway to one VPC at a time. For more information, see AWS Site-to-Site VPN
-// (https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html) in the AWS
-// Site-to-Site VPN User Guide.
+// gateway to one VPC at a time. For more information, see Amazon Web Services
+// Site-to-Site VPN (https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html) in
+// the Amazon Web Services Site-to-Site VPN User Guide.
 func (c *Client) AttachVpnGateway(ctx context.Context, params *AttachVpnGatewayInput, optFns ...func(*Options)) (*AttachVpnGatewayOutput, error) {
 	if params == nil {
 		params = &AttachVpnGatewayInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "AttachVpnGateway", params, optFns, addOperationAttachVpnGatewayMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "AttachVpnGateway", params, optFns, c.addOperationAttachVpnGatewayMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -48,6 +48,8 @@ type AttachVpnGatewayInput struct {
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
 	// UnauthorizedOperation.
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of AttachVpnGateway.
@@ -58,9 +60,11 @@ type AttachVpnGatewayOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationAttachVpnGatewayMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationAttachVpnGatewayMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpAttachVpnGateway{}, middleware.After)
 	if err != nil {
 		return err

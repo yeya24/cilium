@@ -11,14 +11,13 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Rejects one or more VPC endpoint connection requests to your VPC endpoint
-// service.
+// Rejects VPC endpoint connection requests to your VPC endpoint service.
 func (c *Client) RejectVpcEndpointConnections(ctx context.Context, params *RejectVpcEndpointConnectionsInput, optFns ...func(*Options)) (*RejectVpcEndpointConnectionsOutput, error) {
 	if params == nil {
 		params = &RejectVpcEndpointConnectionsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "RejectVpcEndpointConnections", params, optFns, addOperationRejectVpcEndpointConnectionsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "RejectVpcEndpointConnections", params, optFns, c.addOperationRejectVpcEndpointConnectionsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +34,7 @@ type RejectVpcEndpointConnectionsInput struct {
 	// This member is required.
 	ServiceId *string
 
-	// The IDs of one or more VPC endpoints.
+	// The IDs of the VPC endpoints.
 	//
 	// This member is required.
 	VpcEndpointIds []string
@@ -45,6 +44,8 @@ type RejectVpcEndpointConnectionsInput struct {
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
 	// UnauthorizedOperation.
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type RejectVpcEndpointConnectionsOutput struct {
@@ -54,9 +55,11 @@ type RejectVpcEndpointConnectionsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationRejectVpcEndpointConnectionsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationRejectVpcEndpointConnectionsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpRejectVpcEndpointConnections{}, middleware.After)
 	if err != nil {
 		return err
