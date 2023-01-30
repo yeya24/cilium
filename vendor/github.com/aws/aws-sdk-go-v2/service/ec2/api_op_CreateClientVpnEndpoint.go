@@ -20,7 +20,7 @@ func (c *Client) CreateClientVpnEndpoint(ctx context.Context, params *CreateClie
 		params = &CreateClientVpnEndpointInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateClientVpnEndpoint", params, optFns, addOperationCreateClientVpnEndpointMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateClientVpnEndpoint", params, optFns, c.addOperationCreateClientVpnEndpointMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,8 @@ type CreateClientVpnEndpointInput struct {
 	// addresses. The address range cannot overlap with the local CIDR of the VPC in
 	// which the associated subnet is located, or the routes that you add manually. The
 	// address range cannot be changed after the Client VPN endpoint has been created.
-	// The CIDR block should be /22 or greater.
+	// Client CIDR range must have a size of at least /22 and must not be greater than
+	// /12.
 	//
 	// This member is required.
 	ClientCidrBlock *string
@@ -64,7 +65,7 @@ type CreateClientVpnEndpointInput struct {
 	// This member is required.
 	ConnectionLogOptions *types.ConnectionLogOptions
 
-	// The ARN of the server certificate. For more information, see the AWS Certificate
+	// The ARN of the server certificate. For more information, see the Certificate
 	// Manager User Guide (https://docs.aws.amazon.com/acm/latest/userguide/).
 	//
 	// This member is required.
@@ -73,8 +74,12 @@ type CreateClientVpnEndpointInput struct {
 	// The options for managing connection authorization for new client connections.
 	ClientConnectOptions *types.ClientConnectOptions
 
+	// Options for enabling a customizable text banner that will be displayed on Amazon
+	// Web Services provided clients when a VPN session is established.
+	ClientLoginBannerOptions *types.ClientLoginBannerOptions
+
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency of
-	// the request. For more information, see How to Ensure Idempotency
+	// the request. For more information, see How to ensure idempotency
 	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	ClientToken *string
 
@@ -100,11 +105,15 @@ type CreateClientVpnEndpointInput struct {
 	// Default Value: enabled
 	SelfServicePortal types.SelfServicePortal
 
-	// Indicates whether split-tunnel is enabled on the AWS Client VPN endpoint. By
+	// The maximum VPN session duration time in hours. Valid values: 8 | 10 | 12 | 24
+	// Default value: 24
+	SessionTimeoutHours *int32
+
+	// Indicates whether split-tunnel is enabled on the Client VPN endpoint. By
 	// default, split-tunnel on a VPN endpoint is disabled. For information about
-	// split-tunnel VPN endpoints, see Split-Tunnel AWS Client VPN Endpoint
+	// split-tunnel VPN endpoints, see Split-tunnel Client VPN endpoint
 	// (https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/split-tunnel-vpn.html)
-	// in the AWS Client VPN Administrator Guide.
+	// in the Client VPN Administrator Guide.
 	SplitTunnel *bool
 
 	// The tags to apply to the Client VPN endpoint during creation.
@@ -121,6 +130,8 @@ type CreateClientVpnEndpointInput struct {
 	// The port number to assign to the Client VPN endpoint for TCP and UDP traffic.
 	// Valid Values: 443 | 1194 Default Value: 443
 	VpnPort *int32
+
+	noSmithyDocumentSerde
 }
 
 type CreateClientVpnEndpointOutput struct {
@@ -136,9 +147,11 @@ type CreateClientVpnEndpointOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateClientVpnEndpointMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateClientVpnEndpointMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateClientVpnEndpoint{}, middleware.After)
 	if err != nil {
 		return err

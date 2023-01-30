@@ -12,15 +12,17 @@ import (
 )
 
 // Enables detailed monitoring for a running instance. Otherwise, basic monitoring
-// is enabled. For more information, see Monitoring your instances and volumes
+// is enabled. For more information, see Monitor your instances using CloudWatch
 // (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-cloudwatch.html) in
-// the Amazon EC2 User Guide. To disable detailed monitoring, see .
+// the Amazon EC2 User Guide. To disable detailed monitoring, see
+// UnmonitorInstances
+// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_UnmonitorInstances.html).
 func (c *Client) MonitorInstances(ctx context.Context, params *MonitorInstancesInput, optFns ...func(*Options)) (*MonitorInstancesOutput, error) {
 	if params == nil {
 		params = &MonitorInstancesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "MonitorInstances", params, optFns, addOperationMonitorInstancesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "MonitorInstances", params, optFns, c.addOperationMonitorInstancesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -42,6 +44,8 @@ type MonitorInstancesInput struct {
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
 	// UnauthorizedOperation.
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type MonitorInstancesOutput struct {
@@ -51,9 +55,11 @@ type MonitorInstancesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationMonitorInstancesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationMonitorInstancesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpMonitorInstances{}, middleware.After)
 	if err != nil {
 		return err

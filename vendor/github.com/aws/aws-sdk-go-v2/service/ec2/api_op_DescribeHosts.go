@@ -21,7 +21,7 @@ func (c *Client) DescribeHosts(ctx context.Context, params *DescribeHostsInput, 
 		params = &DescribeHostsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeHosts", params, optFns, addOperationDescribeHostsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeHosts", params, optFns, c.addOperationDescribeHostsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -71,6 +71,8 @@ type DescribeHostsInput struct {
 
 	// The token to use to retrieve the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeHostsOutput struct {
@@ -84,9 +86,11 @@ type DescribeHostsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeHostsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeHostsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeHosts{}, middleware.After)
 	if err != nil {
 		return err
@@ -196,12 +200,13 @@ func NewDescribeHostsPaginator(client DescribeHostsAPIClient, params *DescribeHo
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeHostsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeHosts page.
@@ -228,7 +233,10 @@ func (p *DescribeHostsPaginator) NextPage(ctx context.Context, optFns ...func(*O
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 
