@@ -24,11 +24,10 @@ import (
 // * Change the Dedicated Host with which an
 // instance is associated.
 //
-// * Change the instance tenancy of an instance from host
-// to dedicated, or from dedicated to host.
+// * Change the instance tenancy of an instance.
 //
-// * Move an instance to or from a
-// placement group
+// * Move
+// an instance to or from a placement group
 // (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html).
 //
 // At
@@ -41,7 +40,7 @@ func (c *Client) ModifyInstancePlacement(ctx context.Context, params *ModifyInst
 		params = &ModifyInstancePlacementInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ModifyInstancePlacement", params, optFns, addOperationModifyInstancePlacementMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ModifyInstancePlacement", params, optFns, c.addOperationModifyInstancePlacementMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -61,6 +60,10 @@ type ModifyInstancePlacementInput struct {
 	// The affinity setting for the instance.
 	Affinity types.Affinity
 
+	// The Group Id of a placement group. You must specify the Placement Group Group Id
+	// to launch an instance in a shared placement group.
+	GroupId *string
+
 	// The name of the placement group in which to place the instance. For spread
 	// placement groups, the instance must have a tenancy of default. For cluster and
 	// partition placement groups, the instance must have a tenancy of default or
@@ -74,11 +77,16 @@ type ModifyInstancePlacementInput struct {
 	// The ARN of the host resource group in which to place the instance.
 	HostResourceGroupArn *string
 
-	// Reserved for future use.
+	// The number of the partition in which to place the instance. Valid only if the
+	// placement group strategy is set to partition.
 	PartitionNumber *int32
 
-	// The tenancy for the instance.
+	// The tenancy for the instance. For T3 instances, you can't change the tenancy
+	// from dedicated to host, or from host to dedicated. Attempting to make one of
+	// these unsupported tenancy changes results in the InvalidTenancy error code.
 	Tenancy types.HostTenancy
+
+	noSmithyDocumentSerde
 }
 
 type ModifyInstancePlacementOutput struct {
@@ -88,9 +96,11 @@ type ModifyInstancePlacementOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationModifyInstancePlacementMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationModifyInstancePlacementMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpModifyInstancePlacement{}, middleware.After)
 	if err != nil {
 		return err

@@ -19,7 +19,7 @@ func (c *Client) DescribeTransitGateways(ctx context.Context, params *DescribeTr
 		params = &DescribeTransitGatewaysInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeTransitGateways", params, optFns, addOperationDescribeTransitGatewaysMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeTransitGateways", params, optFns, c.addOperationDescribeTransitGatewaysMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -68,14 +68,14 @@ type DescribeTransitGatewaysInput struct {
 	// options.vpn-ecmp-support - Indicates whether Equal Cost Multipath Protocol
 	// support is enabled (enable | disable).
 	//
-	// * owner-id - The ID of the AWS account
-	// that owns the transit gateway.
+	// * owner-id - The ID of the Amazon Web
+	// Services account that owns the transit gateway.
 	//
-	// * state - The state of the transit gateway
-	// (available | deleted | deleting | modifying | pending).
+	// * state - The state of the
+	// transit gateway (available | deleted | deleting | modifying | pending).
 	//
-	// * transit-gateway-id -
-	// The ID of the transit gateway.
+	// *
+	// transit-gateway-id - The ID of the transit gateway.
 	Filters []types.Filter
 
 	// The maximum number of results to return with a single call. To retrieve the
@@ -87,6 +87,8 @@ type DescribeTransitGatewaysInput struct {
 
 	// The IDs of the transit gateways.
 	TransitGatewayIds []string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeTransitGatewaysOutput struct {
@@ -100,9 +102,11 @@ type DescribeTransitGatewaysOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeTransitGatewaysMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeTransitGatewaysMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeTransitGateways{}, middleware.After)
 	if err != nil {
 		return err
@@ -212,12 +216,13 @@ func NewDescribeTransitGatewaysPaginator(client DescribeTransitGatewaysAPIClient
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeTransitGatewaysPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeTransitGateways page.
@@ -244,7 +249,10 @@ func (p *DescribeTransitGatewaysPaginator) NextPage(ctx context.Context, optFns 
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 
