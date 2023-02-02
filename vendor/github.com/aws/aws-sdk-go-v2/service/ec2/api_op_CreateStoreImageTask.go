@@ -11,20 +11,20 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Stores an AMI as a single object in an S3 bucket. To use this API, you must have
-// the required permissions. For more information, see Permissions for storing and
-// restoring AMIs using S3
+// Stores an AMI as a single object in an Amazon S3 bucket. To use this API, you
+// must have the required permissions. For more information, see Permissions for
+// storing and restoring AMIs using Amazon S3
 // (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-store-restore.html#ami-s3-permissions)
-// in the Amazon Elastic Compute Cloud User Guide. For more information, see Store
-// and restore an AMI using S3
+// in the Amazon EC2 User Guide. For more information, see Store and restore an AMI
+// using Amazon S3
 // (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-store-restore.html) in
-// the Amazon Elastic Compute Cloud User Guide.
+// the Amazon EC2 User Guide.
 func (c *Client) CreateStoreImageTask(ctx context.Context, params *CreateStoreImageTaskInput, optFns ...func(*Options)) (*CreateStoreImageTaskOutput, error) {
 	if params == nil {
 		params = &CreateStoreImageTaskInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateStoreImageTask", params, optFns, addOperationCreateStoreImageTaskMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateStoreImageTask", params, optFns, c.addOperationCreateStoreImageTaskMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -36,9 +36,9 @@ func (c *Client) CreateStoreImageTask(ctx context.Context, params *CreateStoreIm
 
 type CreateStoreImageTaskInput struct {
 
-	// The name of the S3 bucket in which the AMI object will be stored. The bucket
-	// must be in the Region in which the request is being made. The AMI object appears
-	// in the bucket only after the upload task has completed.
+	// The name of the Amazon S3 bucket in which the AMI object will be stored. The
+	// bucket must be in the Region in which the request is being made. The AMI object
+	// appears in the bucket only after the upload task has completed.
 	//
 	// This member is required.
 	Bucket *string
@@ -54,8 +54,10 @@ type CreateStoreImageTaskInput struct {
 	// UnauthorizedOperation.
 	DryRun *bool
 
-	// The tags to apply to the AMI object that will be stored in the S3 bucket.
+	// The tags to apply to the AMI object that will be stored in the Amazon S3 bucket.
 	S3ObjectTags []types.S3ObjectTag
+
+	noSmithyDocumentSerde
 }
 
 type CreateStoreImageTaskOutput struct {
@@ -65,9 +67,11 @@ type CreateStoreImageTaskOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateStoreImageTaskMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateStoreImageTaskMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateStoreImageTask{}, middleware.After)
 	if err != nil {
 		return err

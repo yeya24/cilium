@@ -23,7 +23,7 @@ func (c *Client) ModifyCapacityReservation(ctx context.Context, params *ModifyCa
 		params = &ModifyCapacityReservationInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ModifyCapacityReservation", params, optFns, addOperationModifyCapacityReservationMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ModifyCapacityReservation", params, optFns, c.addOperationModifyCapacityReservationMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -42,6 +42,9 @@ type ModifyCapacityReservationInput struct {
 
 	// Reserved. Capacity Reservations you have created are accepted by default.
 	Accept *bool
+
+	// Reserved for future use.
+	AdditionalInfo *string
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
@@ -71,8 +74,11 @@ type ModifyCapacityReservationInput struct {
 	// EndDateType is limited.
 	EndDateType types.EndDateType
 
-	// The number of instances for which to reserve capacity.
+	// The number of instances for which to reserve capacity. The number of instances
+	// can't be increased or decreased by more than 1000 in a single request.
 	InstanceCount *int32
+
+	noSmithyDocumentSerde
 }
 
 type ModifyCapacityReservationOutput struct {
@@ -82,9 +88,11 @@ type ModifyCapacityReservationOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationModifyCapacityReservationMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationModifyCapacityReservationMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpModifyCapacityReservation{}, middleware.After)
 	if err != nil {
 		return err

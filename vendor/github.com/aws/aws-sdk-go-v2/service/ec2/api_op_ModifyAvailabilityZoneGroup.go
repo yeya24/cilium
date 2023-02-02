@@ -20,7 +20,7 @@ func (c *Client) ModifyAvailabilityZoneGroup(ctx context.Context, params *Modify
 		params = &ModifyAvailabilityZoneGroupInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ModifyAvailabilityZoneGroup", params, optFns, addOperationModifyAvailabilityZoneGroupMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ModifyAvailabilityZoneGroup", params, optFns, c.addOperationModifyAvailabilityZoneGroupMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -39,9 +39,10 @@ type ModifyAvailabilityZoneGroupInput struct {
 	GroupName *string
 
 	// Indicates whether you are opted in to the Local Zone group or Wavelength Zone
-	// group. The only valid value is opted-in. You must contact AWS Support
+	// group. The only valid value is opted-in. You must contact Amazon Web Services
+	// Support
 	// (https://console.aws.amazon.com/support/home#/case/create%3FissueType=customer-service%26serviceCode=general-info%26getting-started%26categoryCode=using-aws%26services)
-	// to opt out of a Local Zone group, or Wavelength Zone group.
+	// to opt out of a Local Zone or Wavelength Zone group.
 	//
 	// This member is required.
 	OptInStatus types.ModifyAvailabilityZoneOptInStatus
@@ -51,6 +52,8 @@ type ModifyAvailabilityZoneGroupInput struct {
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
 	// UnauthorizedOperation.
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type ModifyAvailabilityZoneGroupOutput struct {
@@ -60,9 +63,11 @@ type ModifyAvailabilityZoneGroupOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationModifyAvailabilityZoneGroupMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationModifyAvailabilityZoneGroupMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpModifyAvailabilityZoneGroup{}, middleware.After)
 	if err != nil {
 		return err

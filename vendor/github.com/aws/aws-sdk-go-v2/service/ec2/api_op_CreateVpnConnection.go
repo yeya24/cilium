@@ -21,15 +21,15 @@ import (
 // VPN connection, you must reconfigure your customer gateway with the new
 // information returned from this call. This is an idempotent operation. If you
 // perform the operation more than once, Amazon EC2 doesn't return an error. For
-// more information, see AWS Site-to-Site VPN
-// (https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html) in the AWS
-// Site-to-Site VPN User Guide.
+// more information, see Amazon Web Services Site-to-Site VPN
+// (https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html) in the Amazon Web
+// Services Site-to-Site VPN User Guide.
 func (c *Client) CreateVpnConnection(ctx context.Context, params *CreateVpnConnectionInput, optFns ...func(*Options)) (*CreateVpnConnectionOutput, error) {
 	if params == nil {
 		params = &CreateVpnConnectionInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateVpnConnection", params, optFns, addOperationCreateVpnConnectionMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateVpnConnection", params, optFns, c.addOperationCreateVpnConnectionMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -71,6 +71,8 @@ type CreateVpnConnectionInput struct {
 	// The ID of the virtual private gateway. If you specify a virtual private gateway,
 	// you cannot specify a transit gateway.
 	VpnGatewayId *string
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of CreateVpnConnection.
@@ -81,9 +83,11 @@ type CreateVpnConnectionOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateVpnConnectionMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateVpnConnectionMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateVpnConnection{}, middleware.After)
 	if err != nil {
 		return err
