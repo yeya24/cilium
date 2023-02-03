@@ -15,11 +15,11 @@ import (
 // or resources. When you specify an existing tag key, the value is overwritten
 // with the new value. Each resource can have a maximum of 50 tags. Each tag
 // consists of a key and optional value. Tag keys must be unique per resource. For
-// more information about tags, see Tagging Your Resources
+// more information about tags, see Tag your Amazon EC2 resources
 // (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html) in the
 // Amazon Elastic Compute Cloud User Guide. For more information about creating IAM
 // policies that control users' access to resources based on tags, see Supported
-// Resource-Level Permissions for Amazon EC2 API Actions
+// resource-level permissions for Amazon EC2 API actions
 // (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-supported-iam-actions-resources.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 func (c *Client) CreateTags(ctx context.Context, params *CreateTagsInput, optFns ...func(*Options)) (*CreateTagsOutput, error) {
@@ -27,7 +27,7 @@ func (c *Client) CreateTags(ctx context.Context, params *CreateTagsInput, optFns
 		params = &CreateTagsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateTags", params, optFns, addOperationCreateTagsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateTags", params, optFns, c.addOperationCreateTagsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -57,14 +57,18 @@ type CreateTagsInput struct {
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
 	// UnauthorizedOperation.
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type CreateTagsOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateTagsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateTagsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateTags{}, middleware.After)
 	if err != nil {
 		return err
