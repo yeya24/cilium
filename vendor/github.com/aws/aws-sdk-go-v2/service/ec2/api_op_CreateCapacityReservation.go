@@ -38,7 +38,7 @@ func (c *Client) CreateCapacityReservation(ctx context.Context, params *CreateCa
 		params = &CreateCapacityReservationInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateCapacityReservation", params, optFns, addOperationCreateCapacityReservationMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateCapacityReservation", params, optFns, c.addOperationCreateCapacityReservationMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (c *Client) CreateCapacityReservation(ctx context.Context, params *CreateCa
 
 type CreateCapacityReservationInput struct {
 
-	// The number of instances for which to reserve capacity.
+	// The number of instances for which to reserve capacity. Valid range: 1 - 1000
 	//
 	// This member is required.
 	InstanceCount *int32
@@ -115,8 +115,7 @@ type CreateCapacityReservationInput struct {
 	// the EndDateType value is limited.
 	EndDateType types.EndDateType
 
-	// Indicates whether the Capacity Reservation supports instances with temporary,
-	// block-level storage.
+	// Deprecated.
 	EphemeralStorage *bool
 
 	// Indicates the type of instance launches that the Capacity Reservation accepts.
@@ -140,6 +139,13 @@ type CreateCapacityReservationInput struct {
 	// Reservation.
 	OutpostArn *string
 
+	// The Amazon Resource Name (ARN) of the cluster placement group in which to create
+	// the Capacity Reservation. For more information, see  Capacity Reservations for
+	// cluster placement groups
+	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/cr-cpg.html) in the Amazon
+	// EC2 User Guide.
+	PlacementGroupArn *string
+
 	// The tags to apply to the Capacity Reservation during launch.
 	TagSpecifications []types.TagSpecification
 
@@ -147,12 +153,14 @@ type CreateCapacityReservationInput struct {
 	// have one of the following tenancy settings:
 	//
 	// * default - The Capacity
-	// Reservation is created on hardware that is shared with other AWS accounts.
+	// Reservation is created on hardware that is shared with other Amazon Web Services
+	// accounts.
 	//
-	// *
-	// dedicated - The Capacity Reservation is created on single-tenant hardware that
-	// is dedicated to a single AWS account.
+	// * dedicated - The Capacity Reservation is created on single-tenant
+	// hardware that is dedicated to a single Amazon Web Services account.
 	Tenancy types.CapacityReservationTenancy
+
+	noSmithyDocumentSerde
 }
 
 type CreateCapacityReservationOutput struct {
@@ -162,9 +170,11 @@ type CreateCapacityReservationOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateCapacityReservationMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateCapacityReservationMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateCapacityReservation{}, middleware.After)
 	if err != nil {
 		return err

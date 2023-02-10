@@ -22,7 +22,7 @@ func (c *Client) AssociateTransitGatewayMulticastDomain(ctx context.Context, par
 		params = &AssociateTransitGatewayMulticastDomainInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "AssociateTransitGatewayMulticastDomain", params, optFns, addOperationAssociateTransitGatewayMulticastDomainMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "AssociateTransitGatewayMulticastDomain", params, optFns, c.addOperationAssociateTransitGatewayMulticastDomainMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -34,21 +34,29 @@ func (c *Client) AssociateTransitGatewayMulticastDomain(ctx context.Context, par
 
 type AssociateTransitGatewayMulticastDomainInput struct {
 
+	// The IDs of the subnets to associate with the transit gateway multicast domain.
+	//
+	// This member is required.
+	SubnetIds []string
+
+	// The ID of the transit gateway attachment to associate with the transit gateway
+	// multicast domain.
+	//
+	// This member is required.
+	TransitGatewayAttachmentId *string
+
+	// The ID of the transit gateway multicast domain.
+	//
+	// This member is required.
+	TransitGatewayMulticastDomainId *string
+
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
 	// UnauthorizedOperation.
 	DryRun *bool
 
-	// The IDs of the subnets to associate with the transit gateway multicast domain.
-	SubnetIds []string
-
-	// The ID of the transit gateway attachment to associate with the transit gateway
-	// multicast domain.
-	TransitGatewayAttachmentId *string
-
-	// The ID of the transit gateway multicast domain.
-	TransitGatewayMulticastDomainId *string
+	noSmithyDocumentSerde
 }
 
 type AssociateTransitGatewayMulticastDomainOutput struct {
@@ -58,9 +66,11 @@ type AssociateTransitGatewayMulticastDomainOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationAssociateTransitGatewayMulticastDomainMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationAssociateTransitGatewayMulticastDomainMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpAssociateTransitGatewayMulticastDomain{}, middleware.After)
 	if err != nil {
 		return err
@@ -103,6 +113,9 @@ func addOperationAssociateTransitGatewayMulticastDomainMiddlewares(stack *middle
 		return err
 	}
 	if err = smithyhttp.AddCloseResponseBodyMiddleware(stack); err != nil {
+		return err
+	}
+	if err = addOpAssociateTransitGatewayMulticastDomainValidationMiddleware(stack); err != nil {
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opAssociateTransitGatewayMulticastDomain(options.Region), middleware.Before); err != nil {

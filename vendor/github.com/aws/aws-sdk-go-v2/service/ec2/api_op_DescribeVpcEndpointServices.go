@@ -23,7 +23,7 @@ func (c *Client) DescribeVpcEndpointServices(ctx context.Context, params *Descri
 		params = &DescribeVpcEndpointServicesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeVpcEndpointServices", params, optFns, addOperationDescribeVpcEndpointServicesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeVpcEndpointServices", params, optFns, c.addOperationDescribeVpcEndpointServicesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,6 @@ func (c *Client) DescribeVpcEndpointServices(ctx context.Context, params *Descri
 	return out, nil
 }
 
-// Contains the parameters for DescribeVpcEndpointServices.
 type DescribeVpcEndpointServicesInput struct {
 
 	// Checks whether you have the required permissions for the action, without
@@ -42,22 +41,28 @@ type DescribeVpcEndpointServicesInput struct {
 	// UnauthorizedOperation.
 	DryRun *bool
 
-	// One or more filters.
+	// The filters.
+	//
+	// * owner - The ID or alias of the Amazon Web Services account that
+	// owns the service.
 	//
 	// * service-name - The name of the service.
 	//
-	// * service-type
-	// - The type of service (Interface | Gateway).
+	// * service-type -
+	// The type of service (Interface | Gateway | GatewayLoadBalancer).
 	//
-	// * tag: - The key/value combination
-	// of a tag assigned to the resource. Use the tag key in the filter name and the
-	// tag value as the filter value. For example, to find all resources that have a
-	// tag with the key Owner and the value TeamA, specify tag:Owner for the filter
-	// name and TeamA for the filter value.
+	// *
+	// supported-ip-address-types - The IP address type (ipv4 | ipv6).
 	//
-	// * tag-key - The key of a tag assigned to
-	// the resource. Use this filter to find all resources assigned a tag with a
-	// specific key, regardless of the tag value.
+	// * tag: - The
+	// key/value combination of a tag assigned to the resource. Use the tag key in the
+	// filter name and the tag value as the filter value. For example, to find all
+	// resources that have a tag with the key Owner and the value TeamA, specify
+	// tag:Owner for the filter name and TeamA for the filter value.
+	//
+	// * tag-key - The
+	// key of a tag assigned to the resource. Use this filter to find all resources
+	// assigned a tag with a specific key, regardless of the tag value.
 	Filters []types.Filter
 
 	// The maximum number of items to return for this request. The request returns a
@@ -69,11 +74,12 @@ type DescribeVpcEndpointServicesInput struct {
 	// prior call.)
 	NextToken *string
 
-	// One or more service names.
+	// The service names.
 	ServiceNames []string
+
+	noSmithyDocumentSerde
 }
 
-// Contains the output of DescribeVpcEndpointServices.
 type DescribeVpcEndpointServicesOutput struct {
 
 	// The token to use when requesting the next set of items. If there are no
@@ -83,14 +89,16 @@ type DescribeVpcEndpointServicesOutput struct {
 	// Information about the service.
 	ServiceDetails []types.ServiceDetail
 
-	// A list of supported services.
+	// The supported services.
 	ServiceNames []string
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeVpcEndpointServicesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeVpcEndpointServicesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeVpcEndpointServices{}, middleware.After)
 	if err != nil {
 		return err
