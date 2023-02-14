@@ -19,7 +19,7 @@ func (c *Client) DescribeNetworkInsightsAnalyses(ctx context.Context, params *De
 		params = &DescribeNetworkInsightsAnalysesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeNetworkInsightsAnalyses", params, optFns, addOperationDescribeNetworkInsightsAnalysesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeNetworkInsightsAnalyses", params, optFns, c.addOperationDescribeNetworkInsightsAnalysesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -43,13 +43,13 @@ type DescribeNetworkInsightsAnalysesInput struct {
 	// UnauthorizedOperation.
 	DryRun *bool
 
-	// The filters. The following are possible values:
+	// The filters. The following are the possible values:
 	//
-	// * PathFound - A Boolean value
-	// that indicates whether a feasible path is found.
+	// * path-found - A Boolean
+	// value that indicates whether a feasible path is found.
 	//
-	// * Status - The status of the
-	// analysis (running | succeeded | failed).
+	// * status - The status of
+	// the analysis (running | succeeded | failed).
 	Filters []types.Filter
 
 	// The maximum number of results to return with a single call. To retrieve the
@@ -65,6 +65,8 @@ type DescribeNetworkInsightsAnalysesInput struct {
 
 	// The token for the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeNetworkInsightsAnalysesOutput struct {
@@ -78,9 +80,11 @@ type DescribeNetworkInsightsAnalysesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeNetworkInsightsAnalysesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeNetworkInsightsAnalysesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeNetworkInsightsAnalyses{}, middleware.After)
 	if err != nil {
 		return err
@@ -191,12 +195,13 @@ func NewDescribeNetworkInsightsAnalysesPaginator(client DescribeNetworkInsightsA
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeNetworkInsightsAnalysesPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeNetworkInsightsAnalyses page.
@@ -223,7 +228,10 @@ func (p *DescribeNetworkInsightsAnalysesPaginator) NextPage(ctx context.Context,
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

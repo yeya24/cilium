@@ -12,15 +12,15 @@ import (
 )
 
 // Describes one or more of your virtual private gateways. For more information,
-// see AWS Site-to-Site VPN
-// (https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html) in the AWS
-// Site-to-Site VPN User Guide.
+// see Amazon Web Services Site-to-Site VPN
+// (https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html) in the Amazon Web
+// Services Site-to-Site VPN User Guide.
 func (c *Client) DescribeVpnGateways(ctx context.Context, params *DescribeVpnGatewaysInput, optFns ...func(*Options)) (*DescribeVpnGatewaysOutput, error) {
 	if params == nil {
 		params = &DescribeVpnGatewaysInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeVpnGateways", params, optFns, addOperationDescribeVpnGatewaysMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeVpnGateways", params, optFns, c.addOperationDescribeVpnGatewaysMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -77,6 +77,8 @@ type DescribeVpnGatewaysInput struct {
 	// One or more virtual private gateway IDs. Default: Describes all your virtual
 	// private gateways.
 	VpnGatewayIds []string
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of DescribeVpnGateways.
@@ -87,9 +89,11 @@ type DescribeVpnGatewaysOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeVpnGatewaysMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeVpnGatewaysMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeVpnGateways{}, middleware.After)
 	if err != nil {
 		return err

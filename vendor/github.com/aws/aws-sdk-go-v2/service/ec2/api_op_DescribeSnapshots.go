@@ -19,41 +19,41 @@ import (
 // Describes the specified EBS snapshots available to you or all of the EBS
 // snapshots available to you. The snapshots available to you include public
 // snapshots, private snapshots that you own, and private snapshots owned by other
-// AWS accounts for which you have explicit create volume permissions. The create
-// volume permissions fall into the following categories:
+// Amazon Web Services accounts for which you have explicit create volume
+// permissions. The create volume permissions fall into the following
+// categories:
 //
-// * public: The owner of
-// the snapshot granted create volume permissions for the snapshot to the all
-// group. All AWS accounts have create volume permissions for these snapshots.
+// * public: The owner of the snapshot granted create volume
+// permissions for the snapshot to the all group. All Amazon Web Services accounts
+// have create volume permissions for these snapshots.
 //
-// *
-// explicit: The owner of the snapshot granted create volume permissions to a
-// specific AWS account.
+// * explicit: The owner of
+// the snapshot granted create volume permissions to a specific Amazon Web Services
+// account.
 //
-// * implicit: An AWS account has implicit create volume
+// * implicit: An Amazon Web Services account has implicit create volume
 // permissions for all snapshots it owns.
 //
 // The list of snapshots returned can be
-// filtered by specifying snapshot IDs, snapshot owners, or AWS accounts with
-// create volume permissions. If no options are specified, Amazon EC2 returns all
-// snapshots for which you have create volume permissions. If you specify one or
-// more snapshot IDs, only snapshots that have the specified IDs are returned. If
-// you specify an invalid snapshot ID, an error is returned. If you specify a
-// snapshot ID for which you do not have access, it is not included in the returned
-// results. If you specify one or more snapshot owners using the OwnerIds option,
-// only snapshots from the specified owners and for which you have access are
-// returned. The results can include the AWS account IDs of the specified owners,
-// amazon for snapshots owned by Amazon, or self for snapshots that you own. If you
-// specify a list of restorable users, only snapshots with create snapshot
-// permissions for those users are returned. You can specify AWS account IDs (if
-// you own the snapshots), self for snapshots for which you own or have explicit
-// permissions, or all for public snapshots. If you are describing a long list of
-// snapshots, we recommend that you paginate the output to make the list more
-// manageable. The MaxResults parameter sets the maximum number of results returned
-// in a single page. If the list of results exceeds your MaxResults value, then
-// that number of results is returned along with a NextToken value that can be
-// passed to a subsequent DescribeSnapshots request to retrieve the remaining
-// results. To get the state of fast snapshot restores for a snapshot, use
+// filtered by specifying snapshot IDs, snapshot owners, or Amazon Web Services
+// accounts with create volume permissions. If no options are specified, Amazon EC2
+// returns all snapshots for which you have create volume permissions. If you
+// specify one or more snapshot IDs, only snapshots that have the specified IDs are
+// returned. If you specify an invalid snapshot ID, an error is returned. If you
+// specify a snapshot ID for which you do not have access, it is not included in
+// the returned results. If you specify one or more snapshot owners using the
+// OwnerIds option, only snapshots from the specified owners and for which you have
+// access are returned. The results can include the Amazon Web Services account IDs
+// of the specified owners, amazon for snapshots owned by Amazon, or self for
+// snapshots that you own. If you specify a list of restorable users, only
+// snapshots with create snapshot permissions for those users are returned. You can
+// specify Amazon Web Services account IDs (if you own the snapshots), self for
+// snapshots for which you own or have explicit permissions, or all for public
+// snapshots. If you are describing a long list of snapshots, we recommend that you
+// paginate the output to make the list more manageable. For more information, see
+// Pagination
+// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Query-Requests.html#api-pagination).
+// To get the state of fast snapshot restores for a snapshot, use
 // DescribeFastSnapshotRestores. For more information about EBS snapshots, see
 // Amazon EBS snapshots
 // (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSSnapshots.html) in the
@@ -63,7 +63,7 @@ func (c *Client) DescribeSnapshots(ctx context.Context, params *DescribeSnapshot
 		params = &DescribeSnapshotsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeSnapshots", params, optFns, addOperationDescribeSnapshotsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeSnapshots", params, optFns, c.addOperationDescribeSnapshotsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -90,75 +90,74 @@ type DescribeSnapshotsInput struct {
 	//
 	// * owner-alias - The
 	// owner alias, from an Amazon-maintained list (amazon). This is not the
-	// user-configured AWS account alias set using the IAM console. We recommend that
-	// you use the related parameter instead of this filter.
+	// user-configured Amazon Web Services account alias set using the IAM console. We
+	// recommend that you use the related parameter instead of this filter.
 	//
-	// * owner-id - The AWS
-	// account ID of the owner. We recommend that you use the related parameter instead
-	// of this filter.
+	// * owner-id
+	// - The Amazon Web Services account ID of the owner. We recommend that you use the
+	// related parameter instead of this filter.
 	//
-	// * progress - The progress of the snapshot, as a percentage (for
-	// example, 80%).
+	// * progress - The progress of the
+	// snapshot, as a percentage (for example, 80%).
 	//
-	// * snapshot-id - The snapshot ID.
+	// * snapshot-id - The snapshot
+	// ID.
 	//
-	// * start-time - The time stamp
-	// when the snapshot was initiated.
+	// * start-time - The time stamp when the snapshot was initiated.
 	//
-	// * status - The status of the snapshot (pending
-	// | completed | error).
+	// * status -
+	// The status of the snapshot (pending | completed | error).
 	//
-	// * tag: - The key/value combination of a tag assigned to
-	// the resource. Use the tag key in the filter name and the tag value as the filter
-	// value. For example, to find all resources that have a tag with the key Owner and
-	// the value TeamA, specify tag:Owner for the filter name and TeamA for the filter
-	// value.
+	// * storage-tier - The
+	// storage tier of the snapshot (archive | standard).
 	//
-	// * tag-key - The key of a tag assigned to the resource. Use this filter
-	// to find all resources assigned a tag with a specific key, regardless of the tag
-	// value.
+	// * tag: - The key/value
+	// combination of a tag assigned to the resource. Use the tag key in the filter
+	// name and the tag value as the filter value. For example, to find all resources
+	// that have a tag with the key Owner and the value TeamA, specify tag:Owner for
+	// the filter name and TeamA for the filter value.
 	//
-	// * volume-id - The ID of the volume the snapshot is for.
+	// * tag-key - The key of a tag
+	// assigned to the resource. Use this filter to find all resources assigned a tag
+	// with a specific key, regardless of the tag value.
 	//
-	// * volume-size -
-	// The size of the volume, in GiB.
+	// * volume-id - The ID of the
+	// volume the snapshot is for.
+	//
+	// * volume-size - The size of the volume, in GiB.
 	Filters []types.Filter
 
-	// The maximum number of snapshot results returned by DescribeSnapshots in
-	// paginated output. When this parameter is used, DescribeSnapshots only returns
-	// MaxResults results in a single page along with a NextToken response element. The
-	// remaining results of the initial request can be seen by sending another
-	// DescribeSnapshots request with the returned NextToken value. This value can be
-	// between 5 and 1,000; if MaxResults is given a value larger than 1,000, only
-	// 1,000 results are returned. If this parameter is not used, then
-	// DescribeSnapshots returns all results. You cannot specify this parameter and the
-	// snapshot IDs parameter in the same request.
+	// The maximum number of snapshots to return for this request. This value can be
+	// between 5 and 1,000; if this value is larger than 1,000, only 1,000 results are
+	// returned. If this parameter is not used, then the request returns all snapshots.
+	// You cannot specify this parameter and the snapshot IDs parameter in the same
+	// request. For more information, see Pagination
+	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Query-Requests.html#api-pagination).
 	MaxResults *int32
 
-	// The NextToken value returned from a previous paginated DescribeSnapshots request
-	// where MaxResults was used and the results exceeded the value of that parameter.
-	// Pagination continues from the end of the previous results that returned the
-	// NextToken value. This value is null when there are no more results to return.
+	// The token returned from a previous paginated request. Pagination continues from
+	// the end of the items returned by the previous request.
 	NextToken *string
 
 	// Scopes the results to snapshots with the specified owners. You can specify a
-	// combination of AWS account IDs, self, and amazon.
+	// combination of Amazon Web Services account IDs, self, and amazon.
 	OwnerIds []string
 
-	// The IDs of the AWS accounts that can create volumes from the snapshot.
+	// The IDs of the Amazon Web Services accounts that can create volumes from the
+	// snapshot.
 	RestorableByUserIds []string
 
 	// The snapshot IDs. Default: Describes the snapshots for which you have create
 	// volume permissions.
 	SnapshotIds []string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeSnapshotsOutput struct {
 
-	// The NextToken value to include in a future DescribeSnapshots request. When the
-	// results of a DescribeSnapshots request exceed MaxResults, this value can be used
-	// to retrieve the next page of results. This value is null when there are no more
-	// results to return.
+	// The token to include in another request to return the next page of snapshots.
+	// This value is null when there are no more snapshots to return.
 	NextToken *string
 
 	// Information about the snapshots.
@@ -166,9 +165,11 @@ type DescribeSnapshotsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeSnapshotsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeSnapshotsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeSnapshots{}, middleware.After)
 	if err != nil {
 		return err
@@ -238,15 +239,12 @@ var _ DescribeSnapshotsAPIClient = (*Client)(nil)
 
 // DescribeSnapshotsPaginatorOptions is the paginator options for DescribeSnapshots
 type DescribeSnapshotsPaginatorOptions struct {
-	// The maximum number of snapshot results returned by DescribeSnapshots in
-	// paginated output. When this parameter is used, DescribeSnapshots only returns
-	// MaxResults results in a single page along with a NextToken response element. The
-	// remaining results of the initial request can be seen by sending another
-	// DescribeSnapshots request with the returned NextToken value. This value can be
-	// between 5 and 1,000; if MaxResults is given a value larger than 1,000, only
-	// 1,000 results are returned. If this parameter is not used, then
-	// DescribeSnapshots returns all results. You cannot specify this parameter and the
-	// snapshot IDs parameter in the same request.
+	// The maximum number of snapshots to return for this request. This value can be
+	// between 5 and 1,000; if this value is larger than 1,000, only 1,000 results are
+	// returned. If this parameter is not used, then the request returns all snapshots.
+	// You cannot specify this parameter and the snapshot IDs parameter in the same
+	// request. For more information, see Pagination
+	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Query-Requests.html#api-pagination).
 	Limit int32
 
 	// Set to true if pagination should stop if the service returns a pagination token
@@ -283,12 +281,13 @@ func NewDescribeSnapshotsPaginator(client DescribeSnapshotsAPIClient, params *De
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeSnapshotsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeSnapshots page.
@@ -315,7 +314,10 @@ func (p *DescribeSnapshotsPaginator) NextPage(ctx context.Context, optFns ...fun
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 
@@ -381,8 +383,17 @@ func NewSnapshotCompletedWaiter(client DescribeSnapshotsAPIClient, optFns ...fun
 // the maximum wait duration the waiter will wait. The maxWaitDur is required and
 // must be greater than zero.
 func (w *SnapshotCompletedWaiter) Wait(ctx context.Context, params *DescribeSnapshotsInput, maxWaitDur time.Duration, optFns ...func(*SnapshotCompletedWaiterOptions)) error {
+	_, err := w.WaitForOutput(ctx, params, maxWaitDur, optFns...)
+	return err
+}
+
+// WaitForOutput calls the waiter function for SnapshotCompleted waiter and returns
+// the output of the successful operation. The maxWaitDur is the maximum wait
+// duration the waiter will wait. The maxWaitDur is required and must be greater
+// than zero.
+func (w *SnapshotCompletedWaiter) WaitForOutput(ctx context.Context, params *DescribeSnapshotsInput, maxWaitDur time.Duration, optFns ...func(*SnapshotCompletedWaiterOptions)) (*DescribeSnapshotsOutput, error) {
 	if maxWaitDur <= 0 {
-		return fmt.Errorf("maximum wait time for waiter must be greater than zero")
+		return nil, fmt.Errorf("maximum wait time for waiter must be greater than zero")
 	}
 
 	options := w.options
@@ -395,7 +406,7 @@ func (w *SnapshotCompletedWaiter) Wait(ctx context.Context, params *DescribeSnap
 	}
 
 	if options.MinDelay > options.MaxDelay {
-		return fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
+		return nil, fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
 	}
 
 	ctx, cancelFn := context.WithTimeout(ctx, maxWaitDur)
@@ -423,10 +434,10 @@ func (w *SnapshotCompletedWaiter) Wait(ctx context.Context, params *DescribeSnap
 
 		retryable, err := options.Retryable(ctx, params, out, err)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if !retryable {
-			return nil
+			return out, nil
 		}
 
 		remainingTime -= time.Since(start)
@@ -439,16 +450,16 @@ func (w *SnapshotCompletedWaiter) Wait(ctx context.Context, params *DescribeSnap
 			attempt, options.MinDelay, options.MaxDelay, remainingTime,
 		)
 		if err != nil {
-			return fmt.Errorf("error computing waiter delay, %w", err)
+			return nil, fmt.Errorf("error computing waiter delay, %w", err)
 		}
 
 		remainingTime -= delay
 		// sleep for the delay amount before invoking a request
 		if err := smithytime.SleepWithContext(ctx, delay); err != nil {
-			return fmt.Errorf("request cancelled while waiting, %w", err)
+			return nil, fmt.Errorf("request cancelled while waiting, %w", err)
 		}
 	}
-	return fmt.Errorf("exceeded max wait time for SnapshotCompleted waiter")
+	return nil, fmt.Errorf("exceeded max wait time for SnapshotCompleted waiter")
 }
 
 func snapshotCompletedStateRetryable(ctx context.Context, input *DescribeSnapshotsInput, output *DescribeSnapshotsOutput, err error) (bool, error) {
@@ -482,6 +493,30 @@ func snapshotCompletedStateRetryable(ctx context.Context, input *DescribeSnapsho
 
 		if match {
 			return false, nil
+		}
+	}
+
+	if err == nil {
+		pathValue, err := jmespath.Search("Snapshots[].State", output)
+		if err != nil {
+			return false, fmt.Errorf("error evaluating waiter state: %w", err)
+		}
+
+		expectedValue := "error"
+		listOfValues, ok := pathValue.([]interface{})
+		if !ok {
+			return false, fmt.Errorf("waiter comparator expected list got %T", pathValue)
+		}
+
+		for _, v := range listOfValues {
+			value, ok := v.(types.SnapshotState)
+			if !ok {
+				return false, fmt.Errorf("waiter comparator expected types.SnapshotState value, got %T", pathValue)
+			}
+
+			if string(value) == expectedValue {
+				return false, fmt.Errorf("waiter state transitioned to Failure")
+			}
 		}
 	}
 

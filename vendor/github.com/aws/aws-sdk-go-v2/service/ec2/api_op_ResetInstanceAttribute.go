@@ -24,7 +24,7 @@ func (c *Client) ResetInstanceAttribute(ctx context.Context, params *ResetInstan
 		params = &ResetInstanceAttributeInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ResetInstanceAttribute", params, optFns, addOperationResetInstanceAttributeMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ResetInstanceAttribute", params, optFns, c.addOperationResetInstanceAttributeMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -37,8 +37,7 @@ func (c *Client) ResetInstanceAttribute(ctx context.Context, params *ResetInstan
 type ResetInstanceAttributeInput struct {
 
 	// The attribute to reset. You can only reset the following attributes: kernel |
-	// ramdisk | sourceDestCheck. To change an instance attribute, use
-	// ModifyInstanceAttribute.
+	// ramdisk | sourceDestCheck.
 	//
 	// This member is required.
 	Attribute types.InstanceAttributeName
@@ -53,14 +52,18 @@ type ResetInstanceAttributeInput struct {
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
 	// UnauthorizedOperation.
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type ResetInstanceAttributeOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationResetInstanceAttributeMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationResetInstanceAttributeMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpResetInstanceAttribute{}, middleware.After)
 	if err != nil {
 		return err
