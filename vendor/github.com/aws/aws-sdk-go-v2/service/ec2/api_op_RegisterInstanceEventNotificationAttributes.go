@@ -12,13 +12,14 @@ import (
 )
 
 // Registers a set of tag keys to include in scheduled event notifications for your
-// resources. To remove tags, use .
+// resources. To remove tags, use DeregisterInstanceEventNotificationAttributes
+// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DeregisterInstanceEventNotificationAttributes.html).
 func (c *Client) RegisterInstanceEventNotificationAttributes(ctx context.Context, params *RegisterInstanceEventNotificationAttributesInput, optFns ...func(*Options)) (*RegisterInstanceEventNotificationAttributesOutput, error) {
 	if params == nil {
 		params = &RegisterInstanceEventNotificationAttributesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "RegisterInstanceEventNotificationAttributes", params, optFns, addOperationRegisterInstanceEventNotificationAttributesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "RegisterInstanceEventNotificationAttributes", params, optFns, c.addOperationRegisterInstanceEventNotificationAttributesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -38,6 +39,8 @@ type RegisterInstanceEventNotificationAttributesInput struct {
 
 	// Information about the tag keys to register.
 	InstanceTagAttribute *types.RegisterInstanceTagAttributeRequest
+
+	noSmithyDocumentSerde
 }
 
 type RegisterInstanceEventNotificationAttributesOutput struct {
@@ -47,9 +50,11 @@ type RegisterInstanceEventNotificationAttributesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationRegisterInstanceEventNotificationAttributesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationRegisterInstanceEventNotificationAttributesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpRegisterInstanceEventNotificationAttributes{}, middleware.After)
 	if err != nil {
 		return err
