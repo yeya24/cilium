@@ -25,7 +25,7 @@ func (c *Client) RegisterTransitGatewayMulticastGroupMembers(ctx context.Context
 		params = &RegisterTransitGatewayMulticastGroupMembersInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "RegisterTransitGatewayMulticastGroupMembers", params, optFns, addOperationRegisterTransitGatewayMulticastGroupMembersMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "RegisterTransitGatewayMulticastGroupMembers", params, optFns, c.addOperationRegisterTransitGatewayMulticastGroupMembersMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -37,6 +37,17 @@ func (c *Client) RegisterTransitGatewayMulticastGroupMembers(ctx context.Context
 
 type RegisterTransitGatewayMulticastGroupMembersInput struct {
 
+	// The group members' network interface IDs to register with the transit gateway
+	// multicast group.
+	//
+	// This member is required.
+	NetworkInterfaceIds []string
+
+	// The ID of the transit gateway multicast domain.
+	//
+	// This member is required.
+	TransitGatewayMulticastDomainId *string
+
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
@@ -46,12 +57,7 @@ type RegisterTransitGatewayMulticastGroupMembersInput struct {
 	// The IP address assigned to the transit gateway multicast group.
 	GroupIpAddress *string
 
-	// The group members' network interface IDs to register with the transit gateway
-	// multicast group.
-	NetworkInterfaceIds []string
-
-	// The ID of the transit gateway multicast domain.
-	TransitGatewayMulticastDomainId *string
+	noSmithyDocumentSerde
 }
 
 type RegisterTransitGatewayMulticastGroupMembersOutput struct {
@@ -61,9 +67,11 @@ type RegisterTransitGatewayMulticastGroupMembersOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationRegisterTransitGatewayMulticastGroupMembersMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationRegisterTransitGatewayMulticastGroupMembersMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpRegisterTransitGatewayMulticastGroupMembers{}, middleware.After)
 	if err != nil {
 		return err
@@ -106,6 +114,9 @@ func addOperationRegisterTransitGatewayMulticastGroupMembersMiddlewares(stack *m
 		return err
 	}
 	if err = smithyhttp.AddCloseResponseBodyMiddleware(stack); err != nil {
+		return err
+	}
+	if err = addOpRegisterTransitGatewayMulticastGroupMembersValidationMiddleware(stack); err != nil {
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opRegisterTransitGatewayMulticastGroupMembers(options.Region), middleware.Before); err != nil {

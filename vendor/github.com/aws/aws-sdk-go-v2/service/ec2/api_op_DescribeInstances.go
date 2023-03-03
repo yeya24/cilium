@@ -4,15 +4,18 @@ package ec2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
 	"github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	smithy "github.com/aws/smithy-go"
 	"github.com/aws/smithy-go/middleware"
 	smithytime "github.com/aws/smithy-go/time"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	smithywaiter "github.com/aws/smithy-go/waiter"
 	"github.com/jmespath/go-jmespath"
+	"strconv"
 	"time"
 )
 
@@ -35,7 +38,7 @@ func (c *Client) DescribeInstances(ctx context.Context, params *DescribeInstance
 		params = &DescribeInstancesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeInstances", params, optFns, addOperationDescribeInstancesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeInstances", params, optFns, c.addOperationDescribeInstancesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -82,45 +85,48 @@ type DescribeInstancesInput struct {
 	// block-device-mapping.volume-id - The volume ID of the EBS volume.
 	//
 	// *
-	// client-token - The idempotency token you provided when you launched the
-	// instance.
+	// capacity-reservation-id - The ID of the Capacity Reservation into which the
+	// instance was launched.
+	//
+	// * client-token - The idempotency token you provided when
+	// you launched the instance.
 	//
 	// * dns-name - The public DNS name of the instance.
 	//
-	// * group-id - The
-	// ID of the security group for the instance. EC2-Classic only.
-	//
-	// * group-name - The
-	// name of the security group for the instance. EC2-Classic only.
+	// *
+	// group-id - The ID of the security group for the instance. EC2-Classic only.
 	//
 	// *
-	// hibernation-options.configured - A Boolean that indicates whether the instance
-	// is enabled for hibernation. A value of true means that the instance is enabled
-	// for hibernation.
+	// group-name - The name of the security group for the instance. EC2-Classic
+	// only.
 	//
-	// * host-id - The ID of the Dedicated Host on which the instance
-	// is running, if applicable.
+	// * hibernation-options.configured - A Boolean that indicates whether the
+	// instance is enabled for hibernation. A value of true means that the instance is
+	// enabled for hibernation.
 	//
-	// * hypervisor - The hypervisor type of the instance
-	// (ovm | xen). The value xen is used for both Xen and Nitro hypervisors.
+	// * host-id - The ID of the Dedicated Host on which the
+	// instance is running, if applicable.
 	//
-	// *
-	// iam-instance-profile.arn - The instance profile associated with the instance.
-	// Specified as an ARN.
+	// * hypervisor - The hypervisor type of the
+	// instance (ovm | xen). The value xen is used for both Xen and Nitro
+	// hypervisors.
 	//
-	// * image-id - The ID of the image used to launch the
-	// instance.
+	// * iam-instance-profile.arn - The instance profile associated with
+	// the instance. Specified as an ARN.
+	//
+	// * image-id - The ID of the image used to
+	// launch the instance.
 	//
 	// * instance-id - The ID of the instance.
 	//
-	// * instance-lifecycle -
-	// Indicates whether this is a Spot Instance or a Scheduled Instance (spot |
-	// scheduled).
+	// *
+	// instance-lifecycle - Indicates whether this is a Spot Instance or a Scheduled
+	// Instance (spot | scheduled).
 	//
-	// * instance-state-code - The state of the instance, as a 16-bit
-	// unsigned integer. The high byte is used for internal purposes and should be
-	// ignored. The low byte is set based on the state represented. The valid values
-	// are: 0 (pending), 16 (running), 32 (shutting-down), 48 (terminated), 64
+	// * instance-state-code - The state of the instance,
+	// as a 16-bit unsigned integer. The high byte is used for internal purposes and
+	// should be ignored. The low byte is set based on the state represented. The valid
+	// values are: 0 (pending), 16 (running), 32 (shutting-down), 48 (terminated), 64
 	// (stopping), and 80 (stopped).
 	//
 	// * instance-state-name - The state of the instance
@@ -148,21 +154,28 @@ type DescribeInstancesInput struct {
 	// for the instance in the launch group (for example, 0, 1, 2, and so on).
 	//
 	// *
-	// launch-time - The time when the instance was launched.
+	// launch-time - The time when the instance was launched, in the ISO 8601 format in
+	// the UTC time zone (YYYY-MM-DDThh:mm:ss.sssZ), for example,
+	// 2021-09-29T11:04:43.305Z. You can use a wildcard (*), for example, 2021-09-29T*,
+	// which matches an entire day.
+	//
+	// * metadata-options.http-tokens - The metadata
+	// request authorization state (optional | required)
 	//
 	// *
-	// metadata-options.http-tokens - The metadata request authorization state
-	// (optional | required)
-	//
-	// * metadata-options.http-put-response-hop-limit - The http
-	// metadata request put response hop limit (integer, possible values 1 to 64)
+	// metadata-options.http-put-response-hop-limit - The HTTP metadata request put
+	// response hop limit (integer, possible values 1 to 64)
 	//
 	// *
-	// metadata-options.http-endpoint - Enable or disable metadata access on http
-	// endpoint (enabled | disabled)
+	// metadata-options.http-endpoint - The status of access to the HTTP metadata
+	// endpoint on your instance (enabled | disabled)
 	//
-	// * monitoring-state - Indicates whether detailed
-	// monitoring is enabled (disabled | enabled).
+	// *
+	// metadata-options.instance-metadata-tags - The status of access to instance tags
+	// from the instance metadata (enabled | disabled)
+	//
+	// * monitoring-state - Indicates
+	// whether detailed monitoring is enabled (disabled | enabled).
 	//
 	// *
 	// network-interface.addresses.private-ip-address - The private IPv4 address
@@ -254,7 +267,7 @@ type DescribeInstancesInput struct {
 	// for the network interface.
 	//
 	// * network-interface.requester-managed - Indicates
-	// whether the network interface is being managed by AWS.
+	// whether the network interface is being managed by Amazon Web Services.
 	//
 	// *
 	// network-interface.status - The status of the network interface (available) |
@@ -275,42 +288,43 @@ type DescribeInstancesInput struct {
 	// * outpost-arn - The Amazon Resource Name (ARN) of the Outpost.
 	//
 	// *
-	// owner-id - The AWS account ID of the instance owner.
+	// owner-id - The Amazon Web Services account ID of the instance owner.
 	//
-	// * placement-group-name -
-	// The name of the placement group for the instance.
+	// *
+	// placement-group-name - The name of the placement group for the instance.
 	//
-	// * placement-partition-number
-	// - The partition in which the instance is located.
+	// *
+	// placement-partition-number - The partition in which the instance is located.
 	//
-	// * platform - The platform. To
-	// list only Windows instances, use windows.
+	// *
+	// platform - The platform. To list only Windows instances, use windows.
 	//
-	// * private-dns-name - The private IPv4
-	// DNS name of the instance.
+	// *
+	// private-dns-name - The private IPv4 DNS name of the instance.
 	//
-	// * private-ip-address - The private IPv4 address of
-	// the instance.
+	// *
+	// private-ip-address - The private IPv4 address of the instance.
 	//
-	// * product-code - The product code associated with the AMI used to
-	// launch the instance.
+	// * product-code -
+	// The product code associated with the AMI used to launch the instance.
 	//
-	// * product-code.type - The type of product code (devpay |
-	// marketplace).
+	// *
+	// product-code.type - The type of product code (devpay | marketplace).
 	//
-	// * ramdisk-id - The RAM disk ID.
+	// *
+	// ramdisk-id - The RAM disk ID.
 	//
-	// * reason - The reason for the
-	// current state of the instance (for example, shows "User Initiated [date]" when
-	// you stop or terminate the instance). Similar to the state-reason-code filter.
+	// * reason - The reason for the current state of
+	// the instance (for example, shows "User Initiated [date]" when you stop or
+	// terminate the instance). Similar to the state-reason-code filter.
 	//
 	// *
 	// requester-id - The ID of the entity that launched the instance on your behalf
-	// (for example, AWS Management Console, Auto Scaling, and so on).
+	// (for example, Amazon Web Services Management Console, Auto Scaling, and so
+	// on).
 	//
-	// *
-	// reservation-id - The ID of the instance's reservation. A reservation ID is
-	// created any time you launch an instance. A reservation ID has a one-to-one
+	// * reservation-id - The ID of the instance's reservation. A reservation ID
+	// is created any time you launch an instance. A reservation ID has a one-to-one
 	// relationship with an instance launch request, but can be associated with more
 	// than one instance if you launch multiple instances using the same launch
 	// request. For example, if you launch one instance, you get one reservation ID. If
@@ -363,20 +377,25 @@ type DescribeInstancesInput struct {
 	// The instance IDs. Default: Describes all your instances.
 	InstanceIds []string
 
-	// The maximum number of results to return in a single call. To retrieve the
-	// remaining results, make another call with the returned NextToken value. This
-	// value can be between 5 and 1000. You cannot specify this parameter and the
-	// instance IDs parameter in the same call.
+	// The maximum number of items to return for this request. To get the next page of
+	// items, make another request with the token returned in the output. For more
+	// information, see Pagination
+	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Query-Requests.html#api-pagination).
+	// You cannot specify this parameter and the instance IDs parameter in the same
+	// request.
 	MaxResults *int32
 
-	// The token to request the next page of results.
+	// The token returned from a previous paginated request. Pagination continues from
+	// the end of the items returned by the previous request.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeInstancesOutput struct {
 
-	// The token to use to retrieve the next page of results. This value is null when
-	// there are no more results to return.
+	// The token to include in another request to get the next page of items. This
+	// value is null when there are no more items to return.
 	NextToken *string
 
 	// Information about the reservations.
@@ -384,9 +403,11 @@ type DescribeInstancesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeInstancesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeInstancesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeInstances{}, middleware.After)
 	if err != nil {
 		return err
@@ -456,10 +477,12 @@ var _ DescribeInstancesAPIClient = (*Client)(nil)
 
 // DescribeInstancesPaginatorOptions is the paginator options for DescribeInstances
 type DescribeInstancesPaginatorOptions struct {
-	// The maximum number of results to return in a single call. To retrieve the
-	// remaining results, make another call with the returned NextToken value. This
-	// value can be between 5 and 1000. You cannot specify this parameter and the
-	// instance IDs parameter in the same call.
+	// The maximum number of items to return for this request. To get the next page of
+	// items, make another request with the token returned in the output. For more
+	// information, see Pagination
+	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Query-Requests.html#api-pagination).
+	// You cannot specify this parameter and the instance IDs parameter in the same
+	// request.
 	Limit int32
 
 	// Set to true if pagination should stop if the service returns a pagination token
@@ -496,12 +519,13 @@ func NewDescribeInstancesPaginator(client DescribeInstancesAPIClient, params *De
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeInstancesPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeInstances page.
@@ -528,11 +552,449 @@ func (p *DescribeInstancesPaginator) NextPage(ctx context.Context, optFns ...fun
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 
 	return result, nil
+}
+
+// InstanceExistsWaiterOptions are waiter options for InstanceExistsWaiter
+type InstanceExistsWaiterOptions struct {
+
+	// Set of options to modify how an operation is invoked. These apply to all
+	// operations invoked for this client. Use functional options on operation call to
+	// modify this list for per operation behavior.
+	APIOptions []func(*middleware.Stack) error
+
+	// MinDelay is the minimum amount of time to delay between retries. If unset,
+	// InstanceExistsWaiter will use default minimum delay of 5 seconds. Note that
+	// MinDelay must resolve to a value lesser than or equal to the MaxDelay.
+	MinDelay time.Duration
+
+	// MaxDelay is the maximum amount of time to delay between retries. If unset or set
+	// to zero, InstanceExistsWaiter will use default max delay of 120 seconds. Note
+	// that MaxDelay must resolve to value greater than or equal to the MinDelay.
+	MaxDelay time.Duration
+
+	// LogWaitAttempts is used to enable logging for waiter retry attempts
+	LogWaitAttempts bool
+
+	// Retryable is function that can be used to override the service defined
+	// waiter-behavior based on operation output, or returned error. This function is
+	// used by the waiter to decide if a state is retryable or a terminal state. By
+	// default service-modeled logic will populate this option. This option can thus be
+	// used to define a custom waiter state with fall-back to service-modeled waiter
+	// state mutators.The function returns an error in case of a failure state. In case
+	// of retry state, this function returns a bool value of true and nil error, while
+	// in case of success it returns a bool value of false and nil error.
+	Retryable func(context.Context, *DescribeInstancesInput, *DescribeInstancesOutput, error) (bool, error)
+}
+
+// InstanceExistsWaiter defines the waiters for InstanceExists
+type InstanceExistsWaiter struct {
+	client DescribeInstancesAPIClient
+
+	options InstanceExistsWaiterOptions
+}
+
+// NewInstanceExistsWaiter constructs a InstanceExistsWaiter.
+func NewInstanceExistsWaiter(client DescribeInstancesAPIClient, optFns ...func(*InstanceExistsWaiterOptions)) *InstanceExistsWaiter {
+	options := InstanceExistsWaiterOptions{}
+	options.MinDelay = 5 * time.Second
+	options.MaxDelay = 120 * time.Second
+	options.Retryable = instanceExistsStateRetryable
+
+	for _, fn := range optFns {
+		fn(&options)
+	}
+	return &InstanceExistsWaiter{
+		client:  client,
+		options: options,
+	}
+}
+
+// Wait calls the waiter function for InstanceExists waiter. The maxWaitDur is the
+// maximum wait duration the waiter will wait. The maxWaitDur is required and must
+// be greater than zero.
+func (w *InstanceExistsWaiter) Wait(ctx context.Context, params *DescribeInstancesInput, maxWaitDur time.Duration, optFns ...func(*InstanceExistsWaiterOptions)) error {
+	_, err := w.WaitForOutput(ctx, params, maxWaitDur, optFns...)
+	return err
+}
+
+// WaitForOutput calls the waiter function for InstanceExists waiter and returns
+// the output of the successful operation. The maxWaitDur is the maximum wait
+// duration the waiter will wait. The maxWaitDur is required and must be greater
+// than zero.
+func (w *InstanceExistsWaiter) WaitForOutput(ctx context.Context, params *DescribeInstancesInput, maxWaitDur time.Duration, optFns ...func(*InstanceExistsWaiterOptions)) (*DescribeInstancesOutput, error) {
+	if maxWaitDur <= 0 {
+		return nil, fmt.Errorf("maximum wait time for waiter must be greater than zero")
+	}
+
+	options := w.options
+	for _, fn := range optFns {
+		fn(&options)
+	}
+
+	if options.MaxDelay <= 0 {
+		options.MaxDelay = 120 * time.Second
+	}
+
+	if options.MinDelay > options.MaxDelay {
+		return nil, fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
+	}
+
+	ctx, cancelFn := context.WithTimeout(ctx, maxWaitDur)
+	defer cancelFn()
+
+	logger := smithywaiter.Logger{}
+	remainingTime := maxWaitDur
+
+	var attempt int64
+	for {
+
+		attempt++
+		apiOptions := options.APIOptions
+		start := time.Now()
+
+		if options.LogWaitAttempts {
+			logger.Attempt = attempt
+			apiOptions = append([]func(*middleware.Stack) error{}, options.APIOptions...)
+			apiOptions = append(apiOptions, logger.AddLogger)
+		}
+
+		out, err := w.client.DescribeInstances(ctx, params, func(o *Options) {
+			o.APIOptions = append(o.APIOptions, apiOptions...)
+		})
+
+		retryable, err := options.Retryable(ctx, params, out, err)
+		if err != nil {
+			return nil, err
+		}
+		if !retryable {
+			return out, nil
+		}
+
+		remainingTime -= time.Since(start)
+		if remainingTime < options.MinDelay || remainingTime <= 0 {
+			break
+		}
+
+		// compute exponential backoff between waiter retries
+		delay, err := smithywaiter.ComputeDelay(
+			attempt, options.MinDelay, options.MaxDelay, remainingTime,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error computing waiter delay, %w", err)
+		}
+
+		remainingTime -= delay
+		// sleep for the delay amount before invoking a request
+		if err := smithytime.SleepWithContext(ctx, delay); err != nil {
+			return nil, fmt.Errorf("request cancelled while waiting, %w", err)
+		}
+	}
+	return nil, fmt.Errorf("exceeded max wait time for InstanceExists waiter")
+}
+
+func instanceExistsStateRetryable(ctx context.Context, input *DescribeInstancesInput, output *DescribeInstancesOutput, err error) (bool, error) {
+
+	if err == nil {
+		pathValue, err := jmespath.Search("length(Reservations[]) > `0`", output)
+		if err != nil {
+			return false, fmt.Errorf("error evaluating waiter state: %w", err)
+		}
+
+		expectedValue := "true"
+		bv, err := strconv.ParseBool(expectedValue)
+		if err != nil {
+			return false, fmt.Errorf("error parsing boolean from string %w", err)
+		}
+		value, ok := pathValue.(bool)
+		if !ok {
+			return false, fmt.Errorf("waiter comparator expected bool value got %T", pathValue)
+		}
+
+		if value == bv {
+			return false, nil
+		}
+	}
+
+	if err != nil {
+		var apiErr smithy.APIError
+		ok := errors.As(err, &apiErr)
+		if !ok {
+			return false, fmt.Errorf("expected err to be of type smithy.APIError, got %w", err)
+		}
+
+		if "InvalidInstanceID.NotFound" == apiErr.ErrorCode() {
+			return true, nil
+		}
+	}
+
+	return true, nil
+}
+
+// InstanceRunningWaiterOptions are waiter options for InstanceRunningWaiter
+type InstanceRunningWaiterOptions struct {
+
+	// Set of options to modify how an operation is invoked. These apply to all
+	// operations invoked for this client. Use functional options on operation call to
+	// modify this list for per operation behavior.
+	APIOptions []func(*middleware.Stack) error
+
+	// MinDelay is the minimum amount of time to delay between retries. If unset,
+	// InstanceRunningWaiter will use default minimum delay of 15 seconds. Note that
+	// MinDelay must resolve to a value lesser than or equal to the MaxDelay.
+	MinDelay time.Duration
+
+	// MaxDelay is the maximum amount of time to delay between retries. If unset or set
+	// to zero, InstanceRunningWaiter will use default max delay of 120 seconds. Note
+	// that MaxDelay must resolve to value greater than or equal to the MinDelay.
+	MaxDelay time.Duration
+
+	// LogWaitAttempts is used to enable logging for waiter retry attempts
+	LogWaitAttempts bool
+
+	// Retryable is function that can be used to override the service defined
+	// waiter-behavior based on operation output, or returned error. This function is
+	// used by the waiter to decide if a state is retryable or a terminal state. By
+	// default service-modeled logic will populate this option. This option can thus be
+	// used to define a custom waiter state with fall-back to service-modeled waiter
+	// state mutators.The function returns an error in case of a failure state. In case
+	// of retry state, this function returns a bool value of true and nil error, while
+	// in case of success it returns a bool value of false and nil error.
+	Retryable func(context.Context, *DescribeInstancesInput, *DescribeInstancesOutput, error) (bool, error)
+}
+
+// InstanceRunningWaiter defines the waiters for InstanceRunning
+type InstanceRunningWaiter struct {
+	client DescribeInstancesAPIClient
+
+	options InstanceRunningWaiterOptions
+}
+
+// NewInstanceRunningWaiter constructs a InstanceRunningWaiter.
+func NewInstanceRunningWaiter(client DescribeInstancesAPIClient, optFns ...func(*InstanceRunningWaiterOptions)) *InstanceRunningWaiter {
+	options := InstanceRunningWaiterOptions{}
+	options.MinDelay = 15 * time.Second
+	options.MaxDelay = 120 * time.Second
+	options.Retryable = instanceRunningStateRetryable
+
+	for _, fn := range optFns {
+		fn(&options)
+	}
+	return &InstanceRunningWaiter{
+		client:  client,
+		options: options,
+	}
+}
+
+// Wait calls the waiter function for InstanceRunning waiter. The maxWaitDur is the
+// maximum wait duration the waiter will wait. The maxWaitDur is required and must
+// be greater than zero.
+func (w *InstanceRunningWaiter) Wait(ctx context.Context, params *DescribeInstancesInput, maxWaitDur time.Duration, optFns ...func(*InstanceRunningWaiterOptions)) error {
+	_, err := w.WaitForOutput(ctx, params, maxWaitDur, optFns...)
+	return err
+}
+
+// WaitForOutput calls the waiter function for InstanceRunning waiter and returns
+// the output of the successful operation. The maxWaitDur is the maximum wait
+// duration the waiter will wait. The maxWaitDur is required and must be greater
+// than zero.
+func (w *InstanceRunningWaiter) WaitForOutput(ctx context.Context, params *DescribeInstancesInput, maxWaitDur time.Duration, optFns ...func(*InstanceRunningWaiterOptions)) (*DescribeInstancesOutput, error) {
+	if maxWaitDur <= 0 {
+		return nil, fmt.Errorf("maximum wait time for waiter must be greater than zero")
+	}
+
+	options := w.options
+	for _, fn := range optFns {
+		fn(&options)
+	}
+
+	if options.MaxDelay <= 0 {
+		options.MaxDelay = 120 * time.Second
+	}
+
+	if options.MinDelay > options.MaxDelay {
+		return nil, fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
+	}
+
+	ctx, cancelFn := context.WithTimeout(ctx, maxWaitDur)
+	defer cancelFn()
+
+	logger := smithywaiter.Logger{}
+	remainingTime := maxWaitDur
+
+	var attempt int64
+	for {
+
+		attempt++
+		apiOptions := options.APIOptions
+		start := time.Now()
+
+		if options.LogWaitAttempts {
+			logger.Attempt = attempt
+			apiOptions = append([]func(*middleware.Stack) error{}, options.APIOptions...)
+			apiOptions = append(apiOptions, logger.AddLogger)
+		}
+
+		out, err := w.client.DescribeInstances(ctx, params, func(o *Options) {
+			o.APIOptions = append(o.APIOptions, apiOptions...)
+		})
+
+		retryable, err := options.Retryable(ctx, params, out, err)
+		if err != nil {
+			return nil, err
+		}
+		if !retryable {
+			return out, nil
+		}
+
+		remainingTime -= time.Since(start)
+		if remainingTime < options.MinDelay || remainingTime <= 0 {
+			break
+		}
+
+		// compute exponential backoff between waiter retries
+		delay, err := smithywaiter.ComputeDelay(
+			attempt, options.MinDelay, options.MaxDelay, remainingTime,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error computing waiter delay, %w", err)
+		}
+
+		remainingTime -= delay
+		// sleep for the delay amount before invoking a request
+		if err := smithytime.SleepWithContext(ctx, delay); err != nil {
+			return nil, fmt.Errorf("request cancelled while waiting, %w", err)
+		}
+	}
+	return nil, fmt.Errorf("exceeded max wait time for InstanceRunning waiter")
+}
+
+func instanceRunningStateRetryable(ctx context.Context, input *DescribeInstancesInput, output *DescribeInstancesOutput, err error) (bool, error) {
+
+	if err == nil {
+		pathValue, err := jmespath.Search("Reservations[].Instances[].State.Name", output)
+		if err != nil {
+			return false, fmt.Errorf("error evaluating waiter state: %w", err)
+		}
+
+		expectedValue := "running"
+		var match = true
+		listOfValues, ok := pathValue.([]interface{})
+		if !ok {
+			return false, fmt.Errorf("waiter comparator expected list got %T", pathValue)
+		}
+
+		if len(listOfValues) == 0 {
+			match = false
+		}
+		for _, v := range listOfValues {
+			value, ok := v.(types.InstanceStateName)
+			if !ok {
+				return false, fmt.Errorf("waiter comparator expected types.InstanceStateName value, got %T", pathValue)
+			}
+
+			if string(value) != expectedValue {
+				match = false
+			}
+		}
+
+		if match {
+			return false, nil
+		}
+	}
+
+	if err == nil {
+		pathValue, err := jmespath.Search("Reservations[].Instances[].State.Name", output)
+		if err != nil {
+			return false, fmt.Errorf("error evaluating waiter state: %w", err)
+		}
+
+		expectedValue := "shutting-down"
+		listOfValues, ok := pathValue.([]interface{})
+		if !ok {
+			return false, fmt.Errorf("waiter comparator expected list got %T", pathValue)
+		}
+
+		for _, v := range listOfValues {
+			value, ok := v.(types.InstanceStateName)
+			if !ok {
+				return false, fmt.Errorf("waiter comparator expected types.InstanceStateName value, got %T", pathValue)
+			}
+
+			if string(value) == expectedValue {
+				return false, fmt.Errorf("waiter state transitioned to Failure")
+			}
+		}
+	}
+
+	if err == nil {
+		pathValue, err := jmespath.Search("Reservations[].Instances[].State.Name", output)
+		if err != nil {
+			return false, fmt.Errorf("error evaluating waiter state: %w", err)
+		}
+
+		expectedValue := "terminated"
+		listOfValues, ok := pathValue.([]interface{})
+		if !ok {
+			return false, fmt.Errorf("waiter comparator expected list got %T", pathValue)
+		}
+
+		for _, v := range listOfValues {
+			value, ok := v.(types.InstanceStateName)
+			if !ok {
+				return false, fmt.Errorf("waiter comparator expected types.InstanceStateName value, got %T", pathValue)
+			}
+
+			if string(value) == expectedValue {
+				return false, fmt.Errorf("waiter state transitioned to Failure")
+			}
+		}
+	}
+
+	if err == nil {
+		pathValue, err := jmespath.Search("Reservations[].Instances[].State.Name", output)
+		if err != nil {
+			return false, fmt.Errorf("error evaluating waiter state: %w", err)
+		}
+
+		expectedValue := "stopping"
+		listOfValues, ok := pathValue.([]interface{})
+		if !ok {
+			return false, fmt.Errorf("waiter comparator expected list got %T", pathValue)
+		}
+
+		for _, v := range listOfValues {
+			value, ok := v.(types.InstanceStateName)
+			if !ok {
+				return false, fmt.Errorf("waiter comparator expected types.InstanceStateName value, got %T", pathValue)
+			}
+
+			if string(value) == expectedValue {
+				return false, fmt.Errorf("waiter state transitioned to Failure")
+			}
+		}
+	}
+
+	if err != nil {
+		var apiErr smithy.APIError
+		ok := errors.As(err, &apiErr)
+		if !ok {
+			return false, fmt.Errorf("expected err to be of type smithy.APIError, got %w", err)
+		}
+
+		if "InvalidInstanceID.NotFound" == apiErr.ErrorCode() {
+			return true, nil
+		}
+	}
+
+	return true, nil
 }
 
 // InstanceStoppedWaiterOptions are waiter options for InstanceStoppedWaiter
@@ -594,8 +1056,17 @@ func NewInstanceStoppedWaiter(client DescribeInstancesAPIClient, optFns ...func(
 // maximum wait duration the waiter will wait. The maxWaitDur is required and must
 // be greater than zero.
 func (w *InstanceStoppedWaiter) Wait(ctx context.Context, params *DescribeInstancesInput, maxWaitDur time.Duration, optFns ...func(*InstanceStoppedWaiterOptions)) error {
+	_, err := w.WaitForOutput(ctx, params, maxWaitDur, optFns...)
+	return err
+}
+
+// WaitForOutput calls the waiter function for InstanceStopped waiter and returns
+// the output of the successful operation. The maxWaitDur is the maximum wait
+// duration the waiter will wait. The maxWaitDur is required and must be greater
+// than zero.
+func (w *InstanceStoppedWaiter) WaitForOutput(ctx context.Context, params *DescribeInstancesInput, maxWaitDur time.Duration, optFns ...func(*InstanceStoppedWaiterOptions)) (*DescribeInstancesOutput, error) {
 	if maxWaitDur <= 0 {
-		return fmt.Errorf("maximum wait time for waiter must be greater than zero")
+		return nil, fmt.Errorf("maximum wait time for waiter must be greater than zero")
 	}
 
 	options := w.options
@@ -608,7 +1079,7 @@ func (w *InstanceStoppedWaiter) Wait(ctx context.Context, params *DescribeInstan
 	}
 
 	if options.MinDelay > options.MaxDelay {
-		return fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
+		return nil, fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
 	}
 
 	ctx, cancelFn := context.WithTimeout(ctx, maxWaitDur)
@@ -636,10 +1107,10 @@ func (w *InstanceStoppedWaiter) Wait(ctx context.Context, params *DescribeInstan
 
 		retryable, err := options.Retryable(ctx, params, out, err)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if !retryable {
-			return nil
+			return out, nil
 		}
 
 		remainingTime -= time.Since(start)
@@ -652,16 +1123,16 @@ func (w *InstanceStoppedWaiter) Wait(ctx context.Context, params *DescribeInstan
 			attempt, options.MinDelay, options.MaxDelay, remainingTime,
 		)
 		if err != nil {
-			return fmt.Errorf("error computing waiter delay, %w", err)
+			return nil, fmt.Errorf("error computing waiter delay, %w", err)
 		}
 
 		remainingTime -= delay
 		// sleep for the delay amount before invoking a request
 		if err := smithytime.SleepWithContext(ctx, delay); err != nil {
-			return fmt.Errorf("request cancelled while waiting, %w", err)
+			return nil, fmt.Errorf("request cancelled while waiting, %w", err)
 		}
 	}
-	return fmt.Errorf("exceeded max wait time for InstanceStopped waiter")
+	return nil, fmt.Errorf("exceeded max wait time for InstanceStopped waiter")
 }
 
 func instanceStoppedStateRetryable(ctx context.Context, input *DescribeInstancesInput, output *DescribeInstancesOutput, err error) (bool, error) {
@@ -808,8 +1279,17 @@ func NewInstanceTerminatedWaiter(client DescribeInstancesAPIClient, optFns ...fu
 // the maximum wait duration the waiter will wait. The maxWaitDur is required and
 // must be greater than zero.
 func (w *InstanceTerminatedWaiter) Wait(ctx context.Context, params *DescribeInstancesInput, maxWaitDur time.Duration, optFns ...func(*InstanceTerminatedWaiterOptions)) error {
+	_, err := w.WaitForOutput(ctx, params, maxWaitDur, optFns...)
+	return err
+}
+
+// WaitForOutput calls the waiter function for InstanceTerminated waiter and
+// returns the output of the successful operation. The maxWaitDur is the maximum
+// wait duration the waiter will wait. The maxWaitDur is required and must be
+// greater than zero.
+func (w *InstanceTerminatedWaiter) WaitForOutput(ctx context.Context, params *DescribeInstancesInput, maxWaitDur time.Duration, optFns ...func(*InstanceTerminatedWaiterOptions)) (*DescribeInstancesOutput, error) {
 	if maxWaitDur <= 0 {
-		return fmt.Errorf("maximum wait time for waiter must be greater than zero")
+		return nil, fmt.Errorf("maximum wait time for waiter must be greater than zero")
 	}
 
 	options := w.options
@@ -822,7 +1302,7 @@ func (w *InstanceTerminatedWaiter) Wait(ctx context.Context, params *DescribeIns
 	}
 
 	if options.MinDelay > options.MaxDelay {
-		return fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
+		return nil, fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
 	}
 
 	ctx, cancelFn := context.WithTimeout(ctx, maxWaitDur)
@@ -850,10 +1330,10 @@ func (w *InstanceTerminatedWaiter) Wait(ctx context.Context, params *DescribeIns
 
 		retryable, err := options.Retryable(ctx, params, out, err)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if !retryable {
-			return nil
+			return out, nil
 		}
 
 		remainingTime -= time.Since(start)
@@ -866,16 +1346,16 @@ func (w *InstanceTerminatedWaiter) Wait(ctx context.Context, params *DescribeIns
 			attempt, options.MinDelay, options.MaxDelay, remainingTime,
 		)
 		if err != nil {
-			return fmt.Errorf("error computing waiter delay, %w", err)
+			return nil, fmt.Errorf("error computing waiter delay, %w", err)
 		}
 
 		remainingTime -= delay
 		// sleep for the delay amount before invoking a request
 		if err := smithytime.SleepWithContext(ctx, delay); err != nil {
-			return fmt.Errorf("request cancelled while waiting, %w", err)
+			return nil, fmt.Errorf("request cancelled while waiting, %w", err)
 		}
 	}
-	return fmt.Errorf("exceeded max wait time for InstanceTerminated waiter")
+	return nil, fmt.Errorf("exceeded max wait time for InstanceTerminated waiter")
 }
 
 func instanceTerminatedStateRetryable(ctx context.Context, input *DescribeInstancesInput, output *DescribeInstancesOutput, err error) (bool, error) {

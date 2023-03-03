@@ -15,14 +15,14 @@ import (
 // The create operation is asynchronous. To verify that the AFI is ready for use,
 // check the output logs. An AFI contains the FPGA bitstream that is ready to
 // download to an FPGA. You can securely deploy an AFI on multiple FPGA-accelerated
-// instances. For more information, see the AWS FPGA Hardware Development Kit
-// (https://github.com/aws/aws-fpga/).
+// instances. For more information, see the Amazon Web Services FPGA Hardware
+// Development Kit (https://github.com/aws/aws-fpga/).
 func (c *Client) CreateFpgaImage(ctx context.Context, params *CreateFpgaImageInput, optFns ...func(*Options)) (*CreateFpgaImageOutput, error) {
 	if params == nil {
 		params = &CreateFpgaImageInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateFpgaImage", params, optFns, addOperationCreateFpgaImageMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateFpgaImage", params, optFns, c.addOperationCreateFpgaImageMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -62,6 +62,8 @@ type CreateFpgaImageInput struct {
 
 	// The tags to apply to the FPGA image during creation.
 	TagSpecifications []types.TagSpecification
+
+	noSmithyDocumentSerde
 }
 
 type CreateFpgaImageOutput struct {
@@ -74,9 +76,11 @@ type CreateFpgaImageOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateFpgaImageMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateFpgaImageMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateFpgaImage{}, middleware.After)
 	if err != nil {
 		return err
