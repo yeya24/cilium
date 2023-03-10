@@ -39,7 +39,7 @@ func (c *Client) ModifySpotFleetRequest(ctx context.Context, params *ModifySpotF
 		params = &ModifySpotFleetRequestInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ModifySpotFleetRequest", params, optFns, addOperationModifySpotFleetRequestMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ModifySpotFleetRequest", params, optFns, c.addOperationModifySpotFleetRequestMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -57,9 +57,12 @@ type ModifySpotFleetRequestInput struct {
 	// This member is required.
 	SpotFleetRequestId *string
 
-	// Indicates whether running Spot Instances should be terminated if the target
-	// capacity of the Spot Fleet request is decreased below the current size of the
-	// Spot Fleet.
+	// Reserved.
+	Context *string
+
+	// Indicates whether running instances should be terminated if the target capacity
+	// of the Spot Fleet request is decreased below the current size of the Spot Fleet.
+	// Supported only for fleets of type maintain.
 	ExcessCapacityTerminationPolicy types.ExcessCapacityTerminationPolicy
 
 	// The launch template and overrides. You can only use this parameter if you
@@ -73,19 +76,24 @@ type ModifySpotFleetRequestInput struct {
 
 	// The size of the fleet.
 	TargetCapacity *int32
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of ModifySpotFleetRequest.
 type ModifySpotFleetRequestOutput struct {
 
-	// Is true if the request succeeds, and an error otherwise.
+	// If the request succeeds, the response returns true. If the request fails, no
+	// response is returned, and instead an error message is returned.
 	Return *bool
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationModifySpotFleetRequestMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationModifySpotFleetRequestMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpModifySpotFleetRequest{}, middleware.After)
 	if err != nil {
 		return err

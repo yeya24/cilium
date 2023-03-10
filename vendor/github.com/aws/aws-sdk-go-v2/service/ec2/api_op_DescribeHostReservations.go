@@ -18,7 +18,7 @@ func (c *Client) DescribeHostReservations(ctx context.Context, params *DescribeH
 		params = &DescribeHostReservationsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeHostReservations", params, optFns, addOperationDescribeHostReservationsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeHostReservations", params, optFns, c.addOperationDescribeHostReservationsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -63,6 +63,8 @@ type DescribeHostReservationsInput struct {
 
 	// The token to use to retrieve the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeHostReservationsOutput struct {
@@ -76,9 +78,11 @@ type DescribeHostReservationsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeHostReservationsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeHostReservationsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeHostReservations{}, middleware.After)
 	if err != nil {
 		return err
@@ -190,12 +194,13 @@ func NewDescribeHostReservationsPaginator(client DescribeHostReservationsAPIClie
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeHostReservationsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeHostReservations page.
@@ -222,7 +227,10 @@ func (p *DescribeHostReservationsPaginator) NextPage(ctx context.Context, optFns
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

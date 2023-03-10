@@ -18,7 +18,7 @@ func (c *Client) ModifyTrafficMirrorFilterRule(ctx context.Context, params *Modi
 		params = &ModifyTrafficMirrorFilterRuleInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ModifyTrafficMirrorFilterRule", params, optFns, addOperationModifyTrafficMirrorFilterRuleMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ModifyTrafficMirrorFilterRule", params, optFns, c.addOperationModifyTrafficMirrorFilterRuleMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -72,8 +72,10 @@ type ModifyTrafficMirrorFilterRuleInput struct {
 	// The port range to assign to the Traffic Mirror rule.
 	SourcePortRange *types.TrafficMirrorPortRangeRequest
 
-	// The type of traffic (ingress | egress) to assign to the rule.
+	// The type of traffic to assign to the rule.
 	TrafficDirection types.TrafficDirection
+
+	noSmithyDocumentSerde
 }
 
 type ModifyTrafficMirrorFilterRuleOutput struct {
@@ -83,9 +85,11 @@ type ModifyTrafficMirrorFilterRuleOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationModifyTrafficMirrorFilterRuleMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationModifyTrafficMirrorFilterRuleMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpModifyTrafficMirrorFilterRule{}, middleware.After)
 	if err != nil {
 		return err

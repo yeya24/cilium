@@ -19,7 +19,7 @@ func (c *Client) DescribeInstanceTypes(ctx context.Context, params *DescribeInst
 		params = &DescribeInstanceTypesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeInstanceTypes", params, optFns, addOperationDescribeInstanceTypesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeInstanceTypes", params, optFns, c.addOperationDescribeInstanceTypesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -109,8 +109,12 @@ type DescribeInstanceTypesInput struct {
 	// for the local instance storage disks (hdd | ssd).
 	//
 	// *
+	// instance-storage-info.encryption-support - Indicates whether data is encrypted
+	// at rest (required | supported | unsupported).
+	//
+	// *
 	// instance-storage-info.nvme-support - Indicates whether non-volatile memory
-	// express (NVMe) is supported for instance store (required | supported) |
+	// express (NVMe) is supported for instance store (required | supported |
 	// unsupported).
 	//
 	// * instance-storage-info.total-size-in-gb - The total amount of
@@ -137,18 +141,26 @@ type DescribeInstanceTypesInput struct {
 	// (ENA) is supported or required (required | supported | unsupported).
 	//
 	// *
-	// network-info.ipv4-addresses-per-interface - The maximum number of private IPv4
-	// addresses per network interface.
+	// network-info.encryption-in-transit-supported - Indicates whether the instance
+	// type automatically encrypts in-transit traffic between instances (true |
+	// false).
 	//
-	// * network-info.ipv6-addresses-per-interface -
-	// The maximum number of private IPv6 addresses per network interface.
+	// * network-info.ipv4-addresses-per-interface - The maximum number of
+	// private IPv4 addresses per network interface.
 	//
 	// *
-	// network-info.ipv6-supported - Indicates whether the instance type supports IPv6
-	// (true | false).
+	// network-info.ipv6-addresses-per-interface - The maximum number of private IPv6
+	// addresses per network interface.
 	//
-	// * network-info.maximum-network-interfaces - The maximum number
-	// of network interfaces per instance.
+	// * network-info.ipv6-supported - Indicates
+	// whether the instance type supports IPv6 (true | false).
+	//
+	// *
+	// network-info.maximum-network-cards - The maximum number of network cards per
+	// instance.
+	//
+	// * network-info.maximum-network-interfaces - The maximum number of
+	// network interfaces per instance.
 	//
 	// * network-info.network-performance - The
 	// network performance (for example, "25 Gigabit").
@@ -194,13 +206,17 @@ type DescribeInstanceTypesInput struct {
 	// Amazon EC2 User Guide.
 	InstanceTypes []types.InstanceType
 
-	// The maximum number of results to return for the request in a single page. The
-	// remaining results can be seen by sending another request with the next token
-	// value.
+	// The maximum number of items to return for this request. To get the next page of
+	// items, make another request with the token returned in the output. For more
+	// information, see Pagination
+	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Query-Requests.html#api-pagination).
 	MaxResults *int32
 
-	// The token to retrieve the next page of results.
+	// The token returned from a previous paginated request. Pagination continues from
+	// the end of the items returned by the previous request.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeInstanceTypesOutput struct {
@@ -210,15 +226,17 @@ type DescribeInstanceTypesOutput struct {
 	// Amazon EC2 User Guide.
 	InstanceTypes []types.InstanceTypeInfo
 
-	// The token to use to retrieve the next page of results. This value is null when
-	// there are no more results to return.
+	// The token to include in another request to get the next page of items. This
+	// value is null when there are no more items to return.
 	NextToken *string
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeInstanceTypesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeInstanceTypesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeInstanceTypes{}, middleware.After)
 	if err != nil {
 		return err
@@ -289,9 +307,10 @@ var _ DescribeInstanceTypesAPIClient = (*Client)(nil)
 // DescribeInstanceTypesPaginatorOptions is the paginator options for
 // DescribeInstanceTypes
 type DescribeInstanceTypesPaginatorOptions struct {
-	// The maximum number of results to return for the request in a single page. The
-	// remaining results can be seen by sending another request with the next token
-	// value.
+	// The maximum number of items to return for this request. To get the next page of
+	// items, make another request with the token returned in the output. For more
+	// information, see Pagination
+	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Query-Requests.html#api-pagination).
 	Limit int32
 
 	// Set to true if pagination should stop if the service returns a pagination token
@@ -328,12 +347,13 @@ func NewDescribeInstanceTypesPaginator(client DescribeInstanceTypesAPIClient, pa
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeInstanceTypesPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeInstanceTypes page.
@@ -360,7 +380,10 @@ func (p *DescribeInstanceTypesPaginator) NextPage(ctx context.Context, optFns ..
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

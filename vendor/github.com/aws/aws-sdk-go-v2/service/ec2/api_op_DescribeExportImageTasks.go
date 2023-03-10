@@ -18,7 +18,7 @@ func (c *Client) DescribeExportImageTasks(ctx context.Context, params *DescribeE
 		params = &DescribeExportImageTasksInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeExportImageTasks", params, optFns, addOperationDescribeExportImageTasksMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeExportImageTasks", params, optFns, c.addOperationDescribeExportImageTasksMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -48,6 +48,8 @@ type DescribeExportImageTasksInput struct {
 
 	// A token that indicates the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeExportImageTasksOutput struct {
@@ -61,9 +63,11 @@ type DescribeExportImageTasksOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeExportImageTasksMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeExportImageTasksMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeExportImageTasks{}, middleware.After)
 	if err != nil {
 		return err
@@ -172,12 +176,13 @@ func NewDescribeExportImageTasksPaginator(client DescribeExportImageTasksAPIClie
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeExportImageTasksPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeExportImageTasks page.
@@ -204,7 +209,10 @@ func (p *DescribeExportImageTasksPaginator) NextPage(ctx context.Context, optFns
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 
