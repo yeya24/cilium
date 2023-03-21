@@ -17,7 +17,7 @@ func (c *Client) DescribeSpotFleetInstances(ctx context.Context, params *Describ
 		params = &DescribeSpotFleetInstancesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeSpotFleetInstances", params, optFns, addOperationDescribeSpotFleetInstancesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeSpotFleetInstances", params, optFns, c.addOperationDescribeSpotFleetInstancesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -41,13 +41,17 @@ type DescribeSpotFleetInstancesInput struct {
 	// UnauthorizedOperation.
 	DryRun *bool
 
-	// The maximum number of results to return in a single call. Specify a value
-	// between 1 and 1000. The default value is 1000. To retrieve the remaining
-	// results, make another call with the returned NextToken value.
+	// The maximum number of items to return for this request. To get the next page of
+	// items, make another request with the token returned in the output. For more
+	// information, see Pagination
+	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Query-Requests.html#api-pagination).
 	MaxResults *int32
 
-	// The token for the next set of results.
+	// The token to include in another request to get the next page of items. This
+	// value is null when there are no more items to return.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of DescribeSpotFleetInstances.
@@ -57,8 +61,8 @@ type DescribeSpotFleetInstancesOutput struct {
 	// date.
 	ActiveInstances []types.ActiveInstance
 
-	// The token required to retrieve the next set of results. This value is null when
-	// there are no more results to return.
+	// The token to include in another request to get the next page of items. This
+	// value is null when there are no more items to return.
 	NextToken *string
 
 	// The ID of the Spot Fleet request.
@@ -66,9 +70,11 @@ type DescribeSpotFleetInstancesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeSpotFleetInstancesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeSpotFleetInstancesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeSpotFleetInstances{}, middleware.After)
 	if err != nil {
 		return err
