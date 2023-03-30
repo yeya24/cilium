@@ -16,7 +16,7 @@ import (
 // associated with a route table. If a subnet is not explicitly associated with any
 // route table, it is implicitly associated with the main route table. This command
 // does not return the subnet ID for implicit associations. For more information,
-// see Route Tables
+// see Route tables
 // (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html) in the
 // Amazon Virtual Private Cloud User Guide.
 func (c *Client) DescribeRouteTables(ctx context.Context, params *DescribeRouteTablesInput, optFns ...func(*Options)) (*DescribeRouteTablesOutput, error) {
@@ -24,7 +24,7 @@ func (c *Client) DescribeRouteTables(ctx context.Context, params *DescribeRouteT
 		params = &DescribeRouteTablesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeRouteTables", params, optFns, addOperationDescribeRouteTablesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeRouteTables", params, optFns, c.addOperationDescribeRouteTablesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -58,20 +58,20 @@ type DescribeRouteTablesInput struct {
 	// Route tables that do not have an association ID are not returned in the
 	// response.
 	//
-	// * owner-id - The ID of the AWS account that owns the route table.
+	// * owner-id - The ID of the Amazon Web Services account that owns the
+	// route table.
+	//
+	// * route-table-id - The ID of the route table.
 	//
 	// *
-	// route-table-id - The ID of the route table.
+	// route.destination-cidr-block - The IPv4 CIDR range specified in a route in the
+	// table.
 	//
-	// * route.destination-cidr-block -
-	// The IPv4 CIDR range specified in a route in the table.
+	// * route.destination-ipv6-cidr-block - The IPv6 CIDR range specified in a
+	// route in the route table.
 	//
-	// *
-	// route.destination-ipv6-cidr-block - The IPv6 CIDR range specified in a route in
-	// the route table.
-	//
-	// * route.destination-prefix-list-id - The ID (prefix) of the
-	// AWS service specified in a route in the table.
+	// * route.destination-prefix-list-id - The ID (prefix)
+	// of the Amazon Web Service specified in a route in the table.
 	//
 	// *
 	// route.egress-only-internet-gateway-id - The ID of an egress-only Internet
@@ -117,22 +117,27 @@ type DescribeRouteTablesInput struct {
 	// * vpc-id - The ID of the VPC for the route table.
 	Filters []types.Filter
 
-	// The maximum number of results to return with a single call. To retrieve the
-	// remaining results, make another call with the returned nextToken value.
+	// The maximum number of items to return for this request. To get the next page of
+	// items, make another request with the token returned in the output. For more
+	// information, see Pagination
+	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Query-Requests.html#api-pagination).
 	MaxResults *int32
 
-	// The token for the next page of results.
+	// The token returned from a previous paginated request. Pagination continues from
+	// the end of the items returned by the previous request.
 	NextToken *string
 
 	// One or more route table IDs. Default: Describes all your route tables.
 	RouteTableIds []string
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of DescribeRouteTables.
 type DescribeRouteTablesOutput struct {
 
-	// The token to use to retrieve the next page of results. This value is null when
-	// there are no more results to return.
+	// The token to include in another request to get the next page of items. This
+	// value is null when there are no more items to return.
 	NextToken *string
 
 	// Information about one or more route tables.
@@ -140,9 +145,11 @@ type DescribeRouteTablesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeRouteTablesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeRouteTablesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeRouteTables{}, middleware.After)
 	if err != nil {
 		return err
@@ -213,8 +220,10 @@ var _ DescribeRouteTablesAPIClient = (*Client)(nil)
 // DescribeRouteTablesPaginatorOptions is the paginator options for
 // DescribeRouteTables
 type DescribeRouteTablesPaginatorOptions struct {
-	// The maximum number of results to return with a single call. To retrieve the
-	// remaining results, make another call with the returned nextToken value.
+	// The maximum number of items to return for this request. To get the next page of
+	// items, make another request with the token returned in the output. For more
+	// information, see Pagination
+	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Query-Requests.html#api-pagination).
 	Limit int32
 
 	// Set to true if pagination should stop if the service returns a pagination token
@@ -251,12 +260,13 @@ func NewDescribeRouteTablesPaginator(client DescribeRouteTablesAPIClient, params
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeRouteTablesPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeRouteTables page.
@@ -283,7 +293,10 @@ func (p *DescribeRouteTablesPaginator) NextPage(ctx context.Context, optFns ...f
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

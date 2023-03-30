@@ -18,7 +18,7 @@ func (c *Client) DescribeCarrierGateways(ctx context.Context, params *DescribeCa
 		params = &DescribeCarrierGatewaysInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeCarrierGateways", params, optFns, addOperationDescribeCarrierGatewaysMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeCarrierGateways", params, optFns, c.addOperationDescribeCarrierGatewaysMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -47,20 +47,21 @@ type DescribeCarrierGatewaysInput struct {
 	// state - The state of the carrier gateway (pending | failed | available |
 	// deleting | deleted).
 	//
-	// * owner-id - The AWS account ID of the owner of the
+	// * owner-id - The Amazon Web Services account ID of the
+	// owner of the carrier gateway.
+	//
+	// * tag: - The key/value combination of a tag
+	// assigned to the resource. Use the tag key in the filter name and the tag value
+	// as the filter value. For example, to find all resources that have a tag with the
+	// key Owner and the value TeamA, specify tag:Owner for the filter name and TeamA
+	// for the filter value.
+	//
+	// * tag-key - The key of a tag assigned to the resource.
+	// Use this filter to find all resources assigned a tag with a specific key,
+	// regardless of the tag value.
+	//
+	// * vpc-id - The ID of the VPC associated with the
 	// carrier gateway.
-	//
-	// * tag: - The key/value combination of a tag assigned to the
-	// resource. Use the tag key in the filter name and the tag value as the filter
-	// value. For example, to find all resources that have a tag with the key Owner and
-	// the value TeamA, specify tag:Owner for the filter name and TeamA for the filter
-	// value.
-	//
-	// * tag-key - The key of a tag assigned to the resource. Use this filter
-	// to find all resources assigned a tag with a specific key, regardless of the tag
-	// value.
-	//
-	// * vpc-id - The ID of the VPC associated with the carrier gateway.
 	Filters []types.Filter
 
 	// The maximum number of results to return with a single call. To retrieve the
@@ -69,6 +70,8 @@ type DescribeCarrierGatewaysInput struct {
 
 	// The token for the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeCarrierGatewaysOutput struct {
@@ -82,9 +85,11 @@ type DescribeCarrierGatewaysOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeCarrierGatewaysMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeCarrierGatewaysMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeCarrierGateways{}, middleware.After)
 	if err != nil {
 		return err
@@ -194,12 +199,13 @@ func NewDescribeCarrierGatewaysPaginator(client DescribeCarrierGatewaysAPIClient
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeCarrierGatewaysPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeCarrierGateways page.
@@ -226,7 +232,10 @@ func (p *DescribeCarrierGatewaysPaginator) NextPage(ctx context.Context, optFns 
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

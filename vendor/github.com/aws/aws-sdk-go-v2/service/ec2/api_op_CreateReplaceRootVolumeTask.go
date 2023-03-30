@@ -12,16 +12,19 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Creates a root volume replacement task for an Amazon EC2 instance. The root
-// volume can either be restored to its initial launch state, or it can be restored
-// using a specific snapshot. For more information, see Replace a root volume
-// (https://docs.aws.amazon.com/) in the Amazon Elastic Compute Cloud User Guide.
+// Replaces the EBS-backed root volume for a running instance with a new volume
+// that is restored to the original root volume's launch state, that is restored to
+// a specific snapshot taken from the original root volume, or that is restored
+// from an AMI that has the same key characteristics as that of the instance. For
+// more information, see Replace a root volume
+// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/replace-root.html) in the
+// Amazon Elastic Compute Cloud User Guide.
 func (c *Client) CreateReplaceRootVolumeTask(ctx context.Context, params *CreateReplaceRootVolumeTaskInput, optFns ...func(*Options)) (*CreateReplaceRootVolumeTaskOutput, error) {
 	if params == nil {
 		params = &CreateReplaceRootVolumeTaskInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateReplaceRootVolumeTask", params, optFns, addOperationCreateReplaceRootVolumeTaskMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateReplaceRootVolumeTask", params, optFns, c.addOperationCreateReplaceRootVolumeTaskMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -41,9 +44,16 @@ type CreateReplaceRootVolumeTaskInput struct {
 	// Unique, case-sensitive identifier you provide to ensure the idempotency of the
 	// request. If you do not specify a client token, a randomly generated token is
 	// used for the request to ensure idempotency. For more information, see Ensuring
-	// Idempotency
+	// idempotency
 	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	ClientToken *string
+
+	// Indicates whether to automatically delete the original root volume after the
+	// root volume replacement task completes. To delete the original root volume,
+	// specify true. If you choose to keep the original root volume after the
+	// replacement task completes, you must manually delete it when you no longer need
+	// it.
+	DeleteReplacedRootVolume *bool
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
@@ -51,12 +61,24 @@ type CreateReplaceRootVolumeTaskInput struct {
 	// UnauthorizedOperation.
 	DryRun *bool
 
-	// The ID of the snapshot from which to restore the replacement root volume. If you
-	// want to restore the volume to the initial launch state, omit this parameter.
+	// The ID of the AMI to use to restore the root volume. The specified AMI must have
+	// the same product code, billing information, architecture type, and
+	// virtualization type as that of the instance. If you want to restore the
+	// replacement volume from a specific snapshot, or if you want to restore it to its
+	// launch state, omit this parameter.
+	ImageId *string
+
+	// The ID of the snapshot from which to restore the replacement root volume. The
+	// specified snapshot must be a snapshot that you previously created from the
+	// original root volume. If you want to restore the replacement root volume to the
+	// initial launch state, or if you want to restore the replacement root volume from
+	// an AMI, omit this parameter.
 	SnapshotId *string
 
 	// The tags to apply to the root volume replacement task.
 	TagSpecifications []types.TagSpecification
+
+	noSmithyDocumentSerde
 }
 
 type CreateReplaceRootVolumeTaskOutput struct {
@@ -66,9 +88,11 @@ type CreateReplaceRootVolumeTaskOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateReplaceRootVolumeTaskMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateReplaceRootVolumeTaskMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateReplaceRootVolumeTask{}, middleware.After)
 	if err != nil {
 		return err

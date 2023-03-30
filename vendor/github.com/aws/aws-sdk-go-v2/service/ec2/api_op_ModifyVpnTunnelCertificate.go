@@ -17,7 +17,7 @@ func (c *Client) ModifyVpnTunnelCertificate(ctx context.Context, params *ModifyV
 		params = &ModifyVpnTunnelCertificateInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ModifyVpnTunnelCertificate", params, optFns, addOperationModifyVpnTunnelCertificateMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ModifyVpnTunnelCertificate", params, optFns, c.addOperationModifyVpnTunnelCertificateMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +29,7 @@ func (c *Client) ModifyVpnTunnelCertificate(ctx context.Context, params *ModifyV
 
 type ModifyVpnTunnelCertificateInput struct {
 
-	// The ID of the AWS Site-to-Site VPN connection.
+	// The ID of the Amazon Web Services Site-to-Site VPN connection.
 	//
 	// This member is required.
 	VpnConnectionId *string
@@ -44,18 +44,22 @@ type ModifyVpnTunnelCertificateInput struct {
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
 	// UnauthorizedOperation.
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type ModifyVpnTunnelCertificateOutput struct {
 
-	// Describes a VPN connection.
+	// Information about the VPN connection.
 	VpnConnection *types.VpnConnection
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationModifyVpnTunnelCertificateMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationModifyVpnTunnelCertificateMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpModifyVpnTunnelCertificate{}, middleware.After)
 	if err != nil {
 		return err
