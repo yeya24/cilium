@@ -19,7 +19,7 @@ func (c *Client) ModifyNetworkInterfaceAttribute(ctx context.Context, params *Mo
 		params = &ModifyNetworkInterfaceAttributeInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ModifyNetworkInterfaceAttribute", params, optFns, addOperationModifyNetworkInterfaceAttributeMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ModifyNetworkInterfaceAttribute", params, optFns, c.addOperationModifyNetworkInterfaceAttributeMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -37,8 +37,8 @@ type ModifyNetworkInterfaceAttributeInput struct {
 	// This member is required.
 	NetworkInterfaceId *string
 
-	// Information about the interface attachment. If modifying the 'delete on
-	// termination' attribute, you must specify the ID of the interface attachment.
+	// Information about the interface attachment. If modifying the delete on
+	// termination attribute, you must specify the ID of the interface attachment.
 	Attachment *types.NetworkInterfaceAttachmentChanges
 
 	// A description for the network interface.
@@ -49,6 +49,10 @@ type ModifyNetworkInterfaceAttributeInput struct {
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
 	// UnauthorizedOperation.
 	DryRun *bool
+
+	// Updates the ENA Express configuration for the network interface that’s attached
+	// to the instance.
+	EnaSrdSpecification *types.EnaSrdSpecification
 
 	// Changes the security groups for the network interface. The new set of groups you
 	// specify replaces the current set. You must specify at least one group, even if
@@ -63,14 +67,18 @@ type ModifyNetworkInterfaceAttributeInput struct {
 	// if the instance runs services such as network address translation, routing, or
 	// firewalls.
 	SourceDestCheck *types.AttributeBooleanValue
+
+	noSmithyDocumentSerde
 }
 
 type ModifyNetworkInterfaceAttributeOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationModifyNetworkInterfaceAttributeMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationModifyNetworkInterfaceAttributeMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpModifyNetworkInterfaceAttribute{}, middleware.After)
 	if err != nil {
 		return err
