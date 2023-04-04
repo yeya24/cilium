@@ -12,12 +12,19 @@ import (
 )
 
 // Creates an Amazon EBS-backed AMI from an Amazon EBS-backed instance that is
-// either running or stopped. If you customized your instance with instance store
-// volumes or EBS volumes in addition to the root device volume, the new AMI
-// contains block device mapping information for those volumes. When you launch an
-// instance from this new AMI, the instance automatically launches with those
-// additional volumes. For more information, see Creating Amazon EBS-Backed Linux
-// AMIs
+// either running or stopped. By default, when Amazon EC2 creates the new AMI, it
+// reboots the instance so that it can take snapshots of the attached volumes while
+// data is at rest, in order to ensure a consistent state. You can set the NoReboot
+// parameter to true in the API request, or use the --no-reboot option in the CLI
+// to prevent Amazon EC2 from shutting down and rebooting the instance. If you
+// choose to bypass the shutdown and reboot process by setting the NoReboot
+// parameter to true in the API request, or by using the --no-reboot option in the
+// CLI, we can't guarantee the file system integrity of the created image. If you
+// customized your instance with instance store volumes or Amazon EBS volumes in
+// addition to the root device volume, the new AMI contains block device mapping
+// information for those volumes. When you launch an instance from this new AMI,
+// the instance automatically launches with those additional volumes. For more
+// information, see Create an Amazon EBS-backed Linux AMI
 // (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/creating-an-ami-ebs.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 func (c *Client) CreateImage(ctx context.Context, params *CreateImageInput, optFns ...func(*Options)) (*CreateImageOutput, error) {
@@ -25,7 +32,7 @@ func (c *Client) CreateImage(ctx context.Context, params *CreateImageInput, optF
 		params = &CreateImageInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateImage", params, optFns, addOperationCreateImageMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateImage", params, optFns, c.addOperationCreateImageMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -63,10 +70,15 @@ type CreateImageInput struct {
 	// UnauthorizedOperation.
 	DryRun *bool
 
-	// By default, Amazon EC2 attempts to shut down and reboot the instance before
-	// creating the image. If the No Reboot option is set, Amazon EC2 doesn't shut down
-	// the instance before creating the image. When this option is used, file system
-	// integrity on the created image can't be guaranteed.
+	// By default, when Amazon EC2 creates the new AMI, it reboots the instance so that
+	// it can take snapshots of the attached volumes while data is at rest, in order to
+	// ensure a consistent state. You can set the NoReboot parameter to true in the API
+	// request, or use the --no-reboot option in the CLI to prevent Amazon EC2 from
+	// shutting down and rebooting the instance. If you choose to bypass the shutdown
+	// and reboot process by setting the NoReboot parameter to true in the API request,
+	// or by using the --no-reboot option in the CLI, we can't guarantee the file
+	// system integrity of the created image. Default: false (follow standard reboot
+	// process)
 	NoReboot *bool
 
 	// The tags to apply to the AMI and snapshots on creation. You can tag the AMI, the
@@ -76,14 +88,16 @@ type CreateImageInput struct {
 	// image.
 	//
 	// * To tag the snapshots that are created of the root volume and of other
-	// EBS volumes that are attached to the instance, the value for ResourceType must
-	// be snapshot. The same tag is applied to all of the snapshots that are
+	// Amazon EBS volumes that are attached to the instance, the value for ResourceType
+	// must be snapshot. The same tag is applied to all of the snapshots that are
 	// created.
 	//
 	// If you specify other values for ResourceType, the request fails. To
 	// tag an AMI or snapshot after it has been created, see CreateTags
 	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateTags.html).
 	TagSpecifications []types.TagSpecification
+
+	noSmithyDocumentSerde
 }
 
 type CreateImageOutput struct {
@@ -93,9 +107,11 @@ type CreateImageOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateImageMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateImageMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateImage{}, middleware.After)
 	if err != nil {
 		return err
