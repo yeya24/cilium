@@ -28,13 +28,17 @@ import (
 // spot-fleet-request and instance resource types are supported. For more
 // information, see Spot Fleet requests
 // (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet-requests.html)
-// in the Amazon EC2 User Guide for Linux Instances.
+// in the Amazon EC2 User Guide. We strongly discourage using the RequestSpotFleet
+// API because it is a legacy API with no planned investment. For options for
+// requesting Spot Instances, see Which is the best Spot request method to use?
+// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-best-practices.html#which-spot-request-method-to-use)
+// in the Amazon EC2 User Guide.
 func (c *Client) RequestSpotFleet(ctx context.Context, params *RequestSpotFleetInput, optFns ...func(*Options)) (*RequestSpotFleetOutput, error) {
 	if params == nil {
 		params = &RequestSpotFleetInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "RequestSpotFleet", params, optFns, addOperationRequestSpotFleetMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "RequestSpotFleet", params, optFns, c.addOperationRequestSpotFleetMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -57,6 +61,8 @@ type RequestSpotFleetInput struct {
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
 	// UnauthorizedOperation.
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of RequestSpotFleet.
@@ -67,9 +73,11 @@ type RequestSpotFleetOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationRequestSpotFleetMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationRequestSpotFleetMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpRequestSpotFleet{}, middleware.After)
 	if err != nil {
 		return err

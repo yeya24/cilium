@@ -18,7 +18,7 @@ func (c *Client) GetGroupsForCapacityReservation(ctx context.Context, params *Ge
 		params = &GetGroupsForCapacityReservationInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "GetGroupsForCapacityReservation", params, optFns, addOperationGetGroupsForCapacityReservationMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "GetGroupsForCapacityReservation", params, optFns, c.addOperationGetGroupsForCapacityReservationMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,9 @@ func (c *Client) GetGroupsForCapacityReservation(ctx context.Context, params *Ge
 
 type GetGroupsForCapacityReservationInput struct {
 
-	// The ID of the Capacity Reservation.
+	// The ID of the Capacity Reservation. If you specify a Capacity Reservation that
+	// is shared with you, the operation returns only Capacity Reservation groups that
+	// you own.
 	//
 	// This member is required.
 	CapacityReservationId *string
@@ -49,6 +51,8 @@ type GetGroupsForCapacityReservationInput struct {
 
 	// The token to use to retrieve the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type GetGroupsForCapacityReservationOutput struct {
@@ -63,9 +67,11 @@ type GetGroupsForCapacityReservationOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationGetGroupsForCapacityReservationMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationGetGroupsForCapacityReservationMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpGetGroupsForCapacityReservation{}, middleware.After)
 	if err != nil {
 		return err
@@ -181,12 +187,13 @@ func NewGetGroupsForCapacityReservationPaginator(client GetGroupsForCapacityRese
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *GetGroupsForCapacityReservationPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next GetGroupsForCapacityReservation page.
@@ -213,7 +220,10 @@ func (p *GetGroupsForCapacityReservationPaginator) NextPage(ctx context.Context,
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

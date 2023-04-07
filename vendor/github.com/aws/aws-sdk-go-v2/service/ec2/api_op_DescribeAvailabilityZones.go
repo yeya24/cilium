@@ -15,7 +15,7 @@ import (
 // available to you. If there is an event impacting a zone, you can use this
 // request to view the state and any provided messages for that zone. For more
 // information about Availability Zones, Local Zones, and Wavelength Zones, see
-// Regions, Zones and Outposts
+// Regions and zones
 // (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 func (c *Client) DescribeAvailabilityZones(ctx context.Context, params *DescribeAvailabilityZonesInput, optFns ...func(*Options)) (*DescribeAvailabilityZonesOutput, error) {
@@ -23,7 +23,7 @@ func (c *Client) DescribeAvailabilityZones(ctx context.Context, params *Describe
 		params = &DescribeAvailabilityZonesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeAvailabilityZones", params, optFns, addOperationDescribeAvailabilityZonesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeAvailabilityZones", params, optFns, c.addOperationDescribeAvailabilityZonesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ type DescribeAvailabilityZonesInput struct {
 	// *
 	// message - The Zone message.
 	//
-	// * opt-in-status - The opt-in status (opted-in, and
+	// * opt-in-status - The opt-in status (opted-in |
 	// not-opted-in | opt-in-not-required).
 	//
 	// * parent-zoneID - The ID of the zone that
@@ -71,22 +71,19 @@ type DescribeAvailabilityZonesInput struct {
 	// us-east-1).
 	//
 	// * state - The state of the Availability Zone, the Local Zone, or
-	// the Wavelength Zone (available | information | impaired | unavailable).
+	// the Wavelength Zone (available).
 	//
-	// *
-	// zone-id - The ID of the Availability Zone (for example, use1-az1), the Local
-	// Zone (for example, usw2-lax1-az1), or the Wavelength Zone (for example,
+	// * zone-id - The ID of the Availability Zone
+	// (for example, use1-az1), the Local Zone (for example, usw2-lax1-az1), or the
+	// Wavelength Zone (for example, us-east-1-wl1-bos-wlz-1).
+	//
+	// * zone-name - The name
+	// of the Availability Zone (for example, us-east-1a), the Local Zone (for example,
+	// us-west-2-lax-1a), or the Wavelength Zone (for example,
 	// us-east-1-wl1-bos-wlz-1).
 	//
-	// * zone-type - The type of zone, for example,
-	// local-zone.
-	//
-	// * zone-name - The name of the Availability Zone (for example,
-	// us-east-1a), the Local Zone (for example, us-west-2-lax-1a), or the Wavelength
-	// Zone (for example, us-east-1-wl1-bos-wlz-1).
-	//
-	// * zone-type - The type of zone,
-	// for example, local-zone.
+	// * zone-type - The type of zone (availability-zone |
+	// local-zone | wavelength-zone).
 	Filters []types.Filter
 
 	// The IDs of the Availability Zones, Local Zones, and Wavelength Zones.
@@ -94,6 +91,8 @@ type DescribeAvailabilityZonesInput struct {
 
 	// The names of the Availability Zones, Local Zones, and Wavelength Zones.
 	ZoneNames []string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeAvailabilityZonesOutput struct {
@@ -103,9 +102,11 @@ type DescribeAvailabilityZonesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeAvailabilityZonesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeAvailabilityZonesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeAvailabilityZones{}, middleware.After)
 	if err != nil {
 		return err

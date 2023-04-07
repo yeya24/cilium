@@ -12,14 +12,15 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Describes your managed prefix lists and any AWS-managed prefix lists. To view
-// the entries for your prefix list, use GetManagedPrefixListEntries.
+// Describes your managed prefix lists and any Amazon Web Services-managed prefix
+// lists. To view the entries for your prefix list, use
+// GetManagedPrefixListEntries.
 func (c *Client) DescribeManagedPrefixLists(ctx context.Context, params *DescribeManagedPrefixListsInput, optFns ...func(*Options)) (*DescribeManagedPrefixListsOutput, error) {
 	if params == nil {
 		params = &DescribeManagedPrefixListsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeManagedPrefixLists", params, optFns, addOperationDescribeManagedPrefixListsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeManagedPrefixLists", params, optFns, c.addOperationDescribeManagedPrefixListsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -57,6 +58,8 @@ type DescribeManagedPrefixListsInput struct {
 
 	// One or more prefix list IDs.
 	PrefixListIds []string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeManagedPrefixListsOutput struct {
@@ -70,9 +73,11 @@ type DescribeManagedPrefixListsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeManagedPrefixListsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeManagedPrefixListsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeManagedPrefixLists{}, middleware.After)
 	if err != nil {
 		return err
@@ -183,12 +188,13 @@ func NewDescribeManagedPrefixListsPaginator(client DescribeManagedPrefixListsAPI
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeManagedPrefixListsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeManagedPrefixLists page.
@@ -215,7 +221,10 @@ func (p *DescribeManagedPrefixListsPaginator) NextPage(ctx context.Context, optF
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

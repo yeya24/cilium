@@ -17,7 +17,7 @@ func (c *Client) DeleteLocalGatewayRoute(ctx context.Context, params *DeleteLoca
 		params = &DeleteLocalGatewayRouteInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DeleteLocalGatewayRoute", params, optFns, addOperationDeleteLocalGatewayRouteMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DeleteLocalGatewayRoute", params, optFns, c.addOperationDeleteLocalGatewayRouteMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -29,21 +29,25 @@ func (c *Client) DeleteLocalGatewayRoute(ctx context.Context, params *DeleteLoca
 
 type DeleteLocalGatewayRouteInput struct {
 
-	// The CIDR range for the route. This must match the CIDR for the route exactly.
-	//
-	// This member is required.
-	DestinationCidrBlock *string
-
 	// The ID of the local gateway route table.
 	//
 	// This member is required.
 	LocalGatewayRouteTableId *string
+
+	// The CIDR range for the route. This must match the CIDR for the route exactly.
+	DestinationCidrBlock *string
+
+	// Use a prefix list in place of DestinationCidrBlock. You cannot use
+	// DestinationPrefixListId and DestinationCidrBlock in the same request.
+	DestinationPrefixListId *string
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
 	// UnauthorizedOperation.
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type DeleteLocalGatewayRouteOutput struct {
@@ -53,9 +57,11 @@ type DeleteLocalGatewayRouteOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDeleteLocalGatewayRouteMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDeleteLocalGatewayRouteMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDeleteLocalGatewayRoute{}, middleware.After)
 	if err != nil {
 		return err

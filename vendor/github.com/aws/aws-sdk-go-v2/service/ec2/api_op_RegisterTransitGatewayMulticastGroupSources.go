@@ -25,7 +25,7 @@ func (c *Client) RegisterTransitGatewayMulticastGroupSources(ctx context.Context
 		params = &RegisterTransitGatewayMulticastGroupSourcesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "RegisterTransitGatewayMulticastGroupSources", params, optFns, addOperationRegisterTransitGatewayMulticastGroupSourcesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "RegisterTransitGatewayMulticastGroupSources", params, optFns, c.addOperationRegisterTransitGatewayMulticastGroupSourcesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -37,6 +37,17 @@ func (c *Client) RegisterTransitGatewayMulticastGroupSources(ctx context.Context
 
 type RegisterTransitGatewayMulticastGroupSourcesInput struct {
 
+	// The group sources' network interface IDs to register with the transit gateway
+	// multicast group.
+	//
+	// This member is required.
+	NetworkInterfaceIds []string
+
+	// The ID of the transit gateway multicast domain.
+	//
+	// This member is required.
+	TransitGatewayMulticastDomainId *string
+
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
 	// required permissions, the error response is DryRunOperation. Otherwise, it is
@@ -46,12 +57,7 @@ type RegisterTransitGatewayMulticastGroupSourcesInput struct {
 	// The IP address assigned to the transit gateway multicast group.
 	GroupIpAddress *string
 
-	// The group sources' network interface IDs to register with the transit gateway
-	// multicast group.
-	NetworkInterfaceIds []string
-
-	// The ID of the transit gateway multicast domain.
-	TransitGatewayMulticastDomainId *string
+	noSmithyDocumentSerde
 }
 
 type RegisterTransitGatewayMulticastGroupSourcesOutput struct {
@@ -61,9 +67,11 @@ type RegisterTransitGatewayMulticastGroupSourcesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationRegisterTransitGatewayMulticastGroupSourcesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationRegisterTransitGatewayMulticastGroupSourcesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpRegisterTransitGatewayMulticastGroupSources{}, middleware.After)
 	if err != nil {
 		return err
@@ -106,6 +114,9 @@ func addOperationRegisterTransitGatewayMulticastGroupSourcesMiddlewares(stack *m
 		return err
 	}
 	if err = smithyhttp.AddCloseResponseBodyMiddleware(stack); err != nil {
+		return err
+	}
+	if err = addOpRegisterTransitGatewayMulticastGroupSourcesValidationMiddleware(stack); err != nil {
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opRegisterTransitGatewayMulticastGroupSources(options.Region), middleware.Before); err != nil {
