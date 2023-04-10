@@ -14,15 +14,14 @@ import (
 
 // Launches an EC2 Fleet. You can create a single EC2 Fleet that includes multiple
 // launch specifications that vary by instance type, AMI, Availability Zone, or
-// subnet. For more information, see Launching an EC2 Fleet
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-fleet.html) in the
-// Amazon EC2 User Guide.
+// subnet. For more information, see EC2 Fleet (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-fleet.html)
+// in the Amazon EC2 User Guide.
 func (c *Client) CreateFleet(ctx context.Context, params *CreateFleetInput, optFns ...func(*Options)) (*CreateFleetOutput, error) {
 	if params == nil {
 		params = &CreateFleetInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateFleet", params, optFns, addOperationCreateFleetMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateFleet", params, optFns, c.addOperationCreateFleetMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -45,63 +44,62 @@ type CreateFleetInput struct {
 	TargetCapacitySpecification *types.TargetCapacitySpecificationRequest
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency of
-	// the request. For more information, see Ensuring Idempotency
-	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	// the request. For more information, see Ensuring idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html)
+	// .
 	ClientToken *string
+
+	// Reserved.
+	Context *string
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// Indicates whether running instances should be terminated if the total target
 	// capacity of the EC2 Fleet is decreased below the current size of the EC2 Fleet.
+	// Supported only for fleets of type maintain .
 	ExcessCapacityTerminationPolicy types.FleetExcessCapacityTerminationPolicy
 
 	// Describes the configuration of On-Demand Instances in an EC2 Fleet.
 	OnDemandOptions *types.OnDemandOptionsRequest
 
 	// Indicates whether EC2 Fleet should replace unhealthy Spot Instances. Supported
-	// only for fleets of type maintain. For more information, see EC2 Fleet health
-	// checks
-	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/manage-ec2-fleet.html#ec2-fleet-health-checks)
+	// only for fleets of type maintain . For more information, see EC2 Fleet health
+	// checks (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/manage-ec2-fleet.html#ec2-fleet-health-checks)
 	// in the Amazon EC2 User Guide.
 	ReplaceUnhealthyInstances *bool
 
 	// Describes the configuration of Spot Instances in an EC2 Fleet.
 	SpotOptions *types.SpotOptionsRequest
 
-	// The key-value pair for tagging the EC2 Fleet request on creation. The value for
-	// ResourceType must be fleet, otherwise the fleet request fails. To tag instances
-	// at launch, specify the tags in the launch template
-	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html#create-launch-template).
-	// For information about tagging after launch, see Tagging your resources
-	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html#tag-resources).
+	// The key-value pair for tagging the EC2 Fleet request on creation. For more
+	// information, see Tagging your resources (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html#tag-resources)
+	// . If the fleet type is instant , specify a resource type of fleet to tag the
+	// fleet or instance to tag the instances at launch. If the fleet type is maintain
+	// or request , specify a resource type of fleet to tag the fleet. You cannot
+	// specify a resource type of instance . To tag instances at launch, specify the
+	// tags in a launch template (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html#create-launch-template)
+	// .
 	TagSpecifications []types.TagSpecification
 
 	// Indicates whether running instances should be terminated when the EC2 Fleet
 	// expires.
 	TerminateInstancesWithExpiration *bool
 
-	// The type of request. The default value is maintain.
-	//
-	// * maintain - The EC2 Fleet
-	// places an asynchronous request for your desired capacity, and continues to
-	// maintain your desired Spot capacity by replenishing interrupted Spot
-	// Instances.
-	//
-	// * request - The EC2 Fleet places an asynchronous one-time request
-	// for your desired capacity, but does submit Spot requests in alternative capacity
-	// pools if Spot capacity is unavailable, and does not maintain Spot capacity if
-	// Spot Instances are interrupted.
-	//
-	// * instant - The EC2 Fleet places a synchronous
-	// one-time request for your desired capacity, and returns errors for any instances
-	// that could not be launched.
-	//
-	// For more information, see EC2 Fleet request types
-	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-fleet-configuration-strategies.html#ec2-fleet-request-type)
+	// The fleet type. The default value is maintain .
+	//   - maintain - The EC2 Fleet places an asynchronous request for your desired
+	//   capacity, and continues to maintain your desired Spot capacity by replenishing
+	//   interrupted Spot Instances.
+	//   - request - The EC2 Fleet places an asynchronous one-time request for your
+	//   desired capacity, but does submit Spot requests in alternative capacity pools if
+	//   Spot capacity is unavailable, and does not maintain Spot capacity if Spot
+	//   Instances are interrupted.
+	//   - instant - The EC2 Fleet places a synchronous one-time request for your
+	//   desired capacity, and returns errors for any instances that could not be
+	//   launched.
+	// For more information, see EC2 Fleet request types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-fleet-request-type.html)
 	// in the Amazon EC2 User Guide.
 	Type types.FleetType
 
@@ -115,26 +113,30 @@ type CreateFleetInput struct {
 	// able to fulfill the request. If no value is specified, the request remains until
 	// you cancel it.
 	ValidUntil *time.Time
+
+	noSmithyDocumentSerde
 }
 
 type CreateFleetOutput struct {
 
-	// Information about the instances that could not be launched by the fleet. Valid
-	// only when Type is set to instant.
+	// Information about the instances that could not be launched by the fleet.
+	// Supported only for fleets of type instant .
 	Errors []types.CreateFleetError
 
 	// The ID of the EC2 Fleet.
 	FleetId *string
 
-	// Information about the instances that were launched by the fleet. Valid only when
-	// Type is set to instant.
+	// Information about the instances that were launched by the fleet. Supported only
+	// for fleets of type instant .
 	Instances []types.CreateFleetInstance
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateFleetMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateFleetMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateFleet{}, middleware.After)
 	if err != nil {
 		return err

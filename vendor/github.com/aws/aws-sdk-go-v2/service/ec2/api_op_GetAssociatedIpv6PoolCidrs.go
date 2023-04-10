@@ -19,7 +19,7 @@ func (c *Client) GetAssociatedIpv6PoolCidrs(ctx context.Context, params *GetAsso
 		params = &GetAssociatedIpv6PoolCidrsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "GetAssociatedIpv6PoolCidrs", params, optFns, addOperationGetAssociatedIpv6PoolCidrsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "GetAssociatedIpv6PoolCidrs", params, optFns, c.addOperationGetAssociatedIpv6PoolCidrsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -38,8 +38,8 @@ type GetAssociatedIpv6PoolCidrsInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// The maximum number of results to return with a single call. To retrieve the
@@ -48,6 +48,8 @@ type GetAssociatedIpv6PoolCidrsInput struct {
 
 	// The token for the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type GetAssociatedIpv6PoolCidrsOutput struct {
@@ -61,9 +63,11 @@ type GetAssociatedIpv6PoolCidrsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationGetAssociatedIpv6PoolCidrsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationGetAssociatedIpv6PoolCidrsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpGetAssociatedIpv6PoolCidrs{}, middleware.After)
 	if err != nil {
 		return err
@@ -177,12 +181,13 @@ func NewGetAssociatedIpv6PoolCidrsPaginator(client GetAssociatedIpv6PoolCidrsAPI
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *GetAssociatedIpv6PoolCidrsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next GetAssociatedIpv6PoolCidrs page.
@@ -209,7 +214,10 @@ func (p *GetAssociatedIpv6PoolCidrsPaginator) NextPage(ctx context.Context, optF
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

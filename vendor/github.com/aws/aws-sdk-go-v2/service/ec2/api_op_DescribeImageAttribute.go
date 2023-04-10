@@ -11,14 +11,14 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Describes the specified attribute of the specified AMI. You can specify only one
-// attribute at a time.
+// Describes the specified attribute of the specified AMI. You can specify only
+// one attribute at a time.
 func (c *Client) DescribeImageAttribute(ctx context.Context, params *DescribeImageAttributeInput, optFns ...func(*Options)) (*DescribeImageAttributeOutput, error) {
 	if params == nil {
 		params = &DescribeImageAttributeInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeImageAttribute", params, optFns, addOperationDescribeImageAttributeMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeImageAttribute", params, optFns, c.addOperationDescribeImageAttributeMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -45,9 +45,11 @@ type DescribeImageAttributeInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 // Describes an image attribute.
@@ -56,7 +58,7 @@ type DescribeImageAttributeOutput struct {
 	// The block device mapping entries.
 	BlockDeviceMappings []types.BlockDeviceMapping
 
-	// Describes a value for a resource attribute that is a String.
+	// The boot mode.
 	BootMode *types.AttributeValue
 
 	// A description for the AMI.
@@ -65,8 +67,22 @@ type DescribeImageAttributeOutput struct {
 	// The ID of the AMI.
 	ImageId *string
 
+	// If v2.0 , it indicates that IMDSv2 is specified in the AMI. Instances launched
+	// from this AMI will have HttpTokens automatically set to required so that, by
+	// default, the instance requires that IMDSv2 is used when requesting instance
+	// metadata. In addition, HttpPutResponseHopLimit is set to 2 . For more
+	// information, see Configure the AMI (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-IMDS-new-instances.html#configure-IMDS-new-instances-ami-configuration)
+	// in the Amazon EC2 User Guide.
+	ImdsSupport *types.AttributeValue
+
 	// The kernel ID.
 	KernelId *types.AttributeValue
+
+	// The date and time, in ISO 8601 date-time format (http://www.iso.org/iso/iso8601)
+	// , when the AMI was last used to launch an EC2 instance. When the AMI is used to
+	// launch an instance, there is a 24-hour delay before that usage is reported.
+	// lastLaunchedTime data is available starting April 2017.
+	LastLaunchedTime *types.AttributeValue
 
 	// The launch permissions.
 	LaunchPermissions []types.LaunchPermission
@@ -81,11 +97,24 @@ type DescribeImageAttributeOutput struct {
 	// interface is enabled.
 	SriovNetSupport *types.AttributeValue
 
+	// If the image is configured for NitroTPM support, the value is v2.0 .
+	TpmSupport *types.AttributeValue
+
+	// Base64 representation of the non-volatile UEFI variable store. To retrieve the
+	// UEFI data, use the GetInstanceUefiData (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetInstanceUefiData)
+	// command. You can inspect and modify the UEFI data by using the python-uefivars
+	// tool (https://github.com/awslabs/python-uefivars) on GitHub. For more
+	// information, see UEFI Secure Boot (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/uefi-secure-boot.html)
+	// in the Amazon EC2 User Guide.
+	UefiData *types.AttributeValue
+
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeImageAttributeMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeImageAttributeMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeImageAttribute{}, middleware.After)
 	if err != nil {
 		return err

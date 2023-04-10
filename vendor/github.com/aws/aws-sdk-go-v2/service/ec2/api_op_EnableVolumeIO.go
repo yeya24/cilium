@@ -10,14 +10,14 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Enables I/O operations for a volume that had I/O operations disabled because the
-// data on the volume was potentially inconsistent.
+// Enables I/O operations for a volume that had I/O operations disabled because
+// the data on the volume was potentially inconsistent.
 func (c *Client) EnableVolumeIO(ctx context.Context, params *EnableVolumeIOInput, optFns ...func(*Options)) (*EnableVolumeIOOutput, error) {
 	if params == nil {
 		params = &EnableVolumeIOInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "EnableVolumeIO", params, optFns, addOperationEnableVolumeIOMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "EnableVolumeIO", params, optFns, c.addOperationEnableVolumeIOMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -36,17 +36,21 @@ type EnableVolumeIOInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type EnableVolumeIOOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationEnableVolumeIOMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationEnableVolumeIOMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpEnableVolumeIO{}, middleware.After)
 	if err != nil {
 		return err

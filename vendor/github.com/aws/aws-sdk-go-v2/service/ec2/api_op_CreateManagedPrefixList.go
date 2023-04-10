@@ -14,14 +14,12 @@ import (
 
 // Creates a managed prefix list. You can specify one or more entries for the
 // prefix list. Each entry consists of a CIDR block and an optional description.
-// You must specify the maximum number of entries for the prefix list. The maximum
-// number of entries cannot be changed later.
 func (c *Client) CreateManagedPrefixList(ctx context.Context, params *CreateManagedPrefixListInput, optFns ...func(*Options)) (*CreateManagedPrefixListOutput, error) {
 	if params == nil {
 		params = &CreateManagedPrefixListInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateManagedPrefixList", params, optFns, addOperationCreateManagedPrefixListMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateManagedPrefixList", params, optFns, c.addOperationCreateManagedPrefixListMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -44,21 +42,20 @@ type CreateManagedPrefixListInput struct {
 	MaxEntries *int32
 
 	// A name for the prefix list. Constraints: Up to 255 characters in length. The
-	// name cannot start with com.amazonaws.
+	// name cannot start with com.amazonaws .
 	//
 	// This member is required.
 	PrefixListName *string
 
 	// Unique, case-sensitive identifier you provide to ensure the idempotency of the
-	// request. For more information, see Ensuring Idempotency
-	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
-	// Constraints: Up to 255 UTF-8 characters in length.
+	// request. For more information, see Ensuring Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html)
+	// . Constraints: Up to 255 UTF-8 characters in length.
 	ClientToken *string
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// One or more entries for the prefix list.
@@ -66,6 +63,8 @@ type CreateManagedPrefixListInput struct {
 
 	// The tags to apply to the prefix list during creation.
 	TagSpecifications []types.TagSpecification
+
+	noSmithyDocumentSerde
 }
 
 type CreateManagedPrefixListOutput struct {
@@ -75,9 +74,11 @@ type CreateManagedPrefixListOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateManagedPrefixListMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateManagedPrefixListMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateManagedPrefixList{}, middleware.After)
 	if err != nil {
 		return err

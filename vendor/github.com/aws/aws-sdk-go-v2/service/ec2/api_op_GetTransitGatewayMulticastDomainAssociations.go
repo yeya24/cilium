@@ -19,7 +19,7 @@ func (c *Client) GetTransitGatewayMulticastDomainAssociations(ctx context.Contex
 		params = &GetTransitGatewayMulticastDomainAssociationsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "GetTransitGatewayMulticastDomainAssociations", params, optFns, addOperationGetTransitGatewayMulticastDomainAssociationsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "GetTransitGatewayMulticastDomainAssociations", params, optFns, c.addOperationGetTransitGatewayMulticastDomainAssociationsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -31,28 +31,24 @@ func (c *Client) GetTransitGatewayMulticastDomainAssociations(ctx context.Contex
 
 type GetTransitGatewayMulticastDomainAssociationsInput struct {
 
+	// The ID of the transit gateway multicast domain.
+	//
+	// This member is required.
+	TransitGatewayMulticastDomainId *string
+
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// One or more filters. The possible values are:
-	//
-	// * resource-id - The ID of the
-	// resource.
-	//
-	// * resource-type - The type of resource. The valid value is: vpc.
-	//
-	// *
-	// state - The state of the subnet association. Valid values are associated |
-	// associating | disassociated | disassociating.
-	//
-	// * subnet-id - The ID of the
-	// subnet.
-	//
-	// * transit-gateway-attachment-id - The id of the transit gateway
-	// attachment.
+	//   - resource-id - The ID of the resource.
+	//   - resource-type - The type of resource. The valid value is: vpc .
+	//   - state - The state of the subnet association. Valid values are associated |
+	//   associating | disassociated | disassociating .
+	//   - subnet-id - The ID of the subnet.
+	//   - transit-gateway-attachment-id - The id of the transit gateway attachment.
 	Filters []types.Filter
 
 	// The maximum number of results to return with a single call. To retrieve the
@@ -62,8 +58,7 @@ type GetTransitGatewayMulticastDomainAssociationsInput struct {
 	// The token for the next page of results.
 	NextToken *string
 
-	// The ID of the transit gateway multicast domain.
-	TransitGatewayMulticastDomainId *string
+	noSmithyDocumentSerde
 }
 
 type GetTransitGatewayMulticastDomainAssociationsOutput struct {
@@ -77,9 +72,11 @@ type GetTransitGatewayMulticastDomainAssociationsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationGetTransitGatewayMulticastDomainAssociationsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationGetTransitGatewayMulticastDomainAssociationsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpGetTransitGatewayMulticastDomainAssociations{}, middleware.After)
 	if err != nil {
 		return err
@@ -122,6 +119,9 @@ func addOperationGetTransitGatewayMulticastDomainAssociationsMiddlewares(stack *
 		return err
 	}
 	if err = smithyhttp.AddCloseResponseBodyMiddleware(stack); err != nil {
+		return err
+	}
+	if err = addOpGetTransitGatewayMulticastDomainAssociationsValidationMiddleware(stack); err != nil {
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opGetTransitGatewayMulticastDomainAssociations(options.Region), middleware.Before); err != nil {
@@ -190,12 +190,13 @@ func NewGetTransitGatewayMulticastDomainAssociationsPaginator(client GetTransitG
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *GetTransitGatewayMulticastDomainAssociationsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next GetTransitGatewayMulticastDomainAssociations page.
@@ -222,7 +223,10 @@ func (p *GetTransitGatewayMulticastDomainAssociationsPaginator) NextPage(ctx con
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

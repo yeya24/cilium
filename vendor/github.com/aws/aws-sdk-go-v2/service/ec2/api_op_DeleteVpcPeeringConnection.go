@@ -20,7 +20,7 @@ func (c *Client) DeleteVpcPeeringConnection(ctx context.Context, params *DeleteV
 		params = &DeleteVpcPeeringConnectionInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DeleteVpcPeeringConnection", params, optFns, addOperationDeleteVpcPeeringConnectionMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DeleteVpcPeeringConnection", params, optFns, c.addOperationDeleteVpcPeeringConnectionMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -39,9 +39,11 @@ type DeleteVpcPeeringConnectionInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type DeleteVpcPeeringConnectionOutput struct {
@@ -51,9 +53,11 @@ type DeleteVpcPeeringConnectionOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDeleteVpcPeeringConnectionMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDeleteVpcPeeringConnectionMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDeleteVpcPeeringConnection{}, middleware.After)
 	if err != nil {
 		return err

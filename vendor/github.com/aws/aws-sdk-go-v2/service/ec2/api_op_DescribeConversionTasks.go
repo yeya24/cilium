@@ -17,16 +17,16 @@ import (
 )
 
 // Describes the specified conversion tasks or all your conversion tasks. For more
-// information, see the VM Import/Export User Guide
-// (https://docs.aws.amazon.com/vm-import/latest/userguide/). For information about
-// the import manifest referenced by this API action, see VM Import Manifest
-// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/manifest.html).
+// information, see the VM Import/Export User Guide (https://docs.aws.amazon.com/vm-import/latest/userguide/)
+// . For information about the import manifest referenced by this API action, see
+// VM Import Manifest (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/manifest.html)
+// .
 func (c *Client) DescribeConversionTasks(ctx context.Context, params *DescribeConversionTasksInput, optFns ...func(*Options)) (*DescribeConversionTasksOutput, error) {
 	if params == nil {
 		params = &DescribeConversionTasksInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeConversionTasks", params, optFns, addOperationDescribeConversionTasksMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeConversionTasks", params, optFns, c.addOperationDescribeConversionTasksMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -43,9 +43,11 @@ type DescribeConversionTasksInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type DescribeConversionTasksOutput struct {
@@ -55,9 +57,11 @@ type DescribeConversionTasksOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeConversionTasksMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeConversionTasksMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeConversionTasks{}, middleware.After)
 	if err != nil {
 		return err
@@ -139,8 +143,8 @@ type ConversionTaskCancelledWaiterOptions struct {
 	// that MinDelay must resolve to a value lesser than or equal to the MaxDelay.
 	MinDelay time.Duration
 
-	// MaxDelay is the maximum amount of time to delay between retries. If unset or set
-	// to zero, ConversionTaskCancelledWaiter will use default max delay of 120
+	// MaxDelay is the maximum amount of time to delay between retries. If unset or
+	// set to zero, ConversionTaskCancelledWaiter will use default max delay of 120
 	// seconds. Note that MaxDelay must resolve to value greater than or equal to the
 	// MinDelay.
 	MaxDelay time.Duration
@@ -186,8 +190,17 @@ func NewConversionTaskCancelledWaiter(client DescribeConversionTasksAPIClient, o
 // maxWaitDur is the maximum wait duration the waiter will wait. The maxWaitDur is
 // required and must be greater than zero.
 func (w *ConversionTaskCancelledWaiter) Wait(ctx context.Context, params *DescribeConversionTasksInput, maxWaitDur time.Duration, optFns ...func(*ConversionTaskCancelledWaiterOptions)) error {
+	_, err := w.WaitForOutput(ctx, params, maxWaitDur, optFns...)
+	return err
+}
+
+// WaitForOutput calls the waiter function for ConversionTaskCancelled waiter and
+// returns the output of the successful operation. The maxWaitDur is the maximum
+// wait duration the waiter will wait. The maxWaitDur is required and must be
+// greater than zero.
+func (w *ConversionTaskCancelledWaiter) WaitForOutput(ctx context.Context, params *DescribeConversionTasksInput, maxWaitDur time.Duration, optFns ...func(*ConversionTaskCancelledWaiterOptions)) (*DescribeConversionTasksOutput, error) {
 	if maxWaitDur <= 0 {
-		return fmt.Errorf("maximum wait time for waiter must be greater than zero")
+		return nil, fmt.Errorf("maximum wait time for waiter must be greater than zero")
 	}
 
 	options := w.options
@@ -200,7 +213,7 @@ func (w *ConversionTaskCancelledWaiter) Wait(ctx context.Context, params *Descri
 	}
 
 	if options.MinDelay > options.MaxDelay {
-		return fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
+		return nil, fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
 	}
 
 	ctx, cancelFn := context.WithTimeout(ctx, maxWaitDur)
@@ -228,10 +241,10 @@ func (w *ConversionTaskCancelledWaiter) Wait(ctx context.Context, params *Descri
 
 		retryable, err := options.Retryable(ctx, params, out, err)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if !retryable {
-			return nil
+			return out, nil
 		}
 
 		remainingTime -= time.Since(start)
@@ -244,16 +257,16 @@ func (w *ConversionTaskCancelledWaiter) Wait(ctx context.Context, params *Descri
 			attempt, options.MinDelay, options.MaxDelay, remainingTime,
 		)
 		if err != nil {
-			return fmt.Errorf("error computing waiter delay, %w", err)
+			return nil, fmt.Errorf("error computing waiter delay, %w", err)
 		}
 
 		remainingTime -= delay
 		// sleep for the delay amount before invoking a request
 		if err := smithytime.SleepWithContext(ctx, delay); err != nil {
-			return fmt.Errorf("request cancelled while waiting, %w", err)
+			return nil, fmt.Errorf("request cancelled while waiting, %w", err)
 		}
 	}
-	return fmt.Errorf("exceeded max wait time for ConversionTaskCancelled waiter")
+	return nil, fmt.Errorf("exceeded max wait time for ConversionTaskCancelled waiter")
 }
 
 func conversionTaskCancelledStateRetryable(ctx context.Context, input *DescribeConversionTasksInput, output *DescribeConversionTasksOutput, err error) (bool, error) {
@@ -307,8 +320,8 @@ type ConversionTaskCompletedWaiterOptions struct {
 	// that MinDelay must resolve to a value lesser than or equal to the MaxDelay.
 	MinDelay time.Duration
 
-	// MaxDelay is the maximum amount of time to delay between retries. If unset or set
-	// to zero, ConversionTaskCompletedWaiter will use default max delay of 120
+	// MaxDelay is the maximum amount of time to delay between retries. If unset or
+	// set to zero, ConversionTaskCompletedWaiter will use default max delay of 120
 	// seconds. Note that MaxDelay must resolve to value greater than or equal to the
 	// MinDelay.
 	MaxDelay time.Duration
@@ -354,8 +367,17 @@ func NewConversionTaskCompletedWaiter(client DescribeConversionTasksAPIClient, o
 // maxWaitDur is the maximum wait duration the waiter will wait. The maxWaitDur is
 // required and must be greater than zero.
 func (w *ConversionTaskCompletedWaiter) Wait(ctx context.Context, params *DescribeConversionTasksInput, maxWaitDur time.Duration, optFns ...func(*ConversionTaskCompletedWaiterOptions)) error {
+	_, err := w.WaitForOutput(ctx, params, maxWaitDur, optFns...)
+	return err
+}
+
+// WaitForOutput calls the waiter function for ConversionTaskCompleted waiter and
+// returns the output of the successful operation. The maxWaitDur is the maximum
+// wait duration the waiter will wait. The maxWaitDur is required and must be
+// greater than zero.
+func (w *ConversionTaskCompletedWaiter) WaitForOutput(ctx context.Context, params *DescribeConversionTasksInput, maxWaitDur time.Duration, optFns ...func(*ConversionTaskCompletedWaiterOptions)) (*DescribeConversionTasksOutput, error) {
 	if maxWaitDur <= 0 {
-		return fmt.Errorf("maximum wait time for waiter must be greater than zero")
+		return nil, fmt.Errorf("maximum wait time for waiter must be greater than zero")
 	}
 
 	options := w.options
@@ -368,7 +390,7 @@ func (w *ConversionTaskCompletedWaiter) Wait(ctx context.Context, params *Descri
 	}
 
 	if options.MinDelay > options.MaxDelay {
-		return fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
+		return nil, fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
 	}
 
 	ctx, cancelFn := context.WithTimeout(ctx, maxWaitDur)
@@ -396,10 +418,10 @@ func (w *ConversionTaskCompletedWaiter) Wait(ctx context.Context, params *Descri
 
 		retryable, err := options.Retryable(ctx, params, out, err)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if !retryable {
-			return nil
+			return out, nil
 		}
 
 		remainingTime -= time.Since(start)
@@ -412,16 +434,16 @@ func (w *ConversionTaskCompletedWaiter) Wait(ctx context.Context, params *Descri
 			attempt, options.MinDelay, options.MaxDelay, remainingTime,
 		)
 		if err != nil {
-			return fmt.Errorf("error computing waiter delay, %w", err)
+			return nil, fmt.Errorf("error computing waiter delay, %w", err)
 		}
 
 		remainingTime -= delay
 		// sleep for the delay amount before invoking a request
 		if err := smithytime.SleepWithContext(ctx, delay); err != nil {
-			return fmt.Errorf("request cancelled while waiting, %w", err)
+			return nil, fmt.Errorf("request cancelled while waiting, %w", err)
 		}
 	}
-	return fmt.Errorf("exceeded max wait time for ConversionTaskCompleted waiter")
+	return nil, fmt.Errorf("exceeded max wait time for ConversionTaskCompleted waiter")
 }
 
 func conversionTaskCompletedStateRetryable(ctx context.Context, input *DescribeConversionTasksInput, output *DescribeConversionTasksOutput, err error) (bool, error) {
@@ -523,9 +545,10 @@ type ConversionTaskDeletedWaiterOptions struct {
 	// that MinDelay must resolve to a value lesser than or equal to the MaxDelay.
 	MinDelay time.Duration
 
-	// MaxDelay is the maximum amount of time to delay between retries. If unset or set
-	// to zero, ConversionTaskDeletedWaiter will use default max delay of 120 seconds.
-	// Note that MaxDelay must resolve to value greater than or equal to the MinDelay.
+	// MaxDelay is the maximum amount of time to delay between retries. If unset or
+	// set to zero, ConversionTaskDeletedWaiter will use default max delay of 120
+	// seconds. Note that MaxDelay must resolve to value greater than or equal to the
+	// MinDelay.
 	MaxDelay time.Duration
 
 	// LogWaitAttempts is used to enable logging for waiter retry attempts
@@ -569,8 +592,17 @@ func NewConversionTaskDeletedWaiter(client DescribeConversionTasksAPIClient, opt
 // is the maximum wait duration the waiter will wait. The maxWaitDur is required
 // and must be greater than zero.
 func (w *ConversionTaskDeletedWaiter) Wait(ctx context.Context, params *DescribeConversionTasksInput, maxWaitDur time.Duration, optFns ...func(*ConversionTaskDeletedWaiterOptions)) error {
+	_, err := w.WaitForOutput(ctx, params, maxWaitDur, optFns...)
+	return err
+}
+
+// WaitForOutput calls the waiter function for ConversionTaskDeleted waiter and
+// returns the output of the successful operation. The maxWaitDur is the maximum
+// wait duration the waiter will wait. The maxWaitDur is required and must be
+// greater than zero.
+func (w *ConversionTaskDeletedWaiter) WaitForOutput(ctx context.Context, params *DescribeConversionTasksInput, maxWaitDur time.Duration, optFns ...func(*ConversionTaskDeletedWaiterOptions)) (*DescribeConversionTasksOutput, error) {
 	if maxWaitDur <= 0 {
-		return fmt.Errorf("maximum wait time for waiter must be greater than zero")
+		return nil, fmt.Errorf("maximum wait time for waiter must be greater than zero")
 	}
 
 	options := w.options
@@ -583,7 +615,7 @@ func (w *ConversionTaskDeletedWaiter) Wait(ctx context.Context, params *Describe
 	}
 
 	if options.MinDelay > options.MaxDelay {
-		return fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
+		return nil, fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
 	}
 
 	ctx, cancelFn := context.WithTimeout(ctx, maxWaitDur)
@@ -611,10 +643,10 @@ func (w *ConversionTaskDeletedWaiter) Wait(ctx context.Context, params *Describe
 
 		retryable, err := options.Retryable(ctx, params, out, err)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if !retryable {
-			return nil
+			return out, nil
 		}
 
 		remainingTime -= time.Since(start)
@@ -627,16 +659,16 @@ func (w *ConversionTaskDeletedWaiter) Wait(ctx context.Context, params *Describe
 			attempt, options.MinDelay, options.MaxDelay, remainingTime,
 		)
 		if err != nil {
-			return fmt.Errorf("error computing waiter delay, %w", err)
+			return nil, fmt.Errorf("error computing waiter delay, %w", err)
 		}
 
 		remainingTime -= delay
 		// sleep for the delay amount before invoking a request
 		if err := smithytime.SleepWithContext(ctx, delay); err != nil {
-			return fmt.Errorf("request cancelled while waiting, %w", err)
+			return nil, fmt.Errorf("request cancelled while waiting, %w", err)
 		}
 	}
-	return fmt.Errorf("exceeded max wait time for ConversionTaskDeleted waiter")
+	return nil, fmt.Errorf("exceeded max wait time for ConversionTaskDeleted waiter")
 }
 
 func conversionTaskDeletedStateRetryable(ctx context.Context, input *DescribeConversionTasksInput, output *DescribeConversionTasksOutput, err error) (bool, error) {

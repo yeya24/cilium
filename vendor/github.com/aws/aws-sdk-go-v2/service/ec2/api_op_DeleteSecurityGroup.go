@@ -12,14 +12,17 @@ import (
 
 // Deletes a security group. If you attempt to delete a security group that is
 // associated with an instance, or is referenced by another security group, the
-// operation fails with InvalidGroup.InUse in EC2-Classic or DependencyViolation in
-// EC2-VPC.
+// operation fails with InvalidGroup.InUse in EC2-Classic or DependencyViolation
+// in EC2-VPC. We are retiring EC2-Classic. We recommend that you migrate from
+// EC2-Classic to a VPC. For more information, see Migrate from EC2-Classic to a
+// VPC (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/vpc-migrate.html) in
+// the Amazon Elastic Compute Cloud User Guide.
 func (c *Client) DeleteSecurityGroup(ctx context.Context, params *DeleteSecurityGroupInput, optFns ...func(*Options)) (*DeleteSecurityGroupOutput, error) {
 	if params == nil {
 		params = &DeleteSecurityGroupInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DeleteSecurityGroup", params, optFns, addOperationDeleteSecurityGroupMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DeleteSecurityGroup", params, optFns, c.addOperationDeleteSecurityGroupMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -33,24 +36,29 @@ type DeleteSecurityGroupInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// The ID of the security group. Required for a nondefault VPC.
 	GroupId *string
 
 	// [EC2-Classic, default VPC] The name of the security group. You can specify
-	// either the security group name or the security group ID.
+	// either the security group name or the security group ID. For security groups in
+	// a nondefault VPC, you must specify the security group ID.
 	GroupName *string
+
+	noSmithyDocumentSerde
 }
 
 type DeleteSecurityGroupOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDeleteSecurityGroupMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDeleteSecurityGroupMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDeleteSecurityGroup{}, middleware.After)
 	if err != nil {
 		return err

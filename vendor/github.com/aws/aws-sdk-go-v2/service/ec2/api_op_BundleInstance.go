@@ -20,7 +20,7 @@ func (c *Client) BundleInstance(ctx context.Context, params *BundleInstanceInput
 		params = &BundleInstanceInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "BundleInstance", params, optFns, addOperationBundleInstanceMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "BundleInstance", params, optFns, c.addOperationBundleInstanceMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -47,9 +47,11 @@ type BundleInstanceInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of BundleInstance.
@@ -60,9 +62,11 @@ type BundleInstanceOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationBundleInstanceMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationBundleInstanceMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpBundleInstance{}, middleware.After)
 	if err != nil {
 		return err

@@ -20,7 +20,7 @@ func (c *Client) CreateTrafficMirrorFilterRule(ctx context.Context, params *Crea
 		params = &CreateTrafficMirrorFilterRuleInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateTrafficMirrorFilterRule", params, optFns, addOperationCreateTrafficMirrorFilterRuleMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateTrafficMirrorFilterRule", params, optFns, c.addOperationCreateTrafficMirrorFilterRuleMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ type CreateTrafficMirrorFilterRuleInput struct {
 	// This member is required.
 	DestinationCidrBlock *string
 
-	// The action to take (accept | reject) on the filtered traffic.
+	// The action to take on the filtered traffic.
 	//
 	// This member is required.
 	RuleAction types.TrafficMirrorRuleAction
@@ -54,7 +54,7 @@ type CreateTrafficMirrorFilterRuleInput struct {
 	// This member is required.
 	SourceCidrBlock *string
 
-	// The type of traffic (ingress | egress).
+	// The type of traffic.
 	//
 	// This member is required.
 	TrafficDirection types.TrafficDirection
@@ -65,8 +65,8 @@ type CreateTrafficMirrorFilterRuleInput struct {
 	TrafficMirrorFilterId *string
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency of
-	// the request. For more information, see How to Ensure Idempotency
-	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	// the request. For more information, see How to ensure idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html)
+	// .
 	ClientToken *string
 
 	// The description of the Traffic Mirror rule.
@@ -77,25 +77,26 @@ type CreateTrafficMirrorFilterRuleInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// The protocol, for example UDP, to assign to the Traffic Mirror rule. For
-	// information about the protocol value, see Protocol Numbers
-	// (https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml) on
-	// the Internet Assigned Numbers Authority (IANA) website.
+	// information about the protocol value, see Protocol Numbers (https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)
+	// on the Internet Assigned Numbers Authority (IANA) website.
 	Protocol *int32
 
 	// The source port range.
 	SourcePortRange *types.TrafficMirrorPortRangeRequest
+
+	noSmithyDocumentSerde
 }
 
 type CreateTrafficMirrorFilterRuleOutput struct {
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency of
-	// the request. For more information, see How to Ensure Idempotency
-	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	// the request. For more information, see How to ensure idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html)
+	// .
 	ClientToken *string
 
 	// The Traffic Mirror rule.
@@ -103,9 +104,11 @@ type CreateTrafficMirrorFilterRuleOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateTrafficMirrorFilterRuleMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateTrafficMirrorFilterRuleMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateTrafficMirrorFilterRule{}, middleware.After)
 	if err != nil {
 		return err

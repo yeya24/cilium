@@ -19,7 +19,7 @@ func (c *Client) DescribeTrafficMirrorSessions(ctx context.Context, params *Desc
 		params = &DescribeTrafficMirrorSessionsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeTrafficMirrorSessions", params, optFns, addOperationDescribeTrafficMirrorSessionsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeTrafficMirrorSessions", params, optFns, c.addOperationDescribeTrafficMirrorSessionsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -33,37 +33,21 @@ type DescribeTrafficMirrorSessionsInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// One or more filters. The possible values are:
-	//
-	// * description: The Traffic Mirror
-	// session description.
-	//
-	// * network-interface-id: The ID of the Traffic Mirror
-	// session network interface.
-	//
-	// * owner-id: The ID of the account that owns the
-	// Traffic Mirror session.
-	//
-	// * packet-length: The assigned number of packets to
-	// mirror.
-	//
-	// * session-number: The assigned session number.
-	//
-	// *
-	// traffic-mirror-filter-id: The ID of the Traffic Mirror filter.
-	//
-	// *
-	// traffic-mirror-session-id: The ID of the Traffic Mirror session.
-	//
-	// *
-	// traffic-mirror-target-id: The ID of the Traffic Mirror target.
-	//
-	// *
-	// virtual-network-id: The virtual network ID of the Traffic Mirror session.
+	//   - description : The Traffic Mirror session description.
+	//   - network-interface-id : The ID of the Traffic Mirror session network
+	//   interface.
+	//   - owner-id : The ID of the account that owns the Traffic Mirror session.
+	//   - packet-length : The assigned number of packets to mirror.
+	//   - session-number : The assigned session number.
+	//   - traffic-mirror-filter-id : The ID of the Traffic Mirror filter.
+	//   - traffic-mirror-session-id : The ID of the Traffic Mirror session.
+	//   - traffic-mirror-target-id : The ID of the Traffic Mirror target.
+	//   - virtual-network-id : The virtual network ID of the Traffic Mirror session.
 	Filters []types.Filter
 
 	// The maximum number of results to return with a single call. To retrieve the
@@ -75,6 +59,8 @@ type DescribeTrafficMirrorSessionsInput struct {
 
 	// The ID of the Traffic Mirror session.
 	TrafficMirrorSessionIds []string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeTrafficMirrorSessionsOutput struct {
@@ -89,9 +75,11 @@ type DescribeTrafficMirrorSessionsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeTrafficMirrorSessionsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeTrafficMirrorSessionsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeTrafficMirrorSessions{}, middleware.After)
 	if err != nil {
 		return err
@@ -202,12 +190,13 @@ func NewDescribeTrafficMirrorSessionsPaginator(client DescribeTrafficMirrorSessi
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeTrafficMirrorSessionsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeTrafficMirrorSessions page.
@@ -234,7 +223,10 @@ func (p *DescribeTrafficMirrorSessionsPaginator) NextPage(ctx context.Context, o
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

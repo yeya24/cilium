@@ -11,14 +11,13 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Resets an attribute of an AMI to its default value. The productCodes attribute
-// can't be reset.
+// Resets an attribute of an AMI to its default value.
 func (c *Client) ResetImageAttribute(ctx context.Context, params *ResetImageAttributeInput, optFns ...func(*Options)) (*ResetImageAttributeOutput, error) {
 	if params == nil {
 		params = &ResetImageAttributeInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ResetImageAttribute", params, optFns, addOperationResetImageAttributeMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ResetImageAttribute", params, optFns, c.addOperationResetImageAttributeMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -44,17 +43,21 @@ type ResetImageAttributeInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type ResetImageAttributeOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationResetImageAttributeMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationResetImageAttributeMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpResetImageAttribute{}, middleware.After)
 	if err != nil {
 		return err

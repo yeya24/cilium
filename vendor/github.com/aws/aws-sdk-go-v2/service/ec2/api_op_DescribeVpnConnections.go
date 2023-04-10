@@ -16,15 +16,15 @@ import (
 	"time"
 )
 
-// Describes one or more of your VPN connections. For more information, see AWS
-// Site-to-Site VPN (https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html) in
-// the AWS Site-to-Site VPN User Guide.
+// Describes one or more of your VPN connections. For more information, see Amazon
+// Web Services Site-to-Site VPN (https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html)
+// in the Amazon Web Services Site-to-Site VPN User Guide.
 func (c *Client) DescribeVpnConnections(ctx context.Context, params *DescribeVpnConnectionsInput, optFns ...func(*Options)) (*DescribeVpnConnectionsOutput, error) {
 	if params == nil {
 		params = &DescribeVpnConnectionsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeVpnConnections", params, optFns, addOperationDescribeVpnConnectionsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeVpnConnections", params, optFns, c.addOperationDescribeVpnConnectionsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -39,57 +39,43 @@ type DescribeVpnConnectionsInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// One or more filters.
+	//   - customer-gateway-configuration - The configuration information for the
+	//   customer gateway.
+	//   - customer-gateway-id - The ID of a customer gateway associated with the VPN
+	//   connection.
+	//   - state - The state of the VPN connection ( pending | available | deleting |
+	//   deleted ).
+	//   - option.static-routes-only - Indicates whether the connection has static
+	//   routes only. Used for devices that do not support Border Gateway Protocol (BGP).
 	//
-	// * customer-gateway-configuration - The configuration
-	// information for the customer gateway.
-	//
-	// * customer-gateway-id - The ID of a
-	// customer gateway associated with the VPN connection.
-	//
-	// * state - The state of the
-	// VPN connection (pending | available | deleting | deleted).
-	//
-	// *
-	// option.static-routes-only - Indicates whether the connection has static routes
-	// only. Used for devices that do not support Border Gateway Protocol (BGP).
-	//
-	// *
-	// route.destination-cidr-block - The destination CIDR block. This corresponds to
-	// the subnet used in a customer data center.
-	//
-	// * bgp-asn - The BGP Autonomous
-	// System Number (ASN) associated with a BGP device.
-	//
-	// * tag: - The key/value
-	// combination of a tag assigned to the resource. Use the tag key in the filter
-	// name and the tag value as the filter value. For example, to find all resources
-	// that have a tag with the key Owner and the value TeamA, specify tag:Owner for
-	// the filter name and TeamA for the filter value.
-	//
-	// * tag-key - The key of a tag
-	// assigned to the resource. Use this filter to find all resources assigned a tag
-	// with a specific key, regardless of the tag value.
-	//
-	// * type - The type of VPN
-	// connection. Currently the only supported type is ipsec.1.
-	//
-	// * vpn-connection-id -
-	// The ID of the VPN connection.
-	//
-	// * vpn-gateway-id - The ID of a virtual private
-	// gateway associated with the VPN connection.
-	//
-	// * transit-gateway-id - The ID of a
-	// transit gateway associated with the VPN connection.
+	//   - route.destination-cidr-block - The destination CIDR block. This corresponds
+	//   to the subnet used in a customer data center.
+	//   - bgp-asn - The BGP Autonomous System Number (ASN) associated with a BGP
+	//   device.
+	//   - tag : - The key/value combination of a tag assigned to the resource. Use the
+	//   tag key in the filter name and the tag value as the filter value. For example,
+	//   to find all resources that have a tag with the key Owner and the value TeamA ,
+	//   specify tag:Owner for the filter name and TeamA for the filter value.
+	//   - tag-key - The key of a tag assigned to the resource. Use this filter to find
+	//   all resources assigned a tag with a specific key, regardless of the tag value.
+	//   - type - The type of VPN connection. Currently the only supported type is
+	//   ipsec.1 .
+	//   - vpn-connection-id - The ID of the VPN connection.
+	//   - vpn-gateway-id - The ID of a virtual private gateway associated with the VPN
+	//   connection.
+	//   - transit-gateway-id - The ID of a transit gateway associated with the VPN
+	//   connection.
 	Filters []types.Filter
 
 	// One or more VPN connection IDs. Default: Describes your VPN connections.
 	VpnConnectionIds []string
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of DescribeVpnConnections.
@@ -100,9 +86,11 @@ type DescribeVpnConnectionsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeVpnConnectionsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeVpnConnectionsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeVpnConnections{}, middleware.After)
 	if err != nil {
 		return err
@@ -184,9 +172,10 @@ type VpnConnectionAvailableWaiterOptions struct {
 	// that MinDelay must resolve to a value lesser than or equal to the MaxDelay.
 	MinDelay time.Duration
 
-	// MaxDelay is the maximum amount of time to delay between retries. If unset or set
-	// to zero, VpnConnectionAvailableWaiter will use default max delay of 120 seconds.
-	// Note that MaxDelay must resolve to value greater than or equal to the MinDelay.
+	// MaxDelay is the maximum amount of time to delay between retries. If unset or
+	// set to zero, VpnConnectionAvailableWaiter will use default max delay of 120
+	// seconds. Note that MaxDelay must resolve to value greater than or equal to the
+	// MinDelay.
 	MaxDelay time.Duration
 
 	// LogWaitAttempts is used to enable logging for waiter retry attempts
@@ -226,12 +215,21 @@ func NewVpnConnectionAvailableWaiter(client DescribeVpnConnectionsAPIClient, opt
 	}
 }
 
-// Wait calls the waiter function for VpnConnectionAvailable waiter. The maxWaitDur
-// is the maximum wait duration the waiter will wait. The maxWaitDur is required
-// and must be greater than zero.
+// Wait calls the waiter function for VpnConnectionAvailable waiter. The
+// maxWaitDur is the maximum wait duration the waiter will wait. The maxWaitDur is
+// required and must be greater than zero.
 func (w *VpnConnectionAvailableWaiter) Wait(ctx context.Context, params *DescribeVpnConnectionsInput, maxWaitDur time.Duration, optFns ...func(*VpnConnectionAvailableWaiterOptions)) error {
+	_, err := w.WaitForOutput(ctx, params, maxWaitDur, optFns...)
+	return err
+}
+
+// WaitForOutput calls the waiter function for VpnConnectionAvailable waiter and
+// returns the output of the successful operation. The maxWaitDur is the maximum
+// wait duration the waiter will wait. The maxWaitDur is required and must be
+// greater than zero.
+func (w *VpnConnectionAvailableWaiter) WaitForOutput(ctx context.Context, params *DescribeVpnConnectionsInput, maxWaitDur time.Duration, optFns ...func(*VpnConnectionAvailableWaiterOptions)) (*DescribeVpnConnectionsOutput, error) {
 	if maxWaitDur <= 0 {
-		return fmt.Errorf("maximum wait time for waiter must be greater than zero")
+		return nil, fmt.Errorf("maximum wait time for waiter must be greater than zero")
 	}
 
 	options := w.options
@@ -244,7 +242,7 @@ func (w *VpnConnectionAvailableWaiter) Wait(ctx context.Context, params *Describ
 	}
 
 	if options.MinDelay > options.MaxDelay {
-		return fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
+		return nil, fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
 	}
 
 	ctx, cancelFn := context.WithTimeout(ctx, maxWaitDur)
@@ -272,10 +270,10 @@ func (w *VpnConnectionAvailableWaiter) Wait(ctx context.Context, params *Describ
 
 		retryable, err := options.Retryable(ctx, params, out, err)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if !retryable {
-			return nil
+			return out, nil
 		}
 
 		remainingTime -= time.Since(start)
@@ -288,16 +286,16 @@ func (w *VpnConnectionAvailableWaiter) Wait(ctx context.Context, params *Describ
 			attempt, options.MinDelay, options.MaxDelay, remainingTime,
 		)
 		if err != nil {
-			return fmt.Errorf("error computing waiter delay, %w", err)
+			return nil, fmt.Errorf("error computing waiter delay, %w", err)
 		}
 
 		remainingTime -= delay
 		// sleep for the delay amount before invoking a request
 		if err := smithytime.SleepWithContext(ctx, delay); err != nil {
-			return fmt.Errorf("request cancelled while waiting, %w", err)
+			return nil, fmt.Errorf("request cancelled while waiting, %w", err)
 		}
 	}
-	return fmt.Errorf("exceeded max wait time for VpnConnectionAvailable waiter")
+	return nil, fmt.Errorf("exceeded max wait time for VpnConnectionAvailable waiter")
 }
 
 func vpnConnectionAvailableStateRetryable(ctx context.Context, input *DescribeVpnConnectionsInput, output *DescribeVpnConnectionsOutput, err error) (bool, error) {
@@ -399,9 +397,10 @@ type VpnConnectionDeletedWaiterOptions struct {
 	// that MinDelay must resolve to a value lesser than or equal to the MaxDelay.
 	MinDelay time.Duration
 
-	// MaxDelay is the maximum amount of time to delay between retries. If unset or set
-	// to zero, VpnConnectionDeletedWaiter will use default max delay of 120 seconds.
-	// Note that MaxDelay must resolve to value greater than or equal to the MinDelay.
+	// MaxDelay is the maximum amount of time to delay between retries. If unset or
+	// set to zero, VpnConnectionDeletedWaiter will use default max delay of 120
+	// seconds. Note that MaxDelay must resolve to value greater than or equal to the
+	// MinDelay.
 	MaxDelay time.Duration
 
 	// LogWaitAttempts is used to enable logging for waiter retry attempts
@@ -445,8 +444,17 @@ func NewVpnConnectionDeletedWaiter(client DescribeVpnConnectionsAPIClient, optFn
 // is the maximum wait duration the waiter will wait. The maxWaitDur is required
 // and must be greater than zero.
 func (w *VpnConnectionDeletedWaiter) Wait(ctx context.Context, params *DescribeVpnConnectionsInput, maxWaitDur time.Duration, optFns ...func(*VpnConnectionDeletedWaiterOptions)) error {
+	_, err := w.WaitForOutput(ctx, params, maxWaitDur, optFns...)
+	return err
+}
+
+// WaitForOutput calls the waiter function for VpnConnectionDeleted waiter and
+// returns the output of the successful operation. The maxWaitDur is the maximum
+// wait duration the waiter will wait. The maxWaitDur is required and must be
+// greater than zero.
+func (w *VpnConnectionDeletedWaiter) WaitForOutput(ctx context.Context, params *DescribeVpnConnectionsInput, maxWaitDur time.Duration, optFns ...func(*VpnConnectionDeletedWaiterOptions)) (*DescribeVpnConnectionsOutput, error) {
 	if maxWaitDur <= 0 {
-		return fmt.Errorf("maximum wait time for waiter must be greater than zero")
+		return nil, fmt.Errorf("maximum wait time for waiter must be greater than zero")
 	}
 
 	options := w.options
@@ -459,7 +467,7 @@ func (w *VpnConnectionDeletedWaiter) Wait(ctx context.Context, params *DescribeV
 	}
 
 	if options.MinDelay > options.MaxDelay {
-		return fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
+		return nil, fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
 	}
 
 	ctx, cancelFn := context.WithTimeout(ctx, maxWaitDur)
@@ -487,10 +495,10 @@ func (w *VpnConnectionDeletedWaiter) Wait(ctx context.Context, params *DescribeV
 
 		retryable, err := options.Retryable(ctx, params, out, err)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if !retryable {
-			return nil
+			return out, nil
 		}
 
 		remainingTime -= time.Since(start)
@@ -503,16 +511,16 @@ func (w *VpnConnectionDeletedWaiter) Wait(ctx context.Context, params *DescribeV
 			attempt, options.MinDelay, options.MaxDelay, remainingTime,
 		)
 		if err != nil {
-			return fmt.Errorf("error computing waiter delay, %w", err)
+			return nil, fmt.Errorf("error computing waiter delay, %w", err)
 		}
 
 		remainingTime -= delay
 		// sleep for the delay amount before invoking a request
 		if err := smithytime.SleepWithContext(ctx, delay); err != nil {
-			return fmt.Errorf("request cancelled while waiting, %w", err)
+			return nil, fmt.Errorf("request cancelled while waiting, %w", err)
 		}
 	}
-	return fmt.Errorf("exceeded max wait time for VpnConnectionDeleted waiter")
+	return nil, fmt.Errorf("exceeded max wait time for VpnConnectionDeleted waiter")
 }
 
 func vpnConnectionDeletedStateRetryable(ctx context.Context, input *DescribeVpnConnectionsInput, output *DescribeVpnConnectionsOutput, err error) (bool, error) {

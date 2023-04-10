@@ -11,13 +11,13 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Deletes one or more VPC endpoint connection notifications.
+// Deletes the specified VPC endpoint connection notifications.
 func (c *Client) DeleteVpcEndpointConnectionNotifications(ctx context.Context, params *DeleteVpcEndpointConnectionNotificationsInput, optFns ...func(*Options)) (*DeleteVpcEndpointConnectionNotificationsOutput, error) {
 	if params == nil {
 		params = &DeleteVpcEndpointConnectionNotificationsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DeleteVpcEndpointConnectionNotifications", params, optFns, addOperationDeleteVpcEndpointConnectionNotificationsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DeleteVpcEndpointConnectionNotifications", params, optFns, c.addOperationDeleteVpcEndpointConnectionNotificationsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -29,16 +29,18 @@ func (c *Client) DeleteVpcEndpointConnectionNotifications(ctx context.Context, p
 
 type DeleteVpcEndpointConnectionNotificationsInput struct {
 
-	// One or more notification IDs.
+	// The IDs of the notifications.
 	//
 	// This member is required.
 	ConnectionNotificationIds []string
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type DeleteVpcEndpointConnectionNotificationsOutput struct {
@@ -48,9 +50,11 @@ type DeleteVpcEndpointConnectionNotificationsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDeleteVpcEndpointConnectionNotificationsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDeleteVpcEndpointConnectionNotificationsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDeleteVpcEndpointConnectionNotifications{}, middleware.After)
 	if err != nil {
 		return err

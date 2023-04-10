@@ -15,24 +15,23 @@ import (
 // role, or root user. For example, you can view the resource types that are
 // enabled for longer IDs. This request only returns information about resource
 // types whose ID formats can be modified; it does not return information about
-// other resource types. For more information, see Resource IDs
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/resource-ids.html) in the
-// Amazon Elastic Compute Cloud User Guide. The following resource types support
-// longer IDs: bundle | conversion-task | customer-gateway | dhcp-options |
-// elastic-ip-allocation | elastic-ip-association | export-task | flow-log | image
-// | import-task | instance | internet-gateway | network-acl |
+// other resource types. For more information, see Resource IDs (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/resource-ids.html)
+// in the Amazon Elastic Compute Cloud User Guide. The following resource types
+// support longer IDs: bundle | conversion-task | customer-gateway | dhcp-options
+// | elastic-ip-allocation | elastic-ip-association | export-task | flow-log |
+// image | import-task | instance | internet-gateway | network-acl |
 // network-acl-association | network-interface | network-interface-attachment |
 // prefix-list | reservation | route-table | route-table-association |
 // security-group | snapshot | subnet | subnet-cidr-block-association | volume |
 // vpc | vpc-cidr-block-association | vpc-endpoint | vpc-peering-connection |
-// vpn-connection | vpn-gateway. These settings apply to the principal specified in
-// the request. They do not apply to the principal that makes the request.
+// vpn-connection | vpn-gateway . These settings apply to the principal specified
+// in the request. They do not apply to the principal that makes the request.
 func (c *Client) DescribeIdentityIdFormat(ctx context.Context, params *DescribeIdentityIdFormatInput, optFns ...func(*Options)) (*DescribeIdentityIdFormatOutput, error) {
 	if params == nil {
 		params = &DescribeIdentityIdFormatInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeIdentityIdFormat", params, optFns, addOperationDescribeIdentityIdFormatMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeIdentityIdFormat", params, optFns, c.addOperationDescribeIdentityIdFormatMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -58,6 +57,8 @@ type DescribeIdentityIdFormatInput struct {
 	// vpc | vpc-cidr-block-association | vpc-endpoint | vpc-peering-connection |
 	// vpn-connection | vpn-gateway
 	Resource *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeIdentityIdFormatOutput struct {
@@ -67,9 +68,11 @@ type DescribeIdentityIdFormatOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeIdentityIdFormatMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeIdentityIdFormatMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeIdentityIdFormat{}, middleware.After)
 	if err != nil {
 		return err

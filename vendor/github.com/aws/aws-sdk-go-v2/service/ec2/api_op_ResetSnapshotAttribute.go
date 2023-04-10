@@ -12,15 +12,14 @@ import (
 )
 
 // Resets permission settings for the specified snapshot. For more information
-// about modifying snapshot permissions, see Sharing snapshots
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-modifying-snapshot-permissions.html)
+// about modifying snapshot permissions, see Share a snapshot (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-modifying-snapshot-permissions.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 func (c *Client) ResetSnapshotAttribute(ctx context.Context, params *ResetSnapshotAttributeInput, optFns ...func(*Options)) (*ResetSnapshotAttributeOutput, error) {
 	if params == nil {
 		params = &ResetSnapshotAttributeInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ResetSnapshotAttribute", params, optFns, addOperationResetSnapshotAttributeMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ResetSnapshotAttribute", params, optFns, c.addOperationResetSnapshotAttributeMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -45,17 +44,21 @@ type ResetSnapshotAttributeInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type ResetSnapshotAttributeOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationResetSnapshotAttributeMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationResetSnapshotAttributeMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpResetSnapshotAttribute{}, middleware.After)
 	if err != nil {
 		return err

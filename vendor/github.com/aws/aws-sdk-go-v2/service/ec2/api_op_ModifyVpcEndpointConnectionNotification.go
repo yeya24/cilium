@@ -10,15 +10,15 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Modifies a connection notification for VPC endpoint or VPC endpoint service. You
-// can change the SNS topic for the notification, or the events for which to be
+// Modifies a connection notification for VPC endpoint or VPC endpoint service.
+// You can change the SNS topic for the notification, or the events for which to be
 // notified.
 func (c *Client) ModifyVpcEndpointConnectionNotification(ctx context.Context, params *ModifyVpcEndpointConnectionNotificationInput, optFns ...func(*Options)) (*ModifyVpcEndpointConnectionNotificationOutput, error) {
 	if params == nil {
 		params = &ModifyVpcEndpointConnectionNotificationInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ModifyVpcEndpointConnectionNotification", params, optFns, addOperationModifyVpcEndpointConnectionNotificationMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ModifyVpcEndpointConnectionNotification", params, optFns, c.addOperationModifyVpcEndpointConnectionNotificationMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -35,8 +35,8 @@ type ModifyVpcEndpointConnectionNotificationInput struct {
 	// This member is required.
 	ConnectionNotificationId *string
 
-	// One or more events for the endpoint. Valid values are Accept, Connect, Delete,
-	// and Reject.
+	// The events for the endpoint. Valid values are Accept , Connect , Delete , and
+	// Reject .
 	ConnectionEvents []string
 
 	// The ARN for the SNS topic for the notification.
@@ -44,9 +44,11 @@ type ModifyVpcEndpointConnectionNotificationInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type ModifyVpcEndpointConnectionNotificationOutput struct {
@@ -56,9 +58,11 @@ type ModifyVpcEndpointConnectionNotificationOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationModifyVpcEndpointConnectionNotificationMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationModifyVpcEndpointConnectionNotificationMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpModifyVpcEndpointConnectionNotification{}, middleware.After)
 	if err != nil {
 		return err

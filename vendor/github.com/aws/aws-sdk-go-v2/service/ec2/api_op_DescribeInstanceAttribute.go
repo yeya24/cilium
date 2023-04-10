@@ -21,7 +21,7 @@ func (c *Client) DescribeInstanceAttribute(ctx context.Context, params *Describe
 		params = &DescribeInstanceAttributeInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeInstanceAttribute", params, optFns, addOperationDescribeInstanceAttributeMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeInstanceAttribute", params, optFns, c.addOperationDescribeInstanceAttributeMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -46,9 +46,11 @@ type DescribeInstanceAttributeInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 // Describes an instance attribute.
@@ -57,7 +59,11 @@ type DescribeInstanceAttributeOutput struct {
 	// The block device mapping of the instance.
 	BlockDeviceMappings []types.InstanceBlockDeviceMapping
 
-	// If the value is true, you can't terminate the instance through the Amazon EC2
+	// To enable the instance for Amazon Web Services Stop Protection, set this
+	// parameter to true ; otherwise, set it to false .
+	DisableApiStop *types.AttributeBooleanValue
+
+	// If the value is true , you can't terminate the instance through the Amazon EC2
 	// console, CLI, or API; otherwise, you can.
 	DisableApiTermination *types.AttributeBooleanValue
 
@@ -67,8 +73,8 @@ type DescribeInstanceAttributeOutput struct {
 	// Indicates whether enhanced networking with ENA is enabled.
 	EnaSupport *types.AttributeBooleanValue
 
-	// To enable the instance for AWS Nitro Enclaves, set this parameter to true;
-	// otherwise, set it to false.
+	// To enable the instance for Amazon Web Services Nitro Enclaves, set this
+	// parameter to true ; otherwise, set it to false .
 	EnclaveOptions *types.EnclaveOptions
 
 	// The security groups associated with the instance.
@@ -93,13 +99,13 @@ type DescribeInstanceAttributeOutput struct {
 	// The RAM disk ID.
 	RamdiskId *types.AttributeValue
 
-	// The device name of the root device volume (for example, /dev/sda1).
+	// The device name of the root device volume (for example, /dev/sda1 ).
 	RootDeviceName *types.AttributeValue
 
 	// Enable or disable source/destination checks, which ensure that the instance is
 	// either the source or the destination of any traffic that it receives. If the
-	// value is true, source/destination checks are enabled; otherwise, they are
-	// disabled. The default value is true. You must disable source/destination checks
+	// value is true , source/destination checks are enabled; otherwise, they are
+	// disabled. The default value is true . You must disable source/destination checks
 	// if the instance runs services such as network address translation, routing, or
 	// firewalls.
 	SourceDestCheck *types.AttributeBooleanValue
@@ -113,9 +119,11 @@ type DescribeInstanceAttributeOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeInstanceAttributeMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeInstanceAttributeMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeInstanceAttribute{}, middleware.After)
 	if err != nil {
 		return err

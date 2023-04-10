@@ -18,7 +18,7 @@ func (c *Client) ConfirmProductInstance(ctx context.Context, params *ConfirmProd
 		params = &ConfirmProductInstanceInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ConfirmProductInstance", params, optFns, addOperationConfirmProductInstanceMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ConfirmProductInstance", params, optFns, c.addOperationConfirmProductInstanceMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -42,15 +42,17 @@ type ConfirmProductInstanceInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type ConfirmProductInstanceOutput struct {
 
-	// The AWS account ID of the instance owner. This is only present if the product
-	// code is attached to the instance.
+	// The Amazon Web Services account ID of the instance owner. This is only present
+	// if the product code is attached to the instance.
 	OwnerId *string
 
 	// The return value of the request. Returns true if the specified product code is
@@ -59,9 +61,11 @@ type ConfirmProductInstanceOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationConfirmProductInstanceMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationConfirmProductInstanceMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpConfirmProductInstance{}, middleware.After)
 	if err != nil {
 		return err

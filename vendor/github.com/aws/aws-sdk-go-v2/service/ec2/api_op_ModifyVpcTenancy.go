@@ -11,21 +11,20 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Modifies the instance tenancy attribute of the specified VPC. You can change the
-// instance tenancy attribute of a VPC to default only. You cannot change the
-// instance tenancy attribute to dedicated. After you modify the tenancy of the
-// VPC, any new instances that you launch into the VPC have a tenancy of default,
+// Modifies the instance tenancy attribute of the specified VPC. You can change
+// the instance tenancy attribute of a VPC to default only. You cannot change the
+// instance tenancy attribute to dedicated . After you modify the tenancy of the
+// VPC, any new instances that you launch into the VPC have a tenancy of default ,
 // unless you specify otherwise during launch. The tenancy of any existing
 // instances in the VPC is not affected. For more information, see Dedicated
-// Instances
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-instance.html) in
-// the Amazon Elastic Compute Cloud User Guide.
+// Instances (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-instance.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 func (c *Client) ModifyVpcTenancy(ctx context.Context, params *ModifyVpcTenancyInput, optFns ...func(*Options)) (*ModifyVpcTenancyOutput, error) {
 	if params == nil {
 		params = &ModifyVpcTenancyInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ModifyVpcTenancy", params, optFns, addOperationModifyVpcTenancyMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ModifyVpcTenancy", params, optFns, c.addOperationModifyVpcTenancyMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -49,9 +48,11 @@ type ModifyVpcTenancyInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type ModifyVpcTenancyOutput struct {
@@ -61,9 +62,11 @@ type ModifyVpcTenancyOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationModifyVpcTenancyMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationModifyVpcTenancyMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpModifyVpcTenancy{}, middleware.After)
 	if err != nil {
 		return err

@@ -10,19 +10,18 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Disables EBS encryption by default for your account in the current Region. After
-// you disable encryption by default, you can still create encrypted volumes by
-// enabling encryption when you create each volume. Disabling encryption by default
-// does not change the encryption status of your existing volumes. For more
-// information, see Amazon EBS encryption
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html) in the
-// Amazon Elastic Compute Cloud User Guide.
+// Disables EBS encryption by default for your account in the current Region.
+// After you disable encryption by default, you can still create encrypted volumes
+// by enabling encryption when you create each volume. Disabling encryption by
+// default does not change the encryption status of your existing volumes. For more
+// information, see Amazon EBS encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 func (c *Client) DisableEbsEncryptionByDefault(ctx context.Context, params *DisableEbsEncryptionByDefaultInput, optFns ...func(*Options)) (*DisableEbsEncryptionByDefaultOutput, error) {
 	if params == nil {
 		params = &DisableEbsEncryptionByDefaultInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DisableEbsEncryptionByDefault", params, optFns, addOperationDisableEbsEncryptionByDefaultMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DisableEbsEncryptionByDefault", params, optFns, c.addOperationDisableEbsEncryptionByDefaultMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -36,9 +35,11 @@ type DisableEbsEncryptionByDefaultInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type DisableEbsEncryptionByDefaultOutput struct {
@@ -48,9 +49,11 @@ type DisableEbsEncryptionByDefaultOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDisableEbsEncryptionByDefaultMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDisableEbsEncryptionByDefaultMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDisableEbsEncryptionByDefault{}, middleware.After)
 	if err != nil {
 		return err

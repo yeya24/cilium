@@ -19,7 +19,7 @@ func (c *Client) DescribeImportImageTasks(ctx context.Context, params *DescribeI
 		params = &DescribeImportImageTasksInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeImportImageTasks", params, optFns, addOperationDescribeImportImageTasksMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeImportImageTasks", params, optFns, c.addOperationDescribeImportImageTasksMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -33,12 +33,12 @@ type DescribeImportImageTasksInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
-	// Filter tasks using the task-state filter and one of the following values:
-	// active, completed, deleting, or deleted.
+	// Filter tasks using the task-state filter and one of the following values: active
+	// , completed , deleting , or deleted .
 	Filters []types.Filter
 
 	// The IDs of the import image tasks.
@@ -49,6 +49,8 @@ type DescribeImportImageTasksInput struct {
 
 	// A token that indicates the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeImportImageTasksOutput struct {
@@ -63,9 +65,11 @@ type DescribeImportImageTasksOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeImportImageTasksMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeImportImageTasksMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeImportImageTasks{}, middleware.After)
 	if err != nil {
 		return err
@@ -174,12 +178,13 @@ func NewDescribeImportImageTasksPaginator(client DescribeImportImageTasksAPIClie
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeImportImageTasksPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeImportImageTasks page.
@@ -206,7 +211,10 @@ func (p *DescribeImportImageTasksPaginator) NextPage(ctx context.Context, optFns
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

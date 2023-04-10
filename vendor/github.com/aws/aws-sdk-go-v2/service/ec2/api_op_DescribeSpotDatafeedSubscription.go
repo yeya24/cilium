@@ -12,15 +12,14 @@ import (
 )
 
 // Describes the data feed for Spot Instances. For more information, see Spot
-// Instance data feed
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-data-feeds.html) in
-// the Amazon EC2 User Guide for Linux Instances.
+// Instance data feed (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-data-feeds.html)
+// in the Amazon EC2 User Guide for Linux Instances.
 func (c *Client) DescribeSpotDatafeedSubscription(ctx context.Context, params *DescribeSpotDatafeedSubscriptionInput, optFns ...func(*Options)) (*DescribeSpotDatafeedSubscriptionOutput, error) {
 	if params == nil {
 		params = &DescribeSpotDatafeedSubscriptionInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeSpotDatafeedSubscription", params, optFns, addOperationDescribeSpotDatafeedSubscriptionMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeSpotDatafeedSubscription", params, optFns, c.addOperationDescribeSpotDatafeedSubscriptionMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -35,9 +34,11 @@ type DescribeSpotDatafeedSubscriptionInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of DescribeSpotDatafeedSubscription.
@@ -48,9 +49,11 @@ type DescribeSpotDatafeedSubscriptionOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeSpotDatafeedSubscriptionMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeSpotDatafeedSubscriptionMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeSpotDatafeedSubscription{}, middleware.After)
 	if err != nil {
 		return err

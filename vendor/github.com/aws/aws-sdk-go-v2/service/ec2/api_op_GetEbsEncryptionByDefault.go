@@ -11,15 +11,14 @@ import (
 )
 
 // Describes whether EBS encryption by default is enabled for your account in the
-// current Region. For more information, see Amazon EBS encryption
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html) in the
-// Amazon Elastic Compute Cloud User Guide.
+// current Region. For more information, see Amazon EBS encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 func (c *Client) GetEbsEncryptionByDefault(ctx context.Context, params *GetEbsEncryptionByDefaultInput, optFns ...func(*Options)) (*GetEbsEncryptionByDefaultOutput, error) {
 	if params == nil {
 		params = &GetEbsEncryptionByDefaultInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "GetEbsEncryptionByDefault", params, optFns, addOperationGetEbsEncryptionByDefaultMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "GetEbsEncryptionByDefault", params, optFns, c.addOperationGetEbsEncryptionByDefaultMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -33,9 +32,11 @@ type GetEbsEncryptionByDefaultInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type GetEbsEncryptionByDefaultOutput struct {
@@ -45,9 +46,11 @@ type GetEbsEncryptionByDefaultOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationGetEbsEncryptionByDefaultMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationGetEbsEncryptionByDefaultMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpGetEbsEncryptionByDefault{}, middleware.After)
 	if err != nil {
 		return err

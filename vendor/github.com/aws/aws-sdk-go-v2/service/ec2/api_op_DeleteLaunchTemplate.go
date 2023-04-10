@@ -18,7 +18,7 @@ func (c *Client) DeleteLaunchTemplate(ctx context.Context, params *DeleteLaunchT
 		params = &DeleteLaunchTemplateInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DeleteLaunchTemplate", params, optFns, addOperationDeleteLaunchTemplateMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DeleteLaunchTemplate", params, optFns, c.addOperationDeleteLaunchTemplateMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -32,17 +32,19 @@ type DeleteLaunchTemplateInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
-	// The ID of the launch template. You must specify either the launch template ID or
-	// launch template name in the request.
+	// The ID of the launch template. You must specify either the LaunchTemplateId or
+	// the LaunchTemplateName , but not both.
 	LaunchTemplateId *string
 
-	// The name of the launch template. You must specify either the launch template ID
-	// or launch template name in the request.
+	// The name of the launch template. You must specify either the LaunchTemplateName
+	// or the LaunchTemplateId , but not both.
 	LaunchTemplateName *string
+
+	noSmithyDocumentSerde
 }
 
 type DeleteLaunchTemplateOutput struct {
@@ -52,9 +54,11 @@ type DeleteLaunchTemplateOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDeleteLaunchTemplateMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDeleteLaunchTemplateMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDeleteLaunchTemplate{}, middleware.After)
 	if err != nil {
 		return err

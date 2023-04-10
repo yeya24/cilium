@@ -19,7 +19,7 @@ func (c *Client) GetTransitGatewayAttachmentPropagations(ctx context.Context, pa
 		params = &GetTransitGatewayAttachmentPropagationsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "GetTransitGatewayAttachmentPropagations", params, optFns, addOperationGetTransitGatewayAttachmentPropagationsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "GetTransitGatewayAttachmentPropagations", params, optFns, c.addOperationGetTransitGatewayAttachmentPropagationsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -38,14 +38,12 @@ type GetTransitGatewayAttachmentPropagationsInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// One or more filters. The possible values are:
-	//
-	// * transit-gateway-route-table-id
-	// - The ID of the transit gateway route table.
+	//   - transit-gateway-route-table-id - The ID of the transit gateway route table.
 	Filters []types.Filter
 
 	// The maximum number of results to return with a single call. To retrieve the
@@ -54,6 +52,8 @@ type GetTransitGatewayAttachmentPropagationsInput struct {
 
 	// The token for the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type GetTransitGatewayAttachmentPropagationsOutput struct {
@@ -67,9 +67,11 @@ type GetTransitGatewayAttachmentPropagationsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationGetTransitGatewayAttachmentPropagationsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationGetTransitGatewayAttachmentPropagationsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpGetTransitGatewayAttachmentPropagations{}, middleware.After)
 	if err != nil {
 		return err
@@ -132,16 +134,16 @@ func addOperationGetTransitGatewayAttachmentPropagationsMiddlewares(stack *middl
 	return nil
 }
 
-// GetTransitGatewayAttachmentPropagationsAPIClient is a client that implements the
-// GetTransitGatewayAttachmentPropagations operation.
+// GetTransitGatewayAttachmentPropagationsAPIClient is a client that implements
+// the GetTransitGatewayAttachmentPropagations operation.
 type GetTransitGatewayAttachmentPropagationsAPIClient interface {
 	GetTransitGatewayAttachmentPropagations(context.Context, *GetTransitGatewayAttachmentPropagationsInput, ...func(*Options)) (*GetTransitGatewayAttachmentPropagationsOutput, error)
 }
 
 var _ GetTransitGatewayAttachmentPropagationsAPIClient = (*Client)(nil)
 
-// GetTransitGatewayAttachmentPropagationsPaginatorOptions is the paginator options
-// for GetTransitGatewayAttachmentPropagations
+// GetTransitGatewayAttachmentPropagationsPaginatorOptions is the paginator
+// options for GetTransitGatewayAttachmentPropagations
 type GetTransitGatewayAttachmentPropagationsPaginatorOptions struct {
 	// The maximum number of results to return with a single call. To retrieve the
 	// remaining results, make another call with the returned nextToken value.
@@ -183,12 +185,13 @@ func NewGetTransitGatewayAttachmentPropagationsPaginator(client GetTransitGatewa
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *GetTransitGatewayAttachmentPropagationsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next GetTransitGatewayAttachmentPropagations page.
@@ -215,7 +218,10 @@ func (p *GetTransitGatewayAttachmentPropagationsPaginator) NextPage(ctx context.
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

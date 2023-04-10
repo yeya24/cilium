@@ -17,7 +17,7 @@ func (c *Client) DisableVgwRoutePropagation(ctx context.Context, params *Disable
 		params = &DisableVgwRoutePropagationInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DisableVgwRoutePropagation", params, optFns, addOperationDisableVgwRoutePropagationMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DisableVgwRoutePropagation", params, optFns, c.addOperationDisableVgwRoutePropagationMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -42,17 +42,21 @@ type DisableVgwRoutePropagationInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type DisableVgwRoutePropagationOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDisableVgwRoutePropagationMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDisableVgwRoutePropagationMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDisableVgwRoutePropagation{}, middleware.After)
 	if err != nil {
 		return err

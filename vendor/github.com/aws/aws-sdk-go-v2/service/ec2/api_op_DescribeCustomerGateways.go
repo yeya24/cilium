@@ -17,15 +17,14 @@ import (
 )
 
 // Describes one or more of your VPN customer gateways. For more information, see
-// AWS Site-to-Site VPN
-// (https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html) in the AWS
-// Site-to-Site VPN User Guide.
+// Amazon Web Services Site-to-Site VPN (https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html)
+// in the Amazon Web Services Site-to-Site VPN User Guide.
 func (c *Client) DescribeCustomerGateways(ctx context.Context, params *DescribeCustomerGatewaysInput, optFns ...func(*Options)) (*DescribeCustomerGatewaysOutput, error) {
 	if params == nil {
 		params = &DescribeCustomerGatewaysInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeCustomerGateways", params, optFns, addOperationDescribeCustomerGatewaysMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeCustomerGateways", params, optFns, c.addOperationDescribeCustomerGatewaysMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -43,37 +42,29 @@ type DescribeCustomerGatewaysInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// One or more filters.
-	//
-	// * bgp-asn - The customer gateway's Border Gateway Protocol
-	// (BGP) Autonomous System Number (ASN).
-	//
-	// * customer-gateway-id - The ID of the
-	// customer gateway.
-	//
-	// * ip-address - The IP address of the customer gateway's
-	// Internet-routable external interface.
-	//
-	// * state - The state of the customer
-	// gateway (pending | available | deleting | deleted).
-	//
-	// * type - The type of
-	// customer gateway. Currently, the only supported type is ipsec.1.
-	//
-	// * tag: - The
-	// key/value combination of a tag assigned to the resource. Use the tag key in the
-	// filter name and the tag value as the filter value. For example, to find all
-	// resources that have a tag with the key Owner and the value TeamA, specify
-	// tag:Owner for the filter name and TeamA for the filter value.
-	//
-	// * tag-key - The
-	// key of a tag assigned to the resource. Use this filter to find all resources
-	// assigned a tag with a specific key, regardless of the tag value.
+	//   - bgp-asn - The customer gateway's Border Gateway Protocol (BGP) Autonomous
+	//   System Number (ASN).
+	//   - customer-gateway-id - The ID of the customer gateway.
+	//   - ip-address - The IP address of the customer gateway device's external
+	//   interface.
+	//   - state - The state of the customer gateway ( pending | available | deleting |
+	//   deleted ).
+	//   - type - The type of customer gateway. Currently, the only supported type is
+	//   ipsec.1 .
+	//   - tag : - The key/value combination of a tag assigned to the resource. Use the
+	//   tag key in the filter name and the tag value as the filter value. For example,
+	//   to find all resources that have a tag with the key Owner and the value TeamA ,
+	//   specify tag:Owner for the filter name and TeamA for the filter value.
+	//   - tag-key - The key of a tag assigned to the resource. Use this filter to find
+	//   all resources assigned a tag with a specific key, regardless of the tag value.
 	Filters []types.Filter
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of DescribeCustomerGateways.
@@ -84,9 +75,11 @@ type DescribeCustomerGatewaysOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeCustomerGatewaysMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeCustomerGatewaysMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeCustomerGateways{}, middleware.After)
 	if err != nil {
 		return err
@@ -168,8 +161,8 @@ type CustomerGatewayAvailableWaiterOptions struct {
 	// Note that MinDelay must resolve to a value lesser than or equal to the MaxDelay.
 	MinDelay time.Duration
 
-	// MaxDelay is the maximum amount of time to delay between retries. If unset or set
-	// to zero, CustomerGatewayAvailableWaiter will use default max delay of 120
+	// MaxDelay is the maximum amount of time to delay between retries. If unset or
+	// set to zero, CustomerGatewayAvailableWaiter will use default max delay of 120
 	// seconds. Note that MaxDelay must resolve to value greater than or equal to the
 	// MinDelay.
 	MaxDelay time.Duration
@@ -215,8 +208,17 @@ func NewCustomerGatewayAvailableWaiter(client DescribeCustomerGatewaysAPIClient,
 // maxWaitDur is the maximum wait duration the waiter will wait. The maxWaitDur is
 // required and must be greater than zero.
 func (w *CustomerGatewayAvailableWaiter) Wait(ctx context.Context, params *DescribeCustomerGatewaysInput, maxWaitDur time.Duration, optFns ...func(*CustomerGatewayAvailableWaiterOptions)) error {
+	_, err := w.WaitForOutput(ctx, params, maxWaitDur, optFns...)
+	return err
+}
+
+// WaitForOutput calls the waiter function for CustomerGatewayAvailable waiter and
+// returns the output of the successful operation. The maxWaitDur is the maximum
+// wait duration the waiter will wait. The maxWaitDur is required and must be
+// greater than zero.
+func (w *CustomerGatewayAvailableWaiter) WaitForOutput(ctx context.Context, params *DescribeCustomerGatewaysInput, maxWaitDur time.Duration, optFns ...func(*CustomerGatewayAvailableWaiterOptions)) (*DescribeCustomerGatewaysOutput, error) {
 	if maxWaitDur <= 0 {
-		return fmt.Errorf("maximum wait time for waiter must be greater than zero")
+		return nil, fmt.Errorf("maximum wait time for waiter must be greater than zero")
 	}
 
 	options := w.options
@@ -229,7 +231,7 @@ func (w *CustomerGatewayAvailableWaiter) Wait(ctx context.Context, params *Descr
 	}
 
 	if options.MinDelay > options.MaxDelay {
-		return fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
+		return nil, fmt.Errorf("minimum waiter delay %v must be lesser than or equal to maximum waiter delay of %v.", options.MinDelay, options.MaxDelay)
 	}
 
 	ctx, cancelFn := context.WithTimeout(ctx, maxWaitDur)
@@ -257,10 +259,10 @@ func (w *CustomerGatewayAvailableWaiter) Wait(ctx context.Context, params *Descr
 
 		retryable, err := options.Retryable(ctx, params, out, err)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if !retryable {
-			return nil
+			return out, nil
 		}
 
 		remainingTime -= time.Since(start)
@@ -273,16 +275,16 @@ func (w *CustomerGatewayAvailableWaiter) Wait(ctx context.Context, params *Descr
 			attempt, options.MinDelay, options.MaxDelay, remainingTime,
 		)
 		if err != nil {
-			return fmt.Errorf("error computing waiter delay, %w", err)
+			return nil, fmt.Errorf("error computing waiter delay, %w", err)
 		}
 
 		remainingTime -= delay
 		// sleep for the delay amount before invoking a request
 		if err := smithytime.SleepWithContext(ctx, delay); err != nil {
-			return fmt.Errorf("request cancelled while waiting, %w", err)
+			return nil, fmt.Errorf("request cancelled while waiting, %w", err)
 		}
 	}
-	return fmt.Errorf("exceeded max wait time for CustomerGatewayAvailable waiter")
+	return nil, fmt.Errorf("exceeded max wait time for CustomerGatewayAvailable waiter")
 }
 
 func customerGatewayAvailableStateRetryable(ctx context.Context, input *DescribeCustomerGatewaysInput, output *DescribeCustomerGatewaysOutput, err error) (bool, error) {

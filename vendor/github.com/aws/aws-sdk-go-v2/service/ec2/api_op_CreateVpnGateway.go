@@ -13,15 +13,15 @@ import (
 
 // Creates a virtual private gateway. A virtual private gateway is the endpoint on
 // the VPC side of your VPN connection. You can create a virtual private gateway
-// before creating the VPC itself. For more information, see AWS Site-to-Site VPN
-// (https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html) in the AWS
-// Site-to-Site VPN User Guide.
+// before creating the VPC itself. For more information, see Amazon Web Services
+// Site-to-Site VPN (https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html) in
+// the Amazon Web Services Site-to-Site VPN User Guide.
 func (c *Client) CreateVpnGateway(ctx context.Context, params *CreateVpnGatewayInput, optFns ...func(*Options)) (*CreateVpnGatewayOutput, error) {
 	if params == nil {
 		params = &CreateVpnGatewayInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateVpnGateway", params, optFns, addOperationCreateVpnGatewayMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateVpnGateway", params, optFns, c.addOperationCreateVpnGatewayMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -50,12 +50,14 @@ type CreateVpnGatewayInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// The tags to apply to the virtual private gateway.
 	TagSpecifications []types.TagSpecification
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of CreateVpnGateway.
@@ -66,9 +68,11 @@ type CreateVpnGatewayOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateVpnGatewayMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateVpnGatewayMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateVpnGateway{}, middleware.After)
 	if err != nil {
 		return err

@@ -12,15 +12,14 @@ import (
 
 // Enables access to the EC2 serial console of all instances for your account. By
 // default, access to the EC2 serial console is disabled for your account. For more
-// information, see Manage account access to the EC2 serial console
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configure-access-to-serial-console.html#serial-console-account-access)
+// information, see Manage account access to the EC2 serial console (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configure-access-to-serial-console.html#serial-console-account-access)
 // in the Amazon EC2 User Guide.
 func (c *Client) EnableSerialConsoleAccess(ctx context.Context, params *EnableSerialConsoleAccessInput, optFns ...func(*Options)) (*EnableSerialConsoleAccessOutput, error) {
 	if params == nil {
 		params = &EnableSerialConsoleAccessInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "EnableSerialConsoleAccess", params, optFns, addOperationEnableSerialConsoleAccessMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "EnableSerialConsoleAccess", params, optFns, c.addOperationEnableSerialConsoleAccessMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -34,23 +33,27 @@ type EnableSerialConsoleAccessInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type EnableSerialConsoleAccessOutput struct {
 
-	// If true, access to the EC2 serial console of all instances is enabled for your
-	// account. If false, access to the EC2 serial console of all instances is disabled
-	// for your account.
+	// If true , access to the EC2 serial console of all instances is enabled for your
+	// account. If false , access to the EC2 serial console of all instances is
+	// disabled for your account.
 	SerialConsoleAccessEnabled *bool
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationEnableSerialConsoleAccessMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationEnableSerialConsoleAccessMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpEnableSerialConsoleAccess{}, middleware.After)
 	if err != nil {
 		return err

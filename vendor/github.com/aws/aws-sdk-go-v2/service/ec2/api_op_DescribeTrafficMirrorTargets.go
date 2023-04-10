@@ -18,7 +18,7 @@ func (c *Client) DescribeTrafficMirrorTargets(ctx context.Context, params *Descr
 		params = &DescribeTrafficMirrorTargetsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeTrafficMirrorTargets", params, optFns, addOperationDescribeTrafficMirrorTargetsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeTrafficMirrorTargets", params, optFns, c.addOperationDescribeTrafficMirrorTargetsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -32,26 +32,18 @@ type DescribeTrafficMirrorTargetsInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// One or more filters. The possible values are:
-	//
-	// * description: The Traffic Mirror
-	// target description.
-	//
-	// * network-interface-id: The ID of the Traffic Mirror
-	// session network interface.
-	//
-	// * network-load-balancer-arn: The Amazon Resource
-	// Name (ARN) of the Network Load Balancer that is associated with the session.
-	//
-	// *
-	// owner-id: The ID of the account that owns the Traffic Mirror session.
-	//
-	// *
-	// traffic-mirror-target-id: The ID of the Traffic Mirror target.
+	//   - description : The Traffic Mirror target description.
+	//   - network-interface-id : The ID of the Traffic Mirror session network
+	//   interface.
+	//   - network-load-balancer-arn : The Amazon Resource Name (ARN) of the Network
+	//   Load Balancer that is associated with the session.
+	//   - owner-id : The ID of the account that owns the Traffic Mirror session.
+	//   - traffic-mirror-target-id : The ID of the Traffic Mirror target.
 	Filters []types.Filter
 
 	// The maximum number of results to return with a single call. To retrieve the
@@ -63,6 +55,8 @@ type DescribeTrafficMirrorTargetsInput struct {
 
 	// The ID of the Traffic Mirror targets.
 	TrafficMirrorTargetIds []string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeTrafficMirrorTargetsOutput struct {
@@ -76,9 +70,11 @@ type DescribeTrafficMirrorTargetsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeTrafficMirrorTargetsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeTrafficMirrorTargetsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeTrafficMirrorTargets{}, middleware.After)
 	if err != nil {
 		return err
@@ -189,12 +185,13 @@ func NewDescribeTrafficMirrorTargetsPaginator(client DescribeTrafficMirrorTarget
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeTrafficMirrorTargetsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeTrafficMirrorTargets page.
@@ -221,7 +218,10 @@ func (p *DescribeTrafficMirrorTargetsPaginator) NextPage(ctx context.Context, op
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

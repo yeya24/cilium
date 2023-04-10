@@ -19,7 +19,7 @@ func (c *Client) AllocateHosts(ctx context.Context, params *AllocateHostsInput, 
 		params = &AllocateHostsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "AllocateHosts", params, optFns, addOperationAllocateHostsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "AllocateHosts", params, optFns, c.addOperationAllocateHostsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -44,19 +44,22 @@ type AllocateHostsInput struct {
 	// Indicates whether the host accepts any untargeted instance launches that match
 	// its instance type configuration, or if it only accepts Host tenancy instance
 	// launches that specify its unique host ID. For more information, see
-	// Understanding auto-placement and affinity
-	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/how-dedicated-hosts-work.html#dedicated-hosts-understanding)
+	// Understanding auto-placement and affinity (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/how-dedicated-hosts-work.html#dedicated-hosts-understanding)
 	// in the Amazon EC2 User Guide. Default: on
 	AutoPlacement types.AutoPlacement
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency of
-	// the request. For more information, see Ensuring Idempotency
-	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	// the request. For more information, see Ensuring Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html)
+	// .
 	ClientToken *string
 
+	// Indicates whether to enable or disable host maintenance for the Dedicated Host.
+	// For more information, see Host maintenance (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-hosts-maintenance.html)
+	// in the Amazon EC2 User Guide.
+	HostMaintenance types.HostMaintenance
+
 	// Indicates whether to enable or disable host recovery for the Dedicated Host.
-	// Host recovery is disabled by default. For more information, see  Host recovery
-	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-hosts-recovery.html)
+	// Host recovery is disabled by default. For more information, see Host recovery (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-hosts-recovery.html)
 	// in the Amazon EC2 User Guide. Default: off
 	HostRecovery types.HostRecovery
 
@@ -75,8 +78,14 @@ type AllocateHostsInput struct {
 	// the same request.
 	InstanceType *string
 
+	// The Amazon Resource Name (ARN) of the Amazon Web Services Outpost on which to
+	// allocate the Dedicated Host.
+	OutpostArn *string
+
 	// The tags to apply to the Dedicated Host during creation.
 	TagSpecifications []types.TagSpecification
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of AllocateHosts.
@@ -88,9 +97,11 @@ type AllocateHostsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationAllocateHostsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationAllocateHostsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpAllocateHosts{}, middleware.After)
 	if err != nil {
 		return err

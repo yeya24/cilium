@@ -18,7 +18,7 @@ func (c *Client) EnableTransitGatewayRouteTablePropagation(ctx context.Context, 
 		params = &EnableTransitGatewayRouteTablePropagationInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "EnableTransitGatewayRouteTablePropagation", params, optFns, addOperationEnableTransitGatewayRouteTablePropagationMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "EnableTransitGatewayRouteTablePropagation", params, optFns, c.addOperationEnableTransitGatewayRouteTablePropagationMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -30,11 +30,6 @@ func (c *Client) EnableTransitGatewayRouteTablePropagation(ctx context.Context, 
 
 type EnableTransitGatewayRouteTablePropagationInput struct {
 
-	// The ID of the attachment.
-	//
-	// This member is required.
-	TransitGatewayAttachmentId *string
-
 	// The ID of the propagation route table.
 	//
 	// This member is required.
@@ -42,9 +37,17 @@ type EnableTransitGatewayRouteTablePropagationInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	// The ID of the attachment.
+	TransitGatewayAttachmentId *string
+
+	// The ID of the transit gateway route table announcement.
+	TransitGatewayRouteTableAnnouncementId *string
+
+	noSmithyDocumentSerde
 }
 
 type EnableTransitGatewayRouteTablePropagationOutput struct {
@@ -54,9 +57,11 @@ type EnableTransitGatewayRouteTablePropagationOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationEnableTransitGatewayRouteTablePropagationMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationEnableTransitGatewayRouteTablePropagationMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpEnableTransitGatewayRouteTablePropagation{}, middleware.After)
 	if err != nil {
 		return err

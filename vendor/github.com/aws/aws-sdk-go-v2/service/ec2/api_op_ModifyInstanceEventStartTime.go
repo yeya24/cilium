@@ -18,7 +18,7 @@ func (c *Client) ModifyInstanceEventStartTime(ctx context.Context, params *Modif
 		params = &ModifyInstanceEventStartTimeInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ModifyInstanceEventStartTime", params, optFns, addOperationModifyInstanceEventStartTimeMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ModifyInstanceEventStartTime", params, optFns, c.addOperationModifyInstanceEventStartTimeMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -47,21 +47,25 @@ type ModifyInstanceEventStartTimeInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type ModifyInstanceEventStartTimeOutput struct {
 
-	// Describes a scheduled event for an instance.
+	// Information about the event.
 	Event *types.InstanceStatusEvent
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationModifyInstanceEventStartTimeMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationModifyInstanceEventStartTimeMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpModifyInstanceEventStartTime{}, middleware.After)
 	if err != nil {
 		return err

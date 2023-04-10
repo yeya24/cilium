@@ -17,13 +17,16 @@ import (
 // address is moved, it is no longer available for use in the EC2-Classic platform,
 // unless you move it back using the RestoreAddressToClassic request. You cannot
 // move an Elastic IP address that was originally allocated for use in the EC2-VPC
-// platform to the EC2-Classic platform.
+// platform to the EC2-Classic platform. We are retiring EC2-Classic. We recommend
+// that you migrate from EC2-Classic to a VPC. For more information, see Migrate
+// from EC2-Classic to a VPC (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/vpc-migrate.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 func (c *Client) MoveAddressToVpc(ctx context.Context, params *MoveAddressToVpcInput, optFns ...func(*Options)) (*MoveAddressToVpcOutput, error) {
 	if params == nil {
 		params = &MoveAddressToVpcInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "MoveAddressToVpc", params, optFns, addOperationMoveAddressToVpcMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "MoveAddressToVpc", params, optFns, c.addOperationMoveAddressToVpcMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -42,9 +45,11 @@ type MoveAddressToVpcInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type MoveAddressToVpcOutput struct {
@@ -57,9 +62,11 @@ type MoveAddressToVpcOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationMoveAddressToVpcMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationMoveAddressToVpcMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpMoveAddressToVpc{}, middleware.After)
 	if err != nil {
 		return err

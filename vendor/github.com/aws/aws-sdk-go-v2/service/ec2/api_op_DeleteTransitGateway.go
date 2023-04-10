@@ -17,7 +17,7 @@ func (c *Client) DeleteTransitGateway(ctx context.Context, params *DeleteTransit
 		params = &DeleteTransitGatewayInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DeleteTransitGateway", params, optFns, addOperationDeleteTransitGatewayMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DeleteTransitGateway", params, optFns, c.addOperationDeleteTransitGatewayMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -36,9 +36,11 @@ type DeleteTransitGatewayInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type DeleteTransitGatewayOutput struct {
@@ -48,9 +50,11 @@ type DeleteTransitGatewayOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDeleteTransitGatewayMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDeleteTransitGatewayMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDeleteTransitGateway{}, middleware.After)
 	if err != nil {
 		return err

@@ -11,16 +11,17 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Gets usage information about a Capacity Reservation. If the Capacity Reservation
-// is shared, it shows usage information for the Capacity Reservation owner and
-// each AWS account that is currently using the shared capacity. If the Capacity
-// Reservation is not shared, it shows only the Capacity Reservation owner's usage.
+// Gets usage information about a Capacity Reservation. If the Capacity
+// Reservation is shared, it shows usage information for the Capacity Reservation
+// owner and each Amazon Web Services account that is currently using the shared
+// capacity. If the Capacity Reservation is not shared, it shows only the Capacity
+// Reservation owner's usage.
 func (c *Client) GetCapacityReservationUsage(ctx context.Context, params *GetCapacityReservationUsageInput, optFns ...func(*Options)) (*GetCapacityReservationUsageOutput, error) {
 	if params == nil {
 		params = &GetCapacityReservationUsageInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "GetCapacityReservationUsage", params, optFns, addOperationGetCapacityReservationUsageMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "GetCapacityReservationUsage", params, optFns, c.addOperationGetCapacityReservationUsageMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -39,8 +40,8 @@ type GetCapacityReservationUsageInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// The maximum number of results to return for the request in a single page. The
@@ -52,6 +53,8 @@ type GetCapacityReservationUsageInput struct {
 
 	// The token to use to retrieve the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type GetCapacityReservationUsageOutput struct {
@@ -75,25 +78,18 @@ type GetCapacityReservationUsageOutput struct {
 
 	// The current state of the Capacity Reservation. A Capacity Reservation can be in
 	// one of the following states:
-	//
-	// * active - The Capacity Reservation is active and
-	// the capacity is available for your use.
-	//
-	// * expired - The Capacity Reservation
-	// expired automatically at the date and time specified in your request. The
-	// reserved capacity is no longer available for your use.
-	//
-	// * cancelled - The
-	// Capacity Reservation was cancelled. The reserved capacity is no longer available
-	// for your use.
-	//
-	// * pending - The Capacity Reservation request was successful but
-	// the capacity provisioning is still pending.
-	//
-	// * failed - The Capacity Reservation
-	// request has failed. A request might fail due to invalid request parameters,
-	// capacity constraints, or instance limit constraints. Failed requests are
-	// retained for 60 minutes.
+	//   - active - The Capacity Reservation is active and the capacity is available
+	//   for your use.
+	//   - expired - The Capacity Reservation expired automatically at the date and
+	//   time specified in your request. The reserved capacity is no longer available for
+	//   your use.
+	//   - cancelled - The Capacity Reservation was cancelled. The reserved capacity is
+	//   no longer available for your use.
+	//   - pending - The Capacity Reservation request was successful but the capacity
+	//   provisioning is still pending.
+	//   - failed - The Capacity Reservation request has failed. A request might fail
+	//   due to invalid request parameters, capacity constraints, or instance limit
+	//   constraints. Failed requests are retained for 60 minutes.
 	State types.CapacityReservationState
 
 	// The number of instances for which the Capacity Reservation reserves capacity.
@@ -101,9 +97,11 @@ type GetCapacityReservationUsageOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationGetCapacityReservationUsageMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationGetCapacityReservationUsageMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpGetCapacityReservationUsage{}, middleware.After)
 	if err != nil {
 		return err

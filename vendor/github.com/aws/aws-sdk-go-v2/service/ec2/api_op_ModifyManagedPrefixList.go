@@ -20,7 +20,7 @@ func (c *Client) ModifyManagedPrefixList(ctx context.Context, params *ModifyMana
 		params = &ModifyManagedPrefixListInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ModifyManagedPrefixList", params, optFns, addOperationModifyManagedPrefixListMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ModifyManagedPrefixList", params, optFns, c.addOperationModifyManagedPrefixListMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -45,15 +45,24 @@ type ModifyManagedPrefixListInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	// The maximum number of entries for the prefix list. You cannot modify the
+	// entries of a prefix list and modify the size of a prefix list at the same time.
+	// If any of the resources that reference the prefix list cannot support the new
+	// maximum size, the modify operation fails. Check the state message for the IDs of
+	// the first ten resources that do not support the new maximum size.
+	MaxEntries *int32
 
 	// A name for the prefix list.
 	PrefixListName *string
 
 	// One or more entries to remove from the prefix list.
 	RemoveEntries []types.RemovePrefixListEntry
+
+	noSmithyDocumentSerde
 }
 
 type ModifyManagedPrefixListOutput struct {
@@ -63,9 +72,11 @@ type ModifyManagedPrefixListOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationModifyManagedPrefixListMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationModifyManagedPrefixListMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpModifyManagedPrefixList{}, middleware.After)
 	if err != nil {
 		return err

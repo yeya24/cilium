@@ -11,16 +11,16 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// [IPv6 only] Creates an egress-only internet gateway for your VPC. An egress-only
-// internet gateway is used to enable outbound communication over IPv6 from
-// instances in your VPC to the internet, and prevents hosts outside of your VPC
-// from initiating an IPv6 connection with your instance.
+// [IPv6 only] Creates an egress-only internet gateway for your VPC. An
+// egress-only internet gateway is used to enable outbound communication over IPv6
+// from instances in your VPC to the internet, and prevents hosts outside of your
+// VPC from initiating an IPv6 connection with your instance.
 func (c *Client) CreateEgressOnlyInternetGateway(ctx context.Context, params *CreateEgressOnlyInternetGatewayInput, optFns ...func(*Options)) (*CreateEgressOnlyInternetGatewayOutput, error) {
 	if params == nil {
 		params = &CreateEgressOnlyInternetGatewayInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateEgressOnlyInternetGateway", params, optFns, addOperationCreateEgressOnlyInternetGatewayMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateEgressOnlyInternetGateway", params, optFns, c.addOperationCreateEgressOnlyInternetGatewayMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -38,18 +38,20 @@ type CreateEgressOnlyInternetGatewayInput struct {
 	VpcId *string
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency of
-	// the request. For more information, see How to Ensure Idempotency
-	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html).
+	// the request. For more information, see How to ensure idempotency (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html)
+	// .
 	ClientToken *string
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// The tags to assign to the egress-only internet gateway.
 	TagSpecifications []types.TagSpecification
+
+	noSmithyDocumentSerde
 }
 
 type CreateEgressOnlyInternetGatewayOutput struct {
@@ -63,9 +65,11 @@ type CreateEgressOnlyInternetGatewayOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateEgressOnlyInternetGatewayMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateEgressOnlyInternetGatewayMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateEgressOnlyInternetGateway{}, middleware.After)
 	if err != nil {
 		return err

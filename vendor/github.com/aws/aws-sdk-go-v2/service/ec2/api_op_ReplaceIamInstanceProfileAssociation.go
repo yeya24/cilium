@@ -11,8 +11,8 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Replaces an IAM instance profile for the specified running instance. You can use
-// this action to change the IAM instance profile that's associated with an
+// Replaces an IAM instance profile for the specified running instance. You can
+// use this action to change the IAM instance profile that's associated with an
 // instance without having to disassociate the existing IAM instance profile first.
 // Use DescribeIamInstanceProfileAssociations to get the association ID.
 func (c *Client) ReplaceIamInstanceProfileAssociation(ctx context.Context, params *ReplaceIamInstanceProfileAssociationInput, optFns ...func(*Options)) (*ReplaceIamInstanceProfileAssociationOutput, error) {
@@ -20,7 +20,7 @@ func (c *Client) ReplaceIamInstanceProfileAssociation(ctx context.Context, param
 		params = &ReplaceIamInstanceProfileAssociationInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ReplaceIamInstanceProfileAssociation", params, optFns, addOperationReplaceIamInstanceProfileAssociationMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ReplaceIamInstanceProfileAssociation", params, optFns, c.addOperationReplaceIamInstanceProfileAssociationMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -41,6 +41,8 @@ type ReplaceIamInstanceProfileAssociationInput struct {
 	//
 	// This member is required.
 	IamInstanceProfile *types.IamInstanceProfileSpecification
+
+	noSmithyDocumentSerde
 }
 
 type ReplaceIamInstanceProfileAssociationOutput struct {
@@ -50,9 +52,11 @@ type ReplaceIamInstanceProfileAssociationOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationReplaceIamInstanceProfileAssociationMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationReplaceIamInstanceProfileAssociationMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpReplaceIamInstanceProfileAssociation{}, middleware.After)
 	if err != nil {
 		return err

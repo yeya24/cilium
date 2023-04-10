@@ -17,15 +17,14 @@ import (
 // instances. They automatically pick up the changes within a few hours, depending
 // on how frequently the instance renews its DHCP lease. You can explicitly renew
 // the lease using the operating system on the instance. For more information, see
-// DHCP Options Sets
-// (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_DHCP_Options.html) in the
-// Amazon Virtual Private Cloud User Guide.
+// DHCP options sets (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_DHCP_Options.html)
+// in the Amazon Virtual Private Cloud User Guide.
 func (c *Client) AssociateDhcpOptions(ctx context.Context, params *AssociateDhcpOptionsInput, optFns ...func(*Options)) (*AssociateDhcpOptionsOutput, error) {
 	if params == nil {
 		params = &AssociateDhcpOptionsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "AssociateDhcpOptions", params, optFns, addOperationAssociateDhcpOptionsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "AssociateDhcpOptions", params, optFns, c.addOperationAssociateDhcpOptionsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -37,8 +36,8 @@ func (c *Client) AssociateDhcpOptions(ctx context.Context, params *AssociateDhcp
 
 type AssociateDhcpOptionsInput struct {
 
-	// The ID of the DHCP options set, or default to associate no DHCP options with the
-	// VPC.
+	// The ID of the DHCP options set, or default to associate no DHCP options with
+	// the VPC.
 	//
 	// This member is required.
 	DhcpOptionsId *string
@@ -50,17 +49,21 @@ type AssociateDhcpOptionsInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type AssociateDhcpOptionsOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationAssociateDhcpOptionsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationAssociateDhcpOptionsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpAssociateDhcpOptions{}, middleware.After)
 	if err != nil {
 		return err

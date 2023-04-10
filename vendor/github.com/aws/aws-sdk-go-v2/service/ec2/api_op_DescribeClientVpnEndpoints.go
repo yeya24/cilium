@@ -18,7 +18,7 @@ func (c *Client) DescribeClientVpnEndpoints(ctx context.Context, params *Describ
 		params = &DescribeClientVpnEndpointsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeClientVpnEndpoints", params, optFns, addOperationDescribeClientVpnEndpointsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeClientVpnEndpoints", params, optFns, c.addOperationDescribeClientVpnEndpointsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -35,17 +35,13 @@ type DescribeClientVpnEndpointsInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// One or more filters. Filter names and values are case-sensitive.
-	//
-	// * endpoint-id
-	// - The ID of the Client VPN endpoint.
-	//
-	// * transport-protocol - The transport
-	// protocol (tcp | udp).
+	//   - endpoint-id - The ID of the Client VPN endpoint.
+	//   - transport-protocol - The transport protocol ( tcp | udp ).
 	Filters []types.Filter
 
 	// The maximum number of results to return for the request in a single page. The
@@ -55,6 +51,8 @@ type DescribeClientVpnEndpointsInput struct {
 
 	// The token to retrieve the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeClientVpnEndpointsOutput struct {
@@ -68,9 +66,11 @@ type DescribeClientVpnEndpointsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeClientVpnEndpointsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeClientVpnEndpointsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeClientVpnEndpoints{}, middleware.After)
 	if err != nil {
 		return err
@@ -182,12 +182,13 @@ func NewDescribeClientVpnEndpointsPaginator(client DescribeClientVpnEndpointsAPI
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeClientVpnEndpointsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeClientVpnEndpoints page.
@@ -214,7 +215,10 @@ func (p *DescribeClientVpnEndpointsPaginator) NextPage(ctx context.Context, optF
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

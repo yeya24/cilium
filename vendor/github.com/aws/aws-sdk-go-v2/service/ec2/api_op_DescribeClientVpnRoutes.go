@@ -18,7 +18,7 @@ func (c *Client) DescribeClientVpnRoutes(ctx context.Context, params *DescribeCl
 		params = &DescribeClientVpnRoutesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeClientVpnRoutes", params, optFns, addOperationDescribeClientVpnRoutesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeClientVpnRoutes", params, optFns, c.addOperationDescribeClientVpnRoutesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -37,20 +37,15 @@ type DescribeClientVpnRoutesInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// One or more filters. Filter names and values are case-sensitive.
-	//
-	// *
-	// destination-cidr - The CIDR of the route destination.
-	//
-	// * origin - How the route
-	// was associated with the Client VPN endpoint (associate | add-route).
-	//
-	// *
-	// target-subnet - The ID of the subnet through which traffic is routed.
+	//   - destination-cidr - The CIDR of the route destination.
+	//   - origin - How the route was associated with the Client VPN endpoint (
+	//   associate | add-route ).
+	//   - target-subnet - The ID of the subnet through which traffic is routed.
 	Filters []types.Filter
 
 	// The maximum number of results to return for the request in a single page. The
@@ -60,6 +55,8 @@ type DescribeClientVpnRoutesInput struct {
 
 	// The token to retrieve the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeClientVpnRoutesOutput struct {
@@ -73,9 +70,11 @@ type DescribeClientVpnRoutesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeClientVpnRoutesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeClientVpnRoutesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeClientVpnRoutes{}, middleware.After)
 	if err != nil {
 		return err
@@ -189,12 +188,13 @@ func NewDescribeClientVpnRoutesPaginator(client DescribeClientVpnRoutesAPIClient
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeClientVpnRoutesPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeClientVpnRoutes page.
@@ -221,7 +221,10 @@ func (p *DescribeClientVpnRoutesPaginator) NextPage(ctx context.Context, optFns 
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

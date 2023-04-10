@@ -12,15 +12,14 @@ import (
 
 // Deletes the specified placement group. You must terminate all instances in the
 // placement group before you can delete the placement group. For more information,
-// see Placement groups
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html) in
-// the Amazon EC2 User Guide.
+// see Placement groups (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html)
+// in the Amazon EC2 User Guide.
 func (c *Client) DeletePlacementGroup(ctx context.Context, params *DeletePlacementGroupInput, optFns ...func(*Options)) (*DeletePlacementGroupOutput, error) {
 	if params == nil {
 		params = &DeletePlacementGroupInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DeletePlacementGroup", params, optFns, addOperationDeletePlacementGroupMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DeletePlacementGroup", params, optFns, c.addOperationDeletePlacementGroupMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -39,17 +38,21 @@ type DeletePlacementGroupInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type DeletePlacementGroupOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDeletePlacementGroupMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDeletePlacementGroupMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDeletePlacementGroup{}, middleware.After)
 	if err != nil {
 		return err

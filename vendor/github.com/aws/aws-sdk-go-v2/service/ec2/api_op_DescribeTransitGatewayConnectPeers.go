@@ -18,7 +18,7 @@ func (c *Client) DescribeTransitGatewayConnectPeers(ctx context.Context, params 
 		params = &DescribeTransitGatewayConnectPeersInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeTransitGatewayConnectPeers", params, optFns, addOperationDescribeTransitGatewayConnectPeersMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeTransitGatewayConnectPeers", params, optFns, c.addOperationDescribeTransitGatewayConnectPeersMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -32,20 +32,15 @@ type DescribeTransitGatewayConnectPeersInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// One or more filters. The possible values are:
-	//
-	// * state - The state of the
-	// Connect peer (pending | available | deleting | deleted).
-	//
-	// *
-	// transit-gateway-attachment-id - The ID of the attachment.
-	//
-	// *
-	// transit-gateway-connect-peer-id - The ID of the Connect peer.
+	//   - state - The state of the Connect peer ( pending | available | deleting |
+	//   deleted ).
+	//   - transit-gateway-attachment-id - The ID of the attachment.
+	//   - transit-gateway-connect-peer-id - The ID of the Connect peer.
 	Filters []types.Filter
 
 	// The maximum number of results to return with a single call. To retrieve the
@@ -57,6 +52,8 @@ type DescribeTransitGatewayConnectPeersInput struct {
 
 	// The IDs of the Connect peers.
 	TransitGatewayConnectPeerIds []string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeTransitGatewayConnectPeersOutput struct {
@@ -70,9 +67,11 @@ type DescribeTransitGatewayConnectPeersOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeTransitGatewayConnectPeersMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeTransitGatewayConnectPeersMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeTransitGatewayConnectPeers{}, middleware.After)
 	if err != nil {
 		return err
@@ -183,12 +182,13 @@ func NewDescribeTransitGatewayConnectPeersPaginator(client DescribeTransitGatewa
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeTransitGatewayConnectPeersPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeTransitGatewayConnectPeers page.
@@ -215,7 +215,10 @@ func (p *DescribeTransitGatewayConnectPeersPaginator) NextPage(ctx context.Conte
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

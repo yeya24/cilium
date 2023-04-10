@@ -18,7 +18,7 @@ func (c *Client) DescribeClientVpnAuthorizationRules(ctx context.Context, params
 		params = &DescribeClientVpnAuthorizationRulesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeClientVpnAuthorizationRules", params, optFns, addOperationDescribeClientVpnAuthorizationRulesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeClientVpnAuthorizationRules", params, optFns, c.addOperationDescribeClientVpnAuthorizationRulesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -37,20 +37,16 @@ type DescribeClientVpnAuthorizationRulesInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// One or more filters. Filter names and values are case-sensitive.
-	//
-	// * description
-	// - The description of the authorization rule.
-	//
-	// * destination-cidr - The CIDR of
-	// the network to which the authorization rule applies.
-	//
-	// * group-id - The ID of the
-	// Active Directory group to which the authorization rule grants access.
+	//   - description - The description of the authorization rule.
+	//   - destination-cidr - The CIDR of the network to which the authorization rule
+	//   applies.
+	//   - group-id - The ID of the Active Directory group to which the authorization
+	//   rule grants access.
 	Filters []types.Filter
 
 	// The maximum number of results to return for the request in a single page. The
@@ -60,6 +56,8 @@ type DescribeClientVpnAuthorizationRulesInput struct {
 
 	// The token to retrieve the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeClientVpnAuthorizationRulesOutput struct {
@@ -73,9 +71,11 @@ type DescribeClientVpnAuthorizationRulesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeClientVpnAuthorizationRulesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeClientVpnAuthorizationRulesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeClientVpnAuthorizationRules{}, middleware.After)
 	if err != nil {
 		return err
@@ -146,8 +146,8 @@ type DescribeClientVpnAuthorizationRulesAPIClient interface {
 
 var _ DescribeClientVpnAuthorizationRulesAPIClient = (*Client)(nil)
 
-// DescribeClientVpnAuthorizationRulesPaginatorOptions is the paginator options for
-// DescribeClientVpnAuthorizationRules
+// DescribeClientVpnAuthorizationRulesPaginatorOptions is the paginator options
+// for DescribeClientVpnAuthorizationRules
 type DescribeClientVpnAuthorizationRulesPaginatorOptions struct {
 	// The maximum number of results to return for the request in a single page. The
 	// remaining results can be seen by sending another request with the nextToken
@@ -190,12 +190,13 @@ func NewDescribeClientVpnAuthorizationRulesPaginator(client DescribeClientVpnAut
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeClientVpnAuthorizationRulesPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeClientVpnAuthorizationRules page.
@@ -222,7 +223,10 @@ func (p *DescribeClientVpnAuthorizationRulesPaginator) NextPage(ctx context.Cont
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

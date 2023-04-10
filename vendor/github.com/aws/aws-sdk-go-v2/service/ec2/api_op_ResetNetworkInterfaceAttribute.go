@@ -17,7 +17,7 @@ func (c *Client) ResetNetworkInterfaceAttribute(ctx context.Context, params *Res
 		params = &ResetNetworkInterfaceAttributeInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ResetNetworkInterfaceAttribute", params, optFns, addOperationResetNetworkInterfaceAttributeMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ResetNetworkInterfaceAttribute", params, optFns, c.addOperationResetNetworkInterfaceAttributeMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -37,20 +37,24 @@ type ResetNetworkInterfaceAttributeInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
-	// The source/destination checking attribute. Resets the value to true.
+	// The source/destination checking attribute. Resets the value to true .
 	SourceDestCheck *string
+
+	noSmithyDocumentSerde
 }
 
 type ResetNetworkInterfaceAttributeOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationResetNetworkInterfaceAttributeMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationResetNetworkInterfaceAttributeMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpResetNetworkInterfaceAttribute{}, middleware.After)
 	if err != nil {
 		return err

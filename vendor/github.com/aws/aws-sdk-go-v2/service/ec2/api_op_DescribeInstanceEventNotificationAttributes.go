@@ -18,7 +18,7 @@ func (c *Client) DescribeInstanceEventNotificationAttributes(ctx context.Context
 		params = &DescribeInstanceEventNotificationAttributesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeInstanceEventNotificationAttributes", params, optFns, addOperationDescribeInstanceEventNotificationAttributesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeInstanceEventNotificationAttributes", params, optFns, c.addOperationDescribeInstanceEventNotificationAttributesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -32,9 +32,11 @@ type DescribeInstanceEventNotificationAttributesInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type DescribeInstanceEventNotificationAttributesOutput struct {
@@ -44,9 +46,11 @@ type DescribeInstanceEventNotificationAttributesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeInstanceEventNotificationAttributesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeInstanceEventNotificationAttributesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeInstanceEventNotificationAttributes{}, middleware.After)
 	if err != nil {
 		return err

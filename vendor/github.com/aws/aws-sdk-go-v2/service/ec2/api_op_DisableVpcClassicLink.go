@@ -11,13 +11,16 @@ import (
 )
 
 // Disables ClassicLink for a VPC. You cannot disable ClassicLink for a VPC that
-// has EC2-Classic instances linked to it.
+// has EC2-Classic instances linked to it. We are retiring EC2-Classic. We
+// recommend that you migrate from EC2-Classic to a VPC. For more information, see
+// Migrate from EC2-Classic to a VPC (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/vpc-migrate.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 func (c *Client) DisableVpcClassicLink(ctx context.Context, params *DisableVpcClassicLinkInput, optFns ...func(*Options)) (*DisableVpcClassicLinkOutput, error) {
 	if params == nil {
 		params = &DisableVpcClassicLinkInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DisableVpcClassicLink", params, optFns, addOperationDisableVpcClassicLinkMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DisableVpcClassicLink", params, optFns, c.addOperationDisableVpcClassicLinkMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -36,9 +39,11 @@ type DisableVpcClassicLinkInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type DisableVpcClassicLinkOutput struct {
@@ -48,9 +53,11 @@ type DisableVpcClassicLinkOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDisableVpcClassicLinkMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDisableVpcClassicLinkMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDisableVpcClassicLink{}, middleware.After)
 	if err != nil {
 		return err
