@@ -11,8 +11,8 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Deletes one or more VPC endpoint service configurations in your account. Before
-// you delete the endpoint service configuration, you must reject any Available or
+// Deletes the specified VPC endpoint service configurations. Before you can
+// delete an endpoint service configuration, you must reject any Available or
 // PendingAcceptance interface endpoint connections that are attached to the
 // service.
 func (c *Client) DeleteVpcEndpointServiceConfigurations(ctx context.Context, params *DeleteVpcEndpointServiceConfigurationsInput, optFns ...func(*Options)) (*DeleteVpcEndpointServiceConfigurationsOutput, error) {
@@ -20,7 +20,7 @@ func (c *Client) DeleteVpcEndpointServiceConfigurations(ctx context.Context, par
 		params = &DeleteVpcEndpointServiceConfigurationsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DeleteVpcEndpointServiceConfigurations", params, optFns, addOperationDeleteVpcEndpointServiceConfigurationsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DeleteVpcEndpointServiceConfigurations", params, optFns, c.addOperationDeleteVpcEndpointServiceConfigurationsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -32,16 +32,18 @@ func (c *Client) DeleteVpcEndpointServiceConfigurations(ctx context.Context, par
 
 type DeleteVpcEndpointServiceConfigurationsInput struct {
 
-	// The IDs of one or more services.
+	// The IDs of the services.
 	//
 	// This member is required.
 	ServiceIds []string
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type DeleteVpcEndpointServiceConfigurationsOutput struct {
@@ -52,9 +54,11 @@ type DeleteVpcEndpointServiceConfigurationsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDeleteVpcEndpointServiceConfigurationsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDeleteVpcEndpointServiceConfigurationsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDeleteVpcEndpointServiceConfigurations{}, middleware.After)
 	if err != nil {
 		return err
@@ -103,6 +107,9 @@ func addOperationDeleteVpcEndpointServiceConfigurationsMiddlewares(stack *middle
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDeleteVpcEndpointServiceConfigurations(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

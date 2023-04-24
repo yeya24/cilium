@@ -11,14 +11,14 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Describes the specified attribute of the specified VPC. You can specify only one
-// attribute at a time.
+// Describes the specified attribute of the specified VPC. You can specify only
+// one attribute at a time.
 func (c *Client) DescribeVpcAttribute(ctx context.Context, params *DescribeVpcAttributeInput, optFns ...func(*Options)) (*DescribeVpcAttributeOutput, error) {
 	if params == nil {
 		params = &DescribeVpcAttributeInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeVpcAttribute", params, optFns, addOperationDescribeVpcAttributeMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeVpcAttribute", params, optFns, c.addOperationDescribeVpcAttributeMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -42,31 +42,38 @@ type DescribeVpcAttributeInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type DescribeVpcAttributeOutput struct {
 
 	// Indicates whether the instances launched in the VPC get DNS hostnames. If this
-	// attribute is true, instances in the VPC get DNS hostnames; otherwise, they do
+	// attribute is true , instances in the VPC get DNS hostnames; otherwise, they do
 	// not.
 	EnableDnsHostnames *types.AttributeBooleanValue
 
 	// Indicates whether DNS resolution is enabled for the VPC. If this attribute is
-	// true, the Amazon DNS server resolves DNS hostnames for your instances to their
+	// true , the Amazon DNS server resolves DNS hostnames for your instances to their
 	// corresponding IP addresses; otherwise, it does not.
 	EnableDnsSupport *types.AttributeBooleanValue
+
+	// Indicates whether Network Address Usage metrics are enabled for your VPC.
+	EnableNetworkAddressUsageMetrics *types.AttributeBooleanValue
 
 	// The ID of the VPC.
 	VpcId *string
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeVpcAttributeMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeVpcAttributeMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeVpcAttribute{}, middleware.After)
 	if err != nil {
 		return err
@@ -115,6 +122,9 @@ func addOperationDescribeVpcAttributeMiddlewares(stack *middleware.Stack, option
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDescribeVpcAttribute(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

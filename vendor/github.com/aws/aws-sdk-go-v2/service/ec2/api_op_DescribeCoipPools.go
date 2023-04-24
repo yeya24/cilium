@@ -19,7 +19,7 @@ func (c *Client) DescribeCoipPools(ctx context.Context, params *DescribeCoipPool
 		params = &DescribeCoipPoolsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeCoipPools", params, optFns, addOperationDescribeCoipPoolsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeCoipPools", params, optFns, c.addOperationDescribeCoipPoolsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -33,16 +33,14 @@ type DescribeCoipPoolsInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
-	// The filters. The following are the possible values:
-	//
-	// * coip-pool.pool-id
-	//
-	// *
-	// coip-pool.local-gateway-route-table-id
+	// One or more filters.
+	//   - coip-pool.local-gateway-route-table-id - The ID of the local gateway route
+	//   table.
+	//   - coip-pool.pool-id - The ID of the address pool.
 	Filters []types.Filter
 
 	// The maximum number of results to return with a single call. To retrieve the
@@ -54,6 +52,8 @@ type DescribeCoipPoolsInput struct {
 
 	// The IDs of the address pools.
 	PoolIds []string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeCoipPoolsOutput struct {
@@ -67,9 +67,11 @@ type DescribeCoipPoolsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeCoipPoolsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeCoipPoolsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeCoipPools{}, middleware.After)
 	if err != nil {
 		return err
@@ -115,6 +117,9 @@ func addOperationDescribeCoipPoolsMiddlewares(stack *middleware.Stack, options O
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDescribeCoipPools(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
@@ -177,12 +182,13 @@ func NewDescribeCoipPoolsPaginator(client DescribeCoipPoolsAPIClient, params *De
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeCoipPoolsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeCoipPools page.
@@ -209,7 +215,10 @@ func (p *DescribeCoipPoolsPaginator) NextPage(ctx context.Context, optFns ...fun
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

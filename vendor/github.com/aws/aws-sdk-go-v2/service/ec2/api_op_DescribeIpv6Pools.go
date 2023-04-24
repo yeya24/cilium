@@ -18,7 +18,7 @@ func (c *Client) DescribeIpv6Pools(ctx context.Context, params *DescribeIpv6Pool
 		params = &DescribeIpv6PoolsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeIpv6Pools", params, optFns, addOperationDescribeIpv6PoolsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeIpv6Pools", params, optFns, c.addOperationDescribeIpv6PoolsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -32,21 +32,17 @@ type DescribeIpv6PoolsInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// One or more filters.
-	//
-	// * tag: - The key/value combination of a tag assigned to
-	// the resource. Use the tag key in the filter name and the tag value as the filter
-	// value. For example, to find all resources that have a tag with the key Owner and
-	// the value TeamA, specify tag:Owner for the filter name and TeamA for the filter
-	// value.
-	//
-	// * tag-key - The key of a tag assigned to the resource. Use this filter
-	// to find all resources assigned a tag with a specific key, regardless of the tag
-	// value.
+	//   - tag : - The key/value combination of a tag assigned to the resource. Use the
+	//   tag key in the filter name and the tag value as the filter value. For example,
+	//   to find all resources that have a tag with the key Owner and the value TeamA ,
+	//   specify tag:Owner for the filter name and TeamA for the filter value.
+	//   - tag-key - The key of a tag assigned to the resource. Use this filter to find
+	//   all resources assigned a tag with a specific key, regardless of the tag value.
 	Filters []types.Filter
 
 	// The maximum number of results to return with a single call. To retrieve the
@@ -58,6 +54,8 @@ type DescribeIpv6PoolsInput struct {
 
 	// The IDs of the IPv6 address pools.
 	PoolIds []string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeIpv6PoolsOutput struct {
@@ -71,9 +69,11 @@ type DescribeIpv6PoolsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeIpv6PoolsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeIpv6PoolsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeIpv6Pools{}, middleware.After)
 	if err != nil {
 		return err
@@ -119,6 +119,9 @@ func addOperationDescribeIpv6PoolsMiddlewares(stack *middleware.Stack, options O
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDescribeIpv6Pools(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
@@ -181,12 +184,13 @@ func NewDescribeIpv6PoolsPaginator(client DescribeIpv6PoolsAPIClient, params *De
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeIpv6PoolsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeIpv6Pools page.
@@ -213,7 +217,10 @@ func (p *DescribeIpv6PoolsPaginator) NextPage(ctx context.Context, optFns ...fun
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

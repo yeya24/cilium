@@ -17,7 +17,7 @@ func (c *Client) DisassociateTransitGatewayMulticastDomain(ctx context.Context, 
 		params = &DisassociateTransitGatewayMulticastDomainInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DisassociateTransitGatewayMulticastDomain", params, optFns, addOperationDisassociateTransitGatewayMulticastDomainMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DisassociateTransitGatewayMulticastDomain", params, optFns, c.addOperationDisassociateTransitGatewayMulticastDomainMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -29,20 +29,28 @@ func (c *Client) DisassociateTransitGatewayMulticastDomain(ctx context.Context, 
 
 type DisassociateTransitGatewayMulticastDomainInput struct {
 
-	// Checks whether you have the required permissions for the action, without
-	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
-	DryRun *bool
-
 	// The IDs of the subnets;
+	//
+	// This member is required.
 	SubnetIds []string
 
 	// The ID of the attachment.
+	//
+	// This member is required.
 	TransitGatewayAttachmentId *string
 
 	// The ID of the transit gateway multicast domain.
+	//
+	// This member is required.
 	TransitGatewayMulticastDomainId *string
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have the
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
+	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type DisassociateTransitGatewayMulticastDomainOutput struct {
@@ -52,9 +60,11 @@ type DisassociateTransitGatewayMulticastDomainOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDisassociateTransitGatewayMulticastDomainMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDisassociateTransitGatewayMulticastDomainMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDisassociateTransitGatewayMulticastDomain{}, middleware.After)
 	if err != nil {
 		return err
@@ -99,7 +109,13 @@ func addOperationDisassociateTransitGatewayMulticastDomainMiddlewares(stack *mid
 	if err = smithyhttp.AddCloseResponseBodyMiddleware(stack); err != nil {
 		return err
 	}
+	if err = addOpDisassociateTransitGatewayMulticastDomainValidationMiddleware(stack); err != nil {
+		return err
+	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDisassociateTransitGatewayMulticastDomain(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

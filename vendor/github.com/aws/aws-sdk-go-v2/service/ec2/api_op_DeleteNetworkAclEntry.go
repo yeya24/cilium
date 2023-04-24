@@ -17,7 +17,7 @@ func (c *Client) DeleteNetworkAclEntry(ctx context.Context, params *DeleteNetwor
 		params = &DeleteNetworkAclEntryInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DeleteNetworkAclEntry", params, optFns, addOperationDeleteNetworkAclEntryMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DeleteNetworkAclEntry", params, optFns, c.addOperationDeleteNetworkAclEntryMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -46,17 +46,21 @@ type DeleteNetworkAclEntryInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type DeleteNetworkAclEntryOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDeleteNetworkAclEntryMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDeleteNetworkAclEntryMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDeleteNetworkAclEntry{}, middleware.After)
 	if err != nil {
 		return err
@@ -105,6 +109,9 @@ func addOperationDeleteNetworkAclEntryMiddlewares(stack *middleware.Stack, optio
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDeleteNetworkAclEntry(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

@@ -18,7 +18,7 @@ func (c *Client) DescribeExportImageTasks(ctx context.Context, params *DescribeE
 		params = &DescribeExportImageTasksInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeExportImageTasks", params, optFns, addOperationDescribeExportImageTasksMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeExportImageTasks", params, optFns, c.addOperationDescribeExportImageTasksMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -32,15 +32,15 @@ type DescribeExportImageTasksInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// The IDs of the export image tasks.
 	ExportImageTaskIds []string
 
-	// Filter tasks using the task-state filter and one of the following values:
-	// active, completed, deleting, or deleted.
+	// Filter tasks using the task-state filter and one of the following values: active
+	// , completed , deleting , or deleted .
 	Filters []types.Filter
 
 	// The maximum number of results to return in a single call.
@@ -48,6 +48,8 @@ type DescribeExportImageTasksInput struct {
 
 	// A token that indicates the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeExportImageTasksOutput struct {
@@ -61,9 +63,11 @@ type DescribeExportImageTasksOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeExportImageTasksMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeExportImageTasksMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeExportImageTasks{}, middleware.After)
 	if err != nil {
 		return err
@@ -109,6 +113,9 @@ func addOperationDescribeExportImageTasksMiddlewares(stack *middleware.Stack, op
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDescribeExportImageTasks(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
@@ -172,12 +179,13 @@ func NewDescribeExportImageTasksPaginator(client DescribeExportImageTasksAPIClie
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeExportImageTasksPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeExportImageTasks page.
@@ -204,7 +212,10 @@ func (p *DescribeExportImageTasksPaginator) NextPage(ctx context.Context, optFns
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 
