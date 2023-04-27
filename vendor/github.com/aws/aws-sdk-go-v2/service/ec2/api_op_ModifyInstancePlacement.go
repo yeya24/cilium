@@ -13,35 +13,26 @@ import (
 
 // Modifies the placement attributes for a specified instance. You can do the
 // following:
+//   - Modify the affinity between an instance and a Dedicated Host (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-hosts-overview.html)
+//     . When affinity is set to host and the instance is not associated with a
+//     specific Dedicated Host, the next time the instance is launched, it is
+//     automatically associated with the host on which it lands. If the instance is
+//     restarted or rebooted, this relationship persists.
+//   - Change the Dedicated Host with which an instance is associated.
+//   - Change the instance tenancy of an instance.
+//   - Move an instance to or from a placement group (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html)
+//     .
 //
-// * Modify the affinity between an instance and a Dedicated Host
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-hosts-overview.html).
-// When affinity is set to host and the instance is not associated with a specific
-// Dedicated Host, the next time the instance is launched, it is automatically
-// associated with the host on which it lands. If the instance is restarted or
-// rebooted, this relationship persists.
-//
-// * Change the Dedicated Host with which an
-// instance is associated.
-//
-// * Change the instance tenancy of an instance from host
-// to dedicated, or from dedicated to host.
-//
-// * Move an instance to or from a
-// placement group
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html).
-//
-// At
-// least one attribute for affinity, host ID, tenancy, or placement group name must
-// be specified in the request. Affinity and tenancy can be modified in the same
-// request. To modify the host ID, tenancy, placement group, or partition for an
-// instance, the instance must be in the stopped state.
+// At least one attribute for affinity, host ID, tenancy, or placement group name
+// must be specified in the request. Affinity and tenancy can be modified in the
+// same request. To modify the host ID, tenancy, placement group, or partition for
+// an instance, the instance must be in the stopped state.
 func (c *Client) ModifyInstancePlacement(ctx context.Context, params *ModifyInstancePlacementInput, optFns ...func(*Options)) (*ModifyInstancePlacementOutput, error) {
 	if params == nil {
 		params = &ModifyInstancePlacementInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ModifyInstancePlacement", params, optFns, addOperationModifyInstancePlacementMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ModifyInstancePlacement", params, optFns, c.addOperationModifyInstancePlacementMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -61,11 +52,15 @@ type ModifyInstancePlacementInput struct {
 	// The affinity setting for the instance.
 	Affinity types.Affinity
 
+	// The Group Id of a placement group. You must specify the Placement Group Group
+	// Id to launch an instance in a shared placement group.
+	GroupId *string
+
 	// The name of the placement group in which to place the instance. For spread
-	// placement groups, the instance must have a tenancy of default. For cluster and
+	// placement groups, the instance must have a tenancy of default . For cluster and
 	// partition placement groups, the instance must have a tenancy of default or
-	// dedicated. To remove an instance from a placement group, specify an empty string
-	// ("").
+	// dedicated . To remove an instance from a placement group, specify an empty
+	// string ("").
 	GroupName *string
 
 	// The ID of the Dedicated Host with which to associate the instance.
@@ -74,11 +69,16 @@ type ModifyInstancePlacementInput struct {
 	// The ARN of the host resource group in which to place the instance.
 	HostResourceGroupArn *string
 
-	// Reserved for future use.
+	// The number of the partition in which to place the instance. Valid only if the
+	// placement group strategy is set to partition .
 	PartitionNumber *int32
 
-	// The tenancy for the instance.
+	// The tenancy for the instance. For T3 instances, you can't change the tenancy
+	// from dedicated to host , or from host to dedicated . Attempting to make one of
+	// these unsupported tenancy changes results in the InvalidTenancy error code.
 	Tenancy types.HostTenancy
+
+	noSmithyDocumentSerde
 }
 
 type ModifyInstancePlacementOutput struct {
@@ -88,9 +88,11 @@ type ModifyInstancePlacementOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationModifyInstancePlacementMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationModifyInstancePlacementMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpModifyInstancePlacement{}, middleware.After)
 	if err != nil {
 		return err
@@ -139,6 +141,9 @@ func addOperationModifyInstancePlacementMiddlewares(stack *middleware.Stack, opt
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opModifyInstancePlacement(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

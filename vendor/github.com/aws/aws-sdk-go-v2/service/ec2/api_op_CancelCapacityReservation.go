@@ -11,7 +11,7 @@ import (
 )
 
 // Cancels the specified Capacity Reservation, releases the reserved capacity, and
-// changes the Capacity Reservation's state to cancelled. Instances running in the
+// changes the Capacity Reservation's state to cancelled . Instances running in the
 // reserved capacity continue running until you stop them. Stopped instances that
 // target the Capacity Reservation can no longer launch. Modify these instances to
 // either target a different Capacity Reservation, launch On-Demand Instance
@@ -22,7 +22,7 @@ func (c *Client) CancelCapacityReservation(ctx context.Context, params *CancelCa
 		params = &CancelCapacityReservationInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CancelCapacityReservation", params, optFns, addOperationCancelCapacityReservationMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CancelCapacityReservation", params, optFns, c.addOperationCancelCapacityReservationMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -41,9 +41,11 @@ type CancelCapacityReservationInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type CancelCapacityReservationOutput struct {
@@ -53,9 +55,11 @@ type CancelCapacityReservationOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCancelCapacityReservationMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCancelCapacityReservationMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCancelCapacityReservation{}, middleware.After)
 	if err != nil {
 		return err
@@ -104,6 +108,9 @@ func addOperationCancelCapacityReservationMiddlewares(stack *middleware.Stack, o
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opCancelCapacityReservation(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

@@ -12,15 +12,14 @@ import (
 )
 
 // Describes the default credit option for CPU usage of a burstable performance
-// instance family. For more information, see Burstable performance instances
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/burstable-performance-instances.html)
+// instance family. For more information, see Burstable performance instances (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/burstable-performance-instances.html)
 // in the Amazon EC2 User Guide.
 func (c *Client) GetDefaultCreditSpecification(ctx context.Context, params *GetDefaultCreditSpecificationInput, optFns ...func(*Options)) (*GetDefaultCreditSpecificationOutput, error) {
 	if params == nil {
 		params = &GetDefaultCreditSpecificationInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "GetDefaultCreditSpecification", params, optFns, addOperationGetDefaultCreditSpecificationMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "GetDefaultCreditSpecification", params, optFns, c.addOperationGetDefaultCreditSpecificationMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -39,9 +38,11 @@ type GetDefaultCreditSpecificationInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type GetDefaultCreditSpecificationOutput struct {
@@ -51,9 +52,11 @@ type GetDefaultCreditSpecificationOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationGetDefaultCreditSpecificationMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationGetDefaultCreditSpecificationMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpGetDefaultCreditSpecification{}, middleware.After)
 	if err != nil {
 		return err
@@ -102,6 +105,9 @@ func addOperationGetDefaultCreditSpecificationMiddlewares(stack *middleware.Stac
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opGetDefaultCreditSpecification(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

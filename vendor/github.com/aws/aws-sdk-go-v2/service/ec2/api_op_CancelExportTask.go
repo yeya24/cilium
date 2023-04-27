@@ -19,7 +19,7 @@ func (c *Client) CancelExportTask(ctx context.Context, params *CancelExportTaskI
 		params = &CancelExportTaskInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CancelExportTask", params, optFns, addOperationCancelExportTaskMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CancelExportTask", params, optFns, c.addOperationCancelExportTaskMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -31,18 +31,22 @@ func (c *Client) CancelExportTask(ctx context.Context, params *CancelExportTaskI
 
 type CancelExportTaskInput struct {
 
-	// The ID of the export task. This is the ID returned by CreateInstanceExportTask.
+	// The ID of the export task. This is the ID returned by CreateInstanceExportTask .
 	//
 	// This member is required.
 	ExportTaskId *string
+
+	noSmithyDocumentSerde
 }
 
 type CancelExportTaskOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCancelExportTaskMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCancelExportTaskMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCancelExportTask{}, middleware.After)
 	if err != nil {
 		return err
@@ -91,6 +95,9 @@ func addOperationCancelExportTaskMiddlewares(stack *middleware.Stack, options Op
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opCancelExportTask(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

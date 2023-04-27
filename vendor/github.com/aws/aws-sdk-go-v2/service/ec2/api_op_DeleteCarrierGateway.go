@@ -13,14 +13,14 @@ import (
 
 // Deletes a carrier gateway. If you do not delete the route that contains the
 // carrier gateway as the Target, the route is a blackhole route. For information
-// about how to delete a route, see DeleteRoute
-// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DeleteRoute.html).
+// about how to delete a route, see DeleteRoute (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DeleteRoute.html)
+// .
 func (c *Client) DeleteCarrierGateway(ctx context.Context, params *DeleteCarrierGatewayInput, optFns ...func(*Options)) (*DeleteCarrierGatewayOutput, error) {
 	if params == nil {
 		params = &DeleteCarrierGatewayInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DeleteCarrierGateway", params, optFns, addOperationDeleteCarrierGatewayMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DeleteCarrierGateway", params, optFns, c.addOperationDeleteCarrierGatewayMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -39,9 +39,11 @@ type DeleteCarrierGatewayInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type DeleteCarrierGatewayOutput struct {
@@ -51,9 +53,11 @@ type DeleteCarrierGatewayOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDeleteCarrierGatewayMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDeleteCarrierGatewayMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDeleteCarrierGateway{}, middleware.After)
 	if err != nil {
 		return err
@@ -102,6 +106,9 @@ func addOperationDeleteCarrierGatewayMiddlewares(stack *middleware.Stack, option
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDeleteCarrierGateway(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

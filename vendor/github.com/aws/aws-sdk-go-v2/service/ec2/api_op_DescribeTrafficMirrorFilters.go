@@ -18,7 +18,7 @@ func (c *Client) DescribeTrafficMirrorFilters(ctx context.Context, params *Descr
 		params = &DescribeTrafficMirrorFiltersInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeTrafficMirrorFilters", params, optFns, addOperationDescribeTrafficMirrorFiltersMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeTrafficMirrorFilters", params, optFns, c.addOperationDescribeTrafficMirrorFiltersMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -32,17 +32,13 @@ type DescribeTrafficMirrorFiltersInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// One or more filters. The possible values are:
-	//
-	// * description: The Traffic Mirror
-	// filter description.
-	//
-	// * traffic-mirror-filter-id: The ID of the Traffic Mirror
-	// filter.
+	//   - description : The Traffic Mirror filter description.
+	//   - traffic-mirror-filter-id : The ID of the Traffic Mirror filter.
 	Filters []types.Filter
 
 	// The maximum number of results to return with a single call. To retrieve the
@@ -54,6 +50,8 @@ type DescribeTrafficMirrorFiltersInput struct {
 
 	// The ID of the Traffic Mirror filter.
 	TrafficMirrorFilterIds []string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeTrafficMirrorFiltersOutput struct {
@@ -67,9 +65,11 @@ type DescribeTrafficMirrorFiltersOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeTrafficMirrorFiltersMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeTrafficMirrorFiltersMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeTrafficMirrorFilters{}, middleware.After)
 	if err != nil {
 		return err
@@ -115,6 +115,9 @@ func addOperationDescribeTrafficMirrorFiltersMiddlewares(stack *middleware.Stack
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDescribeTrafficMirrorFilters(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
@@ -180,12 +183,13 @@ func NewDescribeTrafficMirrorFiltersPaginator(client DescribeTrafficMirrorFilter
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeTrafficMirrorFiltersPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeTrafficMirrorFilters page.
@@ -212,7 +216,10 @@ func (p *DescribeTrafficMirrorFiltersPaginator) NextPage(ctx context.Context, op
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 
