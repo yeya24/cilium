@@ -17,7 +17,7 @@ func (c *Client) GetCoipPoolUsage(ctx context.Context, params *GetCoipPoolUsageI
 		params = &GetCoipPoolUsageInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "GetCoipPoolUsage", params, optFns, addOperationGetCoipPoolUsageMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "GetCoipPoolUsage", params, optFns, c.addOperationGetCoipPoolUsageMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -36,21 +36,17 @@ type GetCoipPoolUsageInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
-	// The filters. The following are the possible values:
-	//
-	// *
-	// coip-address-usage.allocation-id
-	//
-	// * coip-address-usage.aws-account-id
-	//
-	// *
-	// coip-address-usage.aws-service
-	//
-	// * coip-address-usage.co-ip
+	// One or more filters.
+	//   - coip-address-usage.allocation-id - The allocation ID of the address.
+	//   - coip-address-usage.aws-account-id - The ID of the Amazon Web Services
+	//   account that is using the customer-owned IP address.
+	//   - coip-address-usage.aws-service - The Amazon Web Services service that is
+	//   using the customer-owned IP address.
+	//   - coip-address-usage.co-ip - The customer-owned IP address.
 	Filters []types.Filter
 
 	// The maximum number of results to return with a single call. To retrieve the
@@ -59,6 +55,8 @@ type GetCoipPoolUsageInput struct {
 
 	// The token for the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type GetCoipPoolUsageOutput struct {
@@ -74,9 +72,11 @@ type GetCoipPoolUsageOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationGetCoipPoolUsageMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationGetCoipPoolUsageMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpGetCoipPoolUsage{}, middleware.After)
 	if err != nil {
 		return err
@@ -125,6 +125,9 @@ func addOperationGetCoipPoolUsageMiddlewares(stack *middleware.Stack, options Op
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opGetCoipPoolUsage(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

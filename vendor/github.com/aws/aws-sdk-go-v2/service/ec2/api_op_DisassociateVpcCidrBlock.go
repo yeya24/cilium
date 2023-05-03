@@ -12,17 +12,16 @@ import (
 )
 
 // Disassociates a CIDR block from a VPC. To disassociate the CIDR block, you must
-// specify its association ID. You can get the association ID by using
-// DescribeVpcs. You must detach or delete all gateways and resources that are
-// associated with the CIDR block before you can disassociate it. You cannot
-// disassociate the CIDR block with which you originally created the VPC (the
-// primary CIDR block).
+// specify its association ID. You can get the association ID by using DescribeVpcs
+// . You must detach or delete all gateways and resources that are associated with
+// the CIDR block before you can disassociate it. You cannot disassociate the CIDR
+// block with which you originally created the VPC (the primary CIDR block).
 func (c *Client) DisassociateVpcCidrBlock(ctx context.Context, params *DisassociateVpcCidrBlockInput, optFns ...func(*Options)) (*DisassociateVpcCidrBlockOutput, error) {
 	if params == nil {
 		params = &DisassociateVpcCidrBlockInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DisassociateVpcCidrBlock", params, optFns, addOperationDisassociateVpcCidrBlockMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DisassociateVpcCidrBlock", params, optFns, c.addOperationDisassociateVpcCidrBlockMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -38,6 +37,8 @@ type DisassociateVpcCidrBlockInput struct {
 	//
 	// This member is required.
 	AssociationId *string
+
+	noSmithyDocumentSerde
 }
 
 type DisassociateVpcCidrBlockOutput struct {
@@ -53,9 +54,11 @@ type DisassociateVpcCidrBlockOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDisassociateVpcCidrBlockMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDisassociateVpcCidrBlockMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDisassociateVpcCidrBlock{}, middleware.After)
 	if err != nil {
 		return err
@@ -104,6 +107,9 @@ func addOperationDisassociateVpcCidrBlockMiddlewares(stack *middleware.Stack, op
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDisassociateVpcCidrBlock(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

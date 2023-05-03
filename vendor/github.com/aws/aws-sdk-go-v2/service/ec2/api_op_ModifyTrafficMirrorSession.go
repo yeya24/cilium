@@ -17,7 +17,7 @@ func (c *Client) ModifyTrafficMirrorSession(ctx context.Context, params *ModifyT
 		params = &ModifyTrafficMirrorSessionInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ModifyTrafficMirrorSession", params, optFns, addOperationModifyTrafficMirrorSessionMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ModifyTrafficMirrorSession", params, optFns, c.addOperationModifyTrafficMirrorSessionMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -39,8 +39,8 @@ type ModifyTrafficMirrorSessionInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// The number of bytes in each packet to mirror. These are bytes after the VXLAN
@@ -50,8 +50,8 @@ type ModifyTrafficMirrorSessionInput struct {
 	// want to mirror the entire packet.
 	PacketLength *int32
 
-	// The properties that you want to remove from the Traffic Mirror session. When you
-	// remove a property from a Traffic Mirror session, the property is set to the
+	// The properties that you want to remove from the Traffic Mirror session. When
+	// you remove a property from a Traffic Mirror session, the property is set to the
 	// default.
 	RemoveFields []types.TrafficMirrorSessionField
 
@@ -69,6 +69,8 @@ type ModifyTrafficMirrorSessionInput struct {
 
 	// The virtual network ID of the Traffic Mirror session.
 	VirtualNetworkId *int32
+
+	noSmithyDocumentSerde
 }
 
 type ModifyTrafficMirrorSessionOutput struct {
@@ -78,9 +80,11 @@ type ModifyTrafficMirrorSessionOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationModifyTrafficMirrorSessionMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationModifyTrafficMirrorSessionMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpModifyTrafficMirrorSession{}, middleware.After)
 	if err != nil {
 		return err
@@ -129,6 +133,9 @@ func addOperationModifyTrafficMirrorSessionMiddlewares(stack *middleware.Stack, 
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opModifyTrafficMirrorSession(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

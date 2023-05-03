@@ -10,18 +10,17 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Describes the default customer master key (CMK) for EBS encryption by default
-// for your account in this Region. You can change the default CMK for encryption
-// by default using ModifyEbsDefaultKmsKeyId or ResetEbsDefaultKmsKeyId. For more
-// information, see Amazon EBS encryption
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html) in the
-// Amazon Elastic Compute Cloud User Guide.
+// Describes the default KMS key for EBS encryption by default for your account in
+// this Region. You can change the default KMS key for encryption by default using
+// ModifyEbsDefaultKmsKeyId or ResetEbsDefaultKmsKeyId . For more information, see
+// Amazon EBS encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 func (c *Client) GetEbsDefaultKmsKeyId(ctx context.Context, params *GetEbsDefaultKmsKeyIdInput, optFns ...func(*Options)) (*GetEbsDefaultKmsKeyIdOutput, error) {
 	if params == nil {
 		params = &GetEbsDefaultKmsKeyIdInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "GetEbsDefaultKmsKeyId", params, optFns, addOperationGetEbsDefaultKmsKeyIdMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "GetEbsDefaultKmsKeyId", params, optFns, c.addOperationGetEbsDefaultKmsKeyIdMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -35,21 +34,25 @@ type GetEbsDefaultKmsKeyIdInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type GetEbsDefaultKmsKeyIdOutput struct {
 
-	// The Amazon Resource Name (ARN) of the default CMK for encryption by default.
+	// The Amazon Resource Name (ARN) of the default KMS key for encryption by default.
 	KmsKeyId *string
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationGetEbsDefaultKmsKeyIdMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationGetEbsDefaultKmsKeyIdMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpGetEbsDefaultKmsKeyId{}, middleware.After)
 	if err != nil {
 		return err
@@ -95,6 +98,9 @@ func addOperationGetEbsDefaultKmsKeyIdMiddlewares(stack *middleware.Stack, optio
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opGetEbsDefaultKmsKeyId(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

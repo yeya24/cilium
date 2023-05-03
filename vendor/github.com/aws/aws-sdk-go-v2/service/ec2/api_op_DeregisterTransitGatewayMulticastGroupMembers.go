@@ -18,7 +18,7 @@ func (c *Client) DeregisterTransitGatewayMulticastGroupMembers(ctx context.Conte
 		params = &DeregisterTransitGatewayMulticastGroupMembersInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DeregisterTransitGatewayMulticastGroupMembers", params, optFns, addOperationDeregisterTransitGatewayMulticastGroupMembersMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DeregisterTransitGatewayMulticastGroupMembers", params, optFns, c.addOperationDeregisterTransitGatewayMulticastGroupMembersMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -32,8 +32,8 @@ type DeregisterTransitGatewayMulticastGroupMembersInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// The IP address assigned to the transit gateway multicast group.
@@ -44,6 +44,8 @@ type DeregisterTransitGatewayMulticastGroupMembersInput struct {
 
 	// The ID of the transit gateway multicast domain.
 	TransitGatewayMulticastDomainId *string
+
+	noSmithyDocumentSerde
 }
 
 type DeregisterTransitGatewayMulticastGroupMembersOutput struct {
@@ -53,9 +55,11 @@ type DeregisterTransitGatewayMulticastGroupMembersOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDeregisterTransitGatewayMulticastGroupMembersMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDeregisterTransitGatewayMulticastGroupMembersMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDeregisterTransitGatewayMulticastGroupMembers{}, middleware.After)
 	if err != nil {
 		return err
@@ -101,6 +105,9 @@ func addOperationDeregisterTransitGatewayMulticastGroupMembersMiddlewares(stack 
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDeregisterTransitGatewayMulticastGroupMembers(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

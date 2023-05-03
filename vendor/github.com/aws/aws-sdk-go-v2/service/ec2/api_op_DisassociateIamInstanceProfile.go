@@ -18,7 +18,7 @@ func (c *Client) DisassociateIamInstanceProfile(ctx context.Context, params *Dis
 		params = &DisassociateIamInstanceProfileInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DisassociateIamInstanceProfile", params, optFns, addOperationDisassociateIamInstanceProfileMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DisassociateIamInstanceProfile", params, optFns, c.addOperationDisassociateIamInstanceProfileMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -34,6 +34,8 @@ type DisassociateIamInstanceProfileInput struct {
 	//
 	// This member is required.
 	AssociationId *string
+
+	noSmithyDocumentSerde
 }
 
 type DisassociateIamInstanceProfileOutput struct {
@@ -43,9 +45,11 @@ type DisassociateIamInstanceProfileOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDisassociateIamInstanceProfileMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDisassociateIamInstanceProfileMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDisassociateIamInstanceProfile{}, middleware.After)
 	if err != nil {
 		return err
@@ -94,6 +98,9 @@ func addOperationDisassociateIamInstanceProfileMiddlewares(stack *middleware.Sta
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDisassociateIamInstanceProfile(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

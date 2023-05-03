@@ -13,15 +13,15 @@ import (
 )
 
 // Describes the IP address ranges that were specified in calls to
-// ProvisionByoipCidr. To describe the address pools that were created when you
-// provisioned the address ranges, use DescribePublicIpv4Pools or
-// DescribeIpv6Pools.
+// ProvisionByoipCidr . To describe the address pools that were created when you
+// provisioned the address ranges, use DescribePublicIpv4Pools or DescribeIpv6Pools
+// .
 func (c *Client) DescribeByoipCidrs(ctx context.Context, params *DescribeByoipCidrsInput, optFns ...func(*Options)) (*DescribeByoipCidrsOutput, error) {
 	if params == nil {
 		params = &DescribeByoipCidrsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeByoipCidrs", params, optFns, addOperationDescribeByoipCidrsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeByoipCidrs", params, optFns, c.addOperationDescribeByoipCidrsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -41,12 +41,14 @@ type DescribeByoipCidrsInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// The token for the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeByoipCidrsOutput struct {
@@ -60,9 +62,11 @@ type DescribeByoipCidrsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeByoipCidrsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeByoipCidrsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeByoipCidrs{}, middleware.After)
 	if err != nil {
 		return err
@@ -111,6 +115,9 @@ func addOperationDescribeByoipCidrsMiddlewares(stack *middleware.Stack, options 
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDescribeByoipCidrs(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
@@ -174,12 +181,13 @@ func NewDescribeByoipCidrsPaginator(client DescribeByoipCidrsAPIClient, params *
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeByoipCidrsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeByoipCidrs page.
@@ -206,7 +214,10 @@ func (p *DescribeByoipCidrsPaginator) NextPage(ctx context.Context, optFns ...fu
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 
