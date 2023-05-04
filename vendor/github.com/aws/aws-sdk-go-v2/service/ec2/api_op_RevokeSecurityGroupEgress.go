@@ -11,26 +11,27 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// [VPC only] Removes the specified egress rules from a security group for EC2-VPC.
-// This action does not apply to security groups for use in EC2-Classic. To remove
-// a rule, the values that you specify (for example, ports) must match the existing
-// rule's values exactly. [Default VPC] If the values you specify do not match the
-// existing rule's values, no error is returned, and the output describes the
-// security group rules that were not revoked. AWS recommends that you use
-// DescribeSecurityGroups to verify that the rule has been removed. Each rule
-// consists of the protocol and the IPv4 or IPv6 CIDR range or source security
-// group. For the TCP and UDP protocols, you must also specify the destination port
-// or range of ports. For the ICMP protocol, you must also specify the ICMP type
-// and code. If the security group rule has a description, you do not have to
-// specify the description to revoke the rule. Rule changes are propagated to
-// instances within the security group as quickly as possible. However, a small
-// delay might occur.
+// [VPC only] Removes the specified outbound (egress) rules from a security group
+// for EC2-VPC. This action does not apply to security groups for use in
+// EC2-Classic. You can specify rules using either rule IDs or security group rule
+// properties. If you use rule properties, the values that you specify (for
+// example, ports) must match the existing rule's values exactly. Each rule has a
+// protocol, from and to ports, and destination (CIDR range, security group, or
+// prefix list). For the TCP and UDP protocols, you must also specify the
+// destination port or range of ports. For the ICMP protocol, you must also specify
+// the ICMP type and code. If the security group rule has a description, you do not
+// need to specify the description to revoke the rule. [Default VPC] If the values
+// you specify do not match the existing rule's values, no error is returned, and
+// the output describes the security group rules that were not revoked. Amazon Web
+// Services recommends that you describe the security group to verify that the
+// rules were removed. Rule changes are propagated to instances within the security
+// group as quickly as possible. However, a small delay might occur.
 func (c *Client) RevokeSecurityGroupEgress(ctx context.Context, params *RevokeSecurityGroupEgressInput, optFns ...func(*Options)) (*RevokeSecurityGroupEgressOutput, error) {
 	if params == nil {
 		params = &RevokeSecurityGroupEgressInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "RevokeSecurityGroupEgress", params, optFns, addOperationRevokeSecurityGroupEgressMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "RevokeSecurityGroupEgress", params, optFns, c.addOperationRevokeSecurityGroupEgressMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -52,20 +53,23 @@ type RevokeSecurityGroupEgressInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// Not supported. Use a set of IP permissions to specify the port.
 	FromPort *int32
 
-	// The sets of IP permissions. You can't specify a destination security group and a
-	// CIDR IP address range in the same set of permissions.
+	// The sets of IP permissions. You can't specify a destination security group and
+	// a CIDR IP address range in the same set of permissions.
 	IpPermissions []types.IpPermission
 
 	// Not supported. Use a set of IP permissions to specify the protocol name or
 	// number.
 	IpProtocol *string
+
+	// The IDs of the security group rules.
+	SecurityGroupRuleIds []string
 
 	// Not supported. Use a set of IP permissions to specify a destination security
 	// group.
@@ -77,6 +81,8 @@ type RevokeSecurityGroupEgressInput struct {
 
 	// Not supported. Use a set of IP permissions to specify the port.
 	ToPort *int32
+
+	noSmithyDocumentSerde
 }
 
 type RevokeSecurityGroupEgressOutput struct {
@@ -85,15 +91,16 @@ type RevokeSecurityGroupEgressOutput struct {
 	Return *bool
 
 	// The outbound rules that were unknown to the service. In some cases,
-	// unknownIpPermissionSet might be in a different format from the request
-	// parameter.
+	// unknownIpPermissionSet might be in a different format from the request parameter.
 	UnknownIpPermissions []types.IpPermission
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationRevokeSecurityGroupEgressMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationRevokeSecurityGroupEgressMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpRevokeSecurityGroupEgress{}, middleware.After)
 	if err != nil {
 		return err
@@ -142,6 +149,9 @@ func addOperationRevokeSecurityGroupEgressMiddlewares(stack *middleware.Stack, o
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opRevokeSecurityGroupEgress(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

@@ -17,7 +17,7 @@ func (c *Client) EnableVgwRoutePropagation(ctx context.Context, params *EnableVg
 		params = &EnableVgwRoutePropagationInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "EnableVgwRoutePropagation", params, optFns, addOperationEnableVgwRoutePropagationMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "EnableVgwRoutePropagation", params, optFns, c.addOperationEnableVgwRoutePropagationMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -45,17 +45,21 @@ type EnableVgwRoutePropagationInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type EnableVgwRoutePropagationOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationEnableVgwRoutePropagationMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationEnableVgwRoutePropagationMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpEnableVgwRoutePropagation{}, middleware.After)
 	if err != nil {
 		return err
@@ -104,6 +108,9 @@ func addOperationEnableVgwRoutePropagationMiddlewares(stack *middleware.Stack, o
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opEnableVgwRoutePropagation(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
