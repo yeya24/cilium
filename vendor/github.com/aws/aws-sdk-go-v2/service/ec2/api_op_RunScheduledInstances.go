@@ -14,19 +14,18 @@ import (
 
 // Launches the specified Scheduled Instances. Before you can launch a Scheduled
 // Instance, you must purchase it and obtain an identifier using
-// PurchaseScheduledInstances. You must launch a Scheduled Instance during its
+// PurchaseScheduledInstances . You must launch a Scheduled Instance during its
 // scheduled time period. You can't stop or reboot a Scheduled Instance, but you
 // can terminate it as needed. If you terminate a Scheduled Instance before the
 // current scheduled time period ends, you can launch it again after a few minutes.
-// For more information, see Scheduled Instances
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-scheduled-instances.html)
+// For more information, see Scheduled Instances (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-scheduled-instances.html)
 // in the Amazon EC2 User Guide.
 func (c *Client) RunScheduledInstances(ctx context.Context, params *RunScheduledInstancesInput, optFns ...func(*Options)) (*RunScheduledInstancesOutput, error) {
 	if params == nil {
 		params = &RunScheduledInstancesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "RunScheduledInstances", params, optFns, addOperationRunScheduledInstancesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "RunScheduledInstances", params, optFns, c.addOperationRunScheduledInstancesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -51,18 +50,20 @@ type RunScheduledInstancesInput struct {
 	ScheduledInstanceId *string
 
 	// Unique, case-sensitive identifier that ensures the idempotency of the request.
-	// For more information, see Ensuring Idempotency
-	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	// For more information, see Ensuring Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html)
+	// .
 	ClientToken *string
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// The number of instances. Default: 1
 	InstanceCount *int32
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of RunScheduledInstances.
@@ -73,9 +74,11 @@ type RunScheduledInstancesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationRunScheduledInstancesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationRunScheduledInstancesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpRunScheduledInstances{}, middleware.After)
 	if err != nil {
 		return err
@@ -127,6 +130,9 @@ func addOperationRunScheduledInstancesMiddlewares(stack *middleware.Stack, optio
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opRunScheduledInstances(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

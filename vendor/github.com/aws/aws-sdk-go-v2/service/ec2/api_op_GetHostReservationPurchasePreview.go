@@ -20,7 +20,7 @@ func (c *Client) GetHostReservationPurchasePreview(ctx context.Context, params *
 		params = &GetHostReservationPurchasePreviewInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "GetHostReservationPurchasePreview", params, optFns, addOperationGetHostReservationPurchasePreviewMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "GetHostReservationPurchasePreview", params, optFns, c.addOperationGetHostReservationPurchasePreviewMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -41,12 +41,14 @@ type GetHostReservationPurchasePreviewInput struct {
 	//
 	// This member is required.
 	OfferingId *string
+
+	noSmithyDocumentSerde
 }
 
 type GetHostReservationPurchasePreviewOutput struct {
 
 	// The currency in which the totalUpfrontPrice and totalHourlyPrice amounts are
-	// specified. At this time, the only supported currency is USD.
+	// specified. At this time, the only supported currency is USD .
 	CurrencyCode types.CurrencyCodeValues
 
 	// The purchase information of the Dedicated Host reservation and the Dedicated
@@ -61,9 +63,11 @@ type GetHostReservationPurchasePreviewOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationGetHostReservationPurchasePreviewMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationGetHostReservationPurchasePreviewMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpGetHostReservationPurchasePreview{}, middleware.After)
 	if err != nil {
 		return err
@@ -112,6 +116,9 @@ func addOperationGetHostReservationPurchasePreviewMiddlewares(stack *middleware.
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opGetHostReservationPurchasePreview(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

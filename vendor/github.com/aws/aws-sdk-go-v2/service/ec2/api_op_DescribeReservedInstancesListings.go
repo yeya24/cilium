@@ -24,15 +24,14 @@ import (
 // Marketplace first sells the lowest priced Reserved Instances to you, and
 // continues to sell available Reserved Instance listings to you until your demand
 // is met. You are charged based on the total price of all of the listings that you
-// purchase. For more information, see Reserved Instance Marketplace
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ri-market-general.html) in
-// the Amazon EC2 User Guide.
+// purchase. For more information, see Reserved Instance Marketplace (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ri-market-general.html)
+// in the Amazon EC2 User Guide.
 func (c *Client) DescribeReservedInstancesListings(ctx context.Context, params *DescribeReservedInstancesListingsInput, optFns ...func(*Options)) (*DescribeReservedInstancesListingsOutput, error) {
 	if params == nil {
 		params = &DescribeReservedInstancesListingsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeReservedInstancesListings", params, optFns, addOperationDescribeReservedInstancesListingsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeReservedInstancesListings", params, optFns, c.addOperationDescribeReservedInstancesListingsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -46,17 +45,11 @@ func (c *Client) DescribeReservedInstancesListings(ctx context.Context, params *
 type DescribeReservedInstancesListingsInput struct {
 
 	// One or more filters.
-	//
-	// * reserved-instances-id - The ID of the Reserved
-	// Instances.
-	//
-	// * reserved-instances-listing-id - The ID of the Reserved Instances
-	// listing.
-	//
-	// * status - The status of the Reserved Instance listing (pending |
-	// active | cancelled | closed).
-	//
-	// * status-message - The reason for the status.
+	//   - reserved-instances-id - The ID of the Reserved Instances.
+	//   - reserved-instances-listing-id - The ID of the Reserved Instances listing.
+	//   - status - The status of the Reserved Instance listing ( pending | active |
+	//   cancelled | closed ).
+	//   - status-message - The reason for the status.
 	Filters []types.Filter
 
 	// One or more Reserved Instance IDs.
@@ -64,6 +57,8 @@ type DescribeReservedInstancesListingsInput struct {
 
 	// One or more Reserved Instance listing IDs.
 	ReservedInstancesListingId *string
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of DescribeReservedInstancesListings.
@@ -74,9 +69,11 @@ type DescribeReservedInstancesListingsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeReservedInstancesListingsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeReservedInstancesListingsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeReservedInstancesListings{}, middleware.After)
 	if err != nil {
 		return err
@@ -122,6 +119,9 @@ func addOperationDescribeReservedInstancesListingsMiddlewares(stack *middleware.
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDescribeReservedInstancesListings(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
