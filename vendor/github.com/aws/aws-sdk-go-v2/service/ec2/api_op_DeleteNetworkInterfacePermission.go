@@ -19,7 +19,7 @@ func (c *Client) DeleteNetworkInterfacePermission(ctx context.Context, params *D
 		params = &DeleteNetworkInterfacePermissionInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DeleteNetworkInterfacePermission", params, optFns, addOperationDeleteNetworkInterfacePermissionMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DeleteNetworkInterfacePermission", params, optFns, c.addOperationDeleteNetworkInterfacePermissionMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -39,13 +39,15 @@ type DeleteNetworkInterfacePermissionInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// Specify true to remove the permission even if the network interface is attached
 	// to an instance.
 	Force *bool
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output for DeleteNetworkInterfacePermission.
@@ -56,9 +58,11 @@ type DeleteNetworkInterfacePermissionOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDeleteNetworkInterfacePermissionMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDeleteNetworkInterfacePermissionMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDeleteNetworkInterfacePermission{}, middleware.After)
 	if err != nil {
 		return err
@@ -107,6 +111,9 @@ func addOperationDeleteNetworkInterfacePermissionMiddlewares(stack *middleware.S
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDeleteNetworkInterfacePermission(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

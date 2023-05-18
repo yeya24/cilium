@@ -13,15 +13,14 @@ import (
 
 // Creates a multicast domain using the specified transit gateway. The transit
 // gateway must be in the available state before you create a domain. Use
-// DescribeTransitGateways
-// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGateways.html)
+// DescribeTransitGateways (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGateways.html)
 // to see the state of transit gateway.
 func (c *Client) CreateTransitGatewayMulticastDomain(ctx context.Context, params *CreateTransitGatewayMulticastDomainInput, optFns ...func(*Options)) (*CreateTransitGatewayMulticastDomainOutput, error) {
 	if params == nil {
 		params = &CreateTransitGatewayMulticastDomainInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateTransitGatewayMulticastDomain", params, optFns, addOperationCreateTransitGatewayMulticastDomainMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateTransitGatewayMulticastDomain", params, optFns, c.addOperationCreateTransitGatewayMulticastDomainMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -40,8 +39,8 @@ type CreateTransitGatewayMulticastDomainInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// The options for the transit gateway multicast domain.
@@ -49,6 +48,8 @@ type CreateTransitGatewayMulticastDomainInput struct {
 
 	// The tags for the transit gateway multicast domain.
 	TagSpecifications []types.TagSpecification
+
+	noSmithyDocumentSerde
 }
 
 type CreateTransitGatewayMulticastDomainOutput struct {
@@ -58,9 +59,11 @@ type CreateTransitGatewayMulticastDomainOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateTransitGatewayMulticastDomainMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateTransitGatewayMulticastDomainMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateTransitGatewayMulticastDomain{}, middleware.After)
 	if err != nil {
 		return err
@@ -109,6 +112,9 @@ func addOperationCreateTransitGatewayMulticastDomainMiddlewares(stack *middlewar
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opCreateTransitGatewayMulticastDomain(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

@@ -12,14 +12,14 @@ import (
 
 // Attaches an internet gateway or a virtual private gateway to a VPC, enabling
 // connectivity between the internet and the VPC. For more information about your
-// VPC and internet gateway, see the Amazon Virtual Private Cloud User Guide
-// (https://docs.aws.amazon.com/vpc/latest/userguide/).
+// VPC and internet gateway, see the Amazon Virtual Private Cloud User Guide (https://docs.aws.amazon.com/vpc/latest/userguide/)
+// .
 func (c *Client) AttachInternetGateway(ctx context.Context, params *AttachInternetGatewayInput, optFns ...func(*Options)) (*AttachInternetGatewayOutput, error) {
 	if params == nil {
 		params = &AttachInternetGatewayInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "AttachInternetGateway", params, optFns, addOperationAttachInternetGatewayMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "AttachInternetGateway", params, optFns, c.addOperationAttachInternetGatewayMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -43,17 +43,21 @@ type AttachInternetGatewayInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type AttachInternetGatewayOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationAttachInternetGatewayMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationAttachInternetGatewayMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpAttachInternetGateway{}, middleware.After)
 	if err != nil {
 		return err
@@ -102,6 +106,9 @@ func addOperationAttachInternetGatewayMiddlewares(stack *middleware.Stack, optio
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opAttachInternetGateway(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

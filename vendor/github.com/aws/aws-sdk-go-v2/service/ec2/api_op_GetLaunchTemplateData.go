@@ -14,16 +14,16 @@ import (
 // Retrieves the configuration data of the specified instance. You can use this
 // data to create a launch template. This action calls on other describe actions to
 // get instance information. Depending on your instance configuration, you may need
-// to allow the following actions in your IAM policy: DescribeSpotInstanceRequests,
-// DescribeInstanceCreditSpecifications, DescribeVolumes,
-// DescribeInstanceAttribute, and DescribeElasticGpus. Or, you can allow describe*
-// depending on your instance requirements.
+// to allow the following actions in your IAM policy: DescribeSpotInstanceRequests
+// , DescribeInstanceCreditSpecifications , DescribeVolumes ,
+// DescribeInstanceAttribute , and DescribeElasticGpus . Or, you can allow
+// describe* depending on your instance requirements.
 func (c *Client) GetLaunchTemplateData(ctx context.Context, params *GetLaunchTemplateDataInput, optFns ...func(*Options)) (*GetLaunchTemplateDataOutput, error) {
 	if params == nil {
 		params = &GetLaunchTemplateDataInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "GetLaunchTemplateData", params, optFns, addOperationGetLaunchTemplateDataMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "GetLaunchTemplateData", params, optFns, c.addOperationGetLaunchTemplateDataMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -42,9 +42,11 @@ type GetLaunchTemplateDataInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type GetLaunchTemplateDataOutput struct {
@@ -54,9 +56,11 @@ type GetLaunchTemplateDataOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationGetLaunchTemplateDataMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationGetLaunchTemplateDataMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpGetLaunchTemplateData{}, middleware.After)
 	if err != nil {
 		return err
@@ -105,6 +109,9 @@ func addOperationGetLaunchTemplateDataMiddlewares(stack *middleware.Stack, optio
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opGetLaunchTemplateData(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
