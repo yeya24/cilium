@@ -12,15 +12,16 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Describes available AWS services in a prefix list format, which includes the
-// prefix list name and prefix list ID of the service and the IP address range for
-// the service. We recommend that you use DescribeManagedPrefixLists instead.
+// Describes available Amazon Web Services services in a prefix list format, which
+// includes the prefix list name and prefix list ID of the service and the IP
+// address range for the service. We recommend that you use
+// DescribeManagedPrefixLists instead.
 func (c *Client) DescribePrefixLists(ctx context.Context, params *DescribePrefixListsInput, optFns ...func(*Options)) (*DescribePrefixListsOutput, error) {
 	if params == nil {
 		params = &DescribePrefixListsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribePrefixLists", params, optFns, addOperationDescribePrefixListsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribePrefixLists", params, optFns, c.addOperationDescribePrefixListsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -34,16 +35,13 @@ type DescribePrefixListsInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// One or more filters.
-	//
-	// * prefix-list-id: The ID of a prefix list.
-	//
-	// *
-	// prefix-list-name: The name of a prefix list.
+	//   - prefix-list-id : The ID of a prefix list.
+	//   - prefix-list-name : The name of a prefix list.
 	Filters []types.Filter
 
 	// The maximum number of results to return with a single call. To retrieve the
@@ -55,6 +53,8 @@ type DescribePrefixListsInput struct {
 
 	// One or more prefix list IDs.
 	PrefixListIds []string
+
+	noSmithyDocumentSerde
 }
 
 type DescribePrefixListsOutput struct {
@@ -68,9 +68,11 @@ type DescribePrefixListsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribePrefixListsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribePrefixListsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribePrefixLists{}, middleware.After)
 	if err != nil {
 		return err
@@ -118,6 +120,9 @@ func addOperationDescribePrefixListsMiddlewares(stack *middleware.Stack, options
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDescribePrefixLists(options.Region), middleware.Before); err != nil {
 		return err
 	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
+		return err
+	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
 		return err
 	}
@@ -130,8 +135,8 @@ func addOperationDescribePrefixListsMiddlewares(stack *middleware.Stack, options
 	return nil
 }
 
-// DescribePrefixListsAPIClient is a client that implements the DescribePrefixLists
-// operation.
+// DescribePrefixListsAPIClient is a client that implements the
+// DescribePrefixLists operation.
 type DescribePrefixListsAPIClient interface {
 	DescribePrefixLists(context.Context, *DescribePrefixListsInput, ...func(*Options)) (*DescribePrefixListsOutput, error)
 }
@@ -179,12 +184,13 @@ func NewDescribePrefixListsPaginator(client DescribePrefixListsAPIClient, params
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribePrefixListsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribePrefixLists page.
@@ -211,7 +217,10 @@ func (p *DescribePrefixListsPaginator) NextPage(ctx context.Context, optFns ...f
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

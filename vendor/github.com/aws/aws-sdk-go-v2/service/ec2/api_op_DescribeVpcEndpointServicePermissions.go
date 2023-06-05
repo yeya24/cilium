@@ -12,14 +12,14 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Describes the principals (service consumers) that are permitted to discover your
-// VPC endpoint service.
+// Describes the principals (service consumers) that are permitted to discover
+// your VPC endpoint service.
 func (c *Client) DescribeVpcEndpointServicePermissions(ctx context.Context, params *DescribeVpcEndpointServicePermissionsInput, optFns ...func(*Options)) (*DescribeVpcEndpointServicePermissionsOutput, error) {
 	if params == nil {
 		params = &DescribeVpcEndpointServicePermissionsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeVpcEndpointServicePermissions", params, optFns, addOperationDescribeVpcEndpointServicePermissionsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeVpcEndpointServicePermissions", params, optFns, c.addOperationDescribeVpcEndpointServicePermissionsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -38,16 +38,14 @@ type DescribeVpcEndpointServicePermissionsInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
-	// One or more filters.
-	//
-	// * principal - The ARN of the principal.
-	//
-	// * principal-type
-	// - The principal type (All | Service | OrganizationUnit | Account | User | Role).
+	// The filters.
+	//   - principal - The ARN of the principal.
+	//   - principal-type - The principal type ( All | Service | OrganizationUnit |
+	//   Account | User | Role ).
 	Filters []types.Filter
 
 	// The maximum number of results to return for the request in a single page. The
@@ -58,11 +56,13 @@ type DescribeVpcEndpointServicePermissionsInput struct {
 
 	// The token to retrieve the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeVpcEndpointServicePermissionsOutput struct {
 
-	// Information about one or more allowed principals.
+	// Information about the allowed principals.
 	AllowedPrincipals []types.AllowedPrincipal
 
 	// The token to use to retrieve the next page of results. This value is null when
@@ -71,9 +71,11 @@ type DescribeVpcEndpointServicePermissionsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeVpcEndpointServicePermissionsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeVpcEndpointServicePermissionsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeVpcEndpointServicePermissions{}, middleware.After)
 	if err != nil {
 		return err
@@ -122,6 +124,9 @@ func addOperationDescribeVpcEndpointServicePermissionsMiddlewares(stack *middlew
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDescribeVpcEndpointServicePermissions(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
@@ -189,12 +194,13 @@ func NewDescribeVpcEndpointServicePermissionsPaginator(client DescribeVpcEndpoin
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeVpcEndpointServicePermissionsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeVpcEndpointServicePermissions page.
@@ -221,7 +227,10 @@ func (p *DescribeVpcEndpointServicePermissionsPaginator) NextPage(ctx context.Co
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

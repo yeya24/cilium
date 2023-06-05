@@ -20,7 +20,7 @@ func (c *Client) PurchaseHostReservation(ctx context.Context, params *PurchaseHo
 		params = &PurchaseHostReservationInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "PurchaseHostReservation", params, optFns, addOperationPurchaseHostReservationMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "PurchaseHostReservation", params, optFns, c.addOperationPurchaseHostReservationMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -43,35 +43,37 @@ type PurchaseHostReservationInput struct {
 	OfferingId *string
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency of
-	// the request. For more information, see Ensuring Idempotency
-	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	// the request. For more information, see Ensuring Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html)
+	// .
 	ClientToken *string
 
-	// The currency in which the totalUpfrontPrice, LimitPrice, and totalHourlyPrice
-	// amounts are specified. At this time, the only supported currency is USD.
+	// The currency in which the totalUpfrontPrice , LimitPrice , and totalHourlyPrice
+	// amounts are specified. At this time, the only supported currency is USD .
 	CurrencyCode types.CurrencyCodeValues
 
-	// The specified limit is checked against the total upfront cost of the reservation
-	// (calculated as the offering's upfront cost multiplied by the host count). If the
-	// total upfront cost is greater than the specified price limit, the request fails.
-	// This is used to ensure that the purchase does not exceed the expected upfront
-	// cost of the purchase. At this time, the only supported currency is USD. For
-	// example, to indicate a limit price of USD 100, specify 100.00.
+	// The specified limit is checked against the total upfront cost of the
+	// reservation (calculated as the offering's upfront cost multiplied by the host
+	// count). If the total upfront cost is greater than the specified price limit, the
+	// request fails. This is used to ensure that the purchase does not exceed the
+	// expected upfront cost of the purchase. At this time, the only supported currency
+	// is USD . For example, to indicate a limit price of USD 100, specify 100.00.
 	LimitPrice *string
 
 	// The tags to apply to the Dedicated Host Reservation during purchase.
 	TagSpecifications []types.TagSpecification
+
+	noSmithyDocumentSerde
 }
 
 type PurchaseHostReservationOutput struct {
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency of
-	// the request. For more information, see Ensuring Idempotency
-	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	// the request. For more information, see Ensuring Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html)
+	// .
 	ClientToken *string
 
 	// The currency in which the totalUpfrontPrice and totalHourlyPrice amounts are
-	// specified. At this time, the only supported currency is USD.
+	// specified. At this time, the only supported currency is USD .
 	CurrencyCode types.CurrencyCodeValues
 
 	// Describes the details of the purchase.
@@ -85,9 +87,11 @@ type PurchaseHostReservationOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationPurchaseHostReservationMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationPurchaseHostReservationMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpPurchaseHostReservation{}, middleware.After)
 	if err != nil {
 		return err
@@ -136,6 +140,9 @@ func addOperationPurchaseHostReservationMiddlewares(stack *middleware.Stack, opt
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opPurchaseHostReservation(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

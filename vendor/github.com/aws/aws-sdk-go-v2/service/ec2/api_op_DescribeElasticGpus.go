@@ -12,14 +12,14 @@ import (
 )
 
 // Describes the Elastic Graphics accelerator associated with your instances. For
-// more information about Elastic Graphics, see Amazon Elastic Graphics
-// (https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/elastic-graphics.html).
+// more information about Elastic Graphics, see Amazon Elastic Graphics (https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/elastic-graphics.html)
+// .
 func (c *Client) DescribeElasticGpus(ctx context.Context, params *DescribeElasticGpusInput, optFns ...func(*Options)) (*DescribeElasticGpusOutput, error) {
 	if params == nil {
 		params = &DescribeElasticGpusInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeElasticGpus", params, optFns, addOperationDescribeElasticGpusMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeElasticGpus", params, optFns, c.addOperationDescribeElasticGpusMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -33,29 +33,24 @@ type DescribeElasticGpusInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// The Elastic Graphics accelerator IDs.
 	ElasticGpuIds []string
 
 	// The filters.
-	//
-	// * availability-zone - The Availability Zone in which the Elastic
-	// Graphics accelerator resides.
-	//
-	// * elastic-gpu-health - The status of the Elastic
-	// Graphics accelerator (OK | IMPAIRED).
-	//
-	// * elastic-gpu-state - The state of the
-	// Elastic Graphics accelerator (ATTACHED).
-	//
-	// * elastic-gpu-type - The type of
-	// Elastic Graphics accelerator; for example, eg1.medium.
-	//
-	// * instance-id - The ID
-	// of the instance to which the Elastic Graphics accelerator is associated.
+	//   - availability-zone - The Availability Zone in which the Elastic Graphics
+	//   accelerator resides.
+	//   - elastic-gpu-health - The status of the Elastic Graphics accelerator ( OK |
+	//   IMPAIRED ).
+	//   - elastic-gpu-state - The state of the Elastic Graphics accelerator ( ATTACHED
+	//   ).
+	//   - elastic-gpu-type - The type of Elastic Graphics accelerator; for example,
+	//   eg1.medium .
+	//   - instance-id - The ID of the instance to which the Elastic Graphics
+	//   accelerator is associated.
 	Filters []types.Filter
 
 	// The maximum number of results to return in a single call. To retrieve the
@@ -65,6 +60,8 @@ type DescribeElasticGpusInput struct {
 
 	// The token to request the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeElasticGpusOutput struct {
@@ -83,9 +80,11 @@ type DescribeElasticGpusOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeElasticGpusMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeElasticGpusMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeElasticGpus{}, middleware.After)
 	if err != nil {
 		return err
@@ -131,6 +130,9 @@ func addOperationDescribeElasticGpusMiddlewares(stack *middleware.Stack, options
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDescribeElasticGpus(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

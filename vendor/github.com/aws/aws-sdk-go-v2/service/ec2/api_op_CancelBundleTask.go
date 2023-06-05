@@ -17,7 +17,7 @@ func (c *Client) CancelBundleTask(ctx context.Context, params *CancelBundleTaskI
 		params = &CancelBundleTaskInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CancelBundleTask", params, optFns, addOperationCancelBundleTaskMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CancelBundleTask", params, optFns, c.addOperationCancelBundleTaskMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -37,9 +37,11 @@ type CancelBundleTaskInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of CancelBundleTask.
@@ -50,9 +52,11 @@ type CancelBundleTaskOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCancelBundleTaskMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCancelBundleTaskMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCancelBundleTask{}, middleware.After)
 	if err != nil {
 		return err
@@ -101,6 +105,9 @@ func addOperationCancelBundleTaskMiddlewares(stack *middleware.Stack, options Op
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opCancelBundleTask(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
