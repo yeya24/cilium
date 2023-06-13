@@ -11,19 +11,20 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Moves an Elastic IP address from the EC2-Classic platform to the EC2-VPC
-// platform. The Elastic IP address must be allocated to your account for more than
-// 24 hours, and it must not be associated with an instance. After the Elastic IP
-// address is moved, it is no longer available for use in the EC2-Classic platform,
-// unless you move it back using the RestoreAddressToClassic request. You cannot
-// move an Elastic IP address that was originally allocated for use in the EC2-VPC
-// platform to the EC2-Classic platform.
+// This action is deprecated. Moves an Elastic IP address from the EC2-Classic
+// platform to the EC2-VPC platform. The Elastic IP address must be allocated to
+// your account for more than 24 hours, and it must not be associated with an
+// instance. After the Elastic IP address is moved, it is no longer available for
+// use in the EC2-Classic platform, unless you move it back using the
+// RestoreAddressToClassic request. You cannot move an Elastic IP address that was
+// originally allocated for use in the EC2-VPC platform to the EC2-Classic
+// platform.
 func (c *Client) MoveAddressToVpc(ctx context.Context, params *MoveAddressToVpcInput, optFns ...func(*Options)) (*MoveAddressToVpcOutput, error) {
 	if params == nil {
 		params = &MoveAddressToVpcInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "MoveAddressToVpc", params, optFns, addOperationMoveAddressToVpcMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "MoveAddressToVpc", params, optFns, c.addOperationMoveAddressToVpcMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -42,9 +43,11 @@ type MoveAddressToVpcInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type MoveAddressToVpcOutput struct {
@@ -57,9 +60,11 @@ type MoveAddressToVpcOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationMoveAddressToVpcMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationMoveAddressToVpcMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpMoveAddressToVpc{}, middleware.After)
 	if err != nil {
 		return err
@@ -108,6 +113,9 @@ func addOperationMoveAddressToVpcMiddlewares(stack *middleware.Stack, options Op
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opMoveAddressToVpc(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

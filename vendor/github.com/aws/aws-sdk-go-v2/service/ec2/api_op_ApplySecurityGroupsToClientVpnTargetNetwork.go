@@ -18,7 +18,7 @@ func (c *Client) ApplySecurityGroupsToClientVpnTargetNetwork(ctx context.Context
 		params = &ApplySecurityGroupsToClientVpnTargetNetworkInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ApplySecurityGroupsToClientVpnTargetNetwork", params, optFns, addOperationApplySecurityGroupsToClientVpnTargetNetworkMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ApplySecurityGroupsToClientVpnTargetNetwork", params, optFns, c.addOperationApplySecurityGroupsToClientVpnTargetNetworkMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -48,9 +48,11 @@ type ApplySecurityGroupsToClientVpnTargetNetworkInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type ApplySecurityGroupsToClientVpnTargetNetworkOutput struct {
@@ -60,9 +62,11 @@ type ApplySecurityGroupsToClientVpnTargetNetworkOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationApplySecurityGroupsToClientVpnTargetNetworkMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationApplySecurityGroupsToClientVpnTargetNetworkMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpApplySecurityGroupsToClientVpnTargetNetwork{}, middleware.After)
 	if err != nil {
 		return err
@@ -111,6 +115,9 @@ func addOperationApplySecurityGroupsToClientVpnTargetNetworkMiddlewares(stack *m
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opApplySecurityGroupsToClientVpnTargetNetwork(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

@@ -18,7 +18,7 @@ func (c *Client) DisableFastSnapshotRestores(ctx context.Context, params *Disabl
 		params = &DisableFastSnapshotRestoresInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DisableFastSnapshotRestores", params, optFns, addOperationDisableFastSnapshotRestoresMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DisableFastSnapshotRestores", params, optFns, c.addOperationDisableFastSnapshotRestoresMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -30,21 +30,23 @@ func (c *Client) DisableFastSnapshotRestores(ctx context.Context, params *Disabl
 
 type DisableFastSnapshotRestoresInput struct {
 
-	// One or more Availability Zones. For example, us-east-2a.
+	// One or more Availability Zones. For example, us-east-2a .
 	//
 	// This member is required.
 	AvailabilityZones []string
 
-	// The IDs of one or more snapshots. For example, snap-1234567890abcdef0.
+	// The IDs of one or more snapshots. For example, snap-1234567890abcdef0 .
 	//
 	// This member is required.
 	SourceSnapshotIds []string
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type DisableFastSnapshotRestoresOutput struct {
@@ -59,9 +61,11 @@ type DisableFastSnapshotRestoresOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDisableFastSnapshotRestoresMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDisableFastSnapshotRestoresMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDisableFastSnapshotRestores{}, middleware.After)
 	if err != nil {
 		return err
@@ -110,6 +114,9 @@ func addOperationDisableFastSnapshotRestoresMiddlewares(stack *middleware.Stack,
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDisableFastSnapshotRestores(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

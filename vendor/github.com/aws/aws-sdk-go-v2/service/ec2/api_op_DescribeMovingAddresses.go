@@ -12,16 +12,15 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Describes your Elastic IP addresses that are being moved to the EC2-VPC
-// platform, or that are being restored to the EC2-Classic platform. This request
-// does not return information about any other Elastic IP addresses in your
-// account.
+// This action is deprecated. Describes your Elastic IP addresses that are being
+// moved from or being restored to the EC2-Classic platform. This request does not
+// return information about any other Elastic IP addresses in your account.
 func (c *Client) DescribeMovingAddresses(ctx context.Context, params *DescribeMovingAddressesInput, optFns ...func(*Options)) (*DescribeMovingAddressesOutput, error) {
 	if params == nil {
 		params = &DescribeMovingAddressesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeMovingAddresses", params, optFns, addOperationDescribeMovingAddressesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeMovingAddresses", params, optFns, c.addOperationDescribeMovingAddressesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -35,14 +34,13 @@ type DescribeMovingAddressesInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// One or more filters.
-	//
-	// * moving-status - The status of the Elastic IP address
-	// (MovingToVpc | RestoringToClassic).
+	//   - moving-status - The status of the Elastic IP address ( MovingToVpc |
+	//   RestoringToClassic ).
 	Filters []types.Filter
 
 	// The maximum number of results to return for the request in a single page. The
@@ -57,6 +55,8 @@ type DescribeMovingAddressesInput struct {
 
 	// One or more Elastic IP addresses.
 	PublicIps []string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeMovingAddressesOutput struct {
@@ -70,9 +70,11 @@ type DescribeMovingAddressesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeMovingAddressesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeMovingAddressesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeMovingAddresses{}, middleware.After)
 	if err != nil {
 		return err
@@ -118,6 +120,9 @@ func addOperationDescribeMovingAddressesMiddlewares(stack *middleware.Stack, opt
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDescribeMovingAddresses(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
@@ -185,12 +190,13 @@ func NewDescribeMovingAddressesPaginator(client DescribeMovingAddressesAPIClient
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeMovingAddressesPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeMovingAddresses page.
@@ -217,7 +223,10 @@ func (p *DescribeMovingAddressesPaginator) NextPage(ctx context.Context, optFns 
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

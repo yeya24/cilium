@@ -22,7 +22,7 @@ func (c *Client) CreateVpcEndpointConnectionNotification(ctx context.Context, pa
 		params = &CreateVpcEndpointConnectionNotificationInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateVpcEndpointConnectionNotification", params, optFns, addOperationCreateVpcEndpointConnectionNotificationMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateVpcEndpointConnectionNotification", params, optFns, c.addOperationCreateVpcEndpointConnectionNotificationMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -34,8 +34,8 @@ func (c *Client) CreateVpcEndpointConnectionNotification(ctx context.Context, pa
 
 type CreateVpcEndpointConnectionNotificationInput struct {
 
-	// One or more endpoint events for which to receive notifications. Valid values are
-	// Accept, Connect, Delete, and Reject.
+	// The endpoint events for which to receive notifications. Valid values are Accept
+	// , Connect , Delete , and Reject .
 	//
 	// This member is required.
 	ConnectionEvents []string
@@ -46,14 +46,14 @@ type CreateVpcEndpointConnectionNotificationInput struct {
 	ConnectionNotificationArn *string
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency of
-	// the request. For more information, see How to Ensure Idempotency
-	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	// the request. For more information, see How to ensure idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html)
+	// .
 	ClientToken *string
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// The ID of the endpoint service.
@@ -61,6 +61,8 @@ type CreateVpcEndpointConnectionNotificationInput struct {
 
 	// The ID of the endpoint.
 	VpcEndpointId *string
+
+	noSmithyDocumentSerde
 }
 
 type CreateVpcEndpointConnectionNotificationOutput struct {
@@ -74,9 +76,11 @@ type CreateVpcEndpointConnectionNotificationOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateVpcEndpointConnectionNotificationMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateVpcEndpointConnectionNotificationMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateVpcEndpointConnectionNotification{}, middleware.After)
 	if err != nil {
 		return err
@@ -125,6 +129,9 @@ func addOperationCreateVpcEndpointConnectionNotificationMiddlewares(stack *middl
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opCreateVpcEndpointConnectionNotification(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
