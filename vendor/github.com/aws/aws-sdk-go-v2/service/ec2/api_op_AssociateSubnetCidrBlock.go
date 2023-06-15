@@ -19,7 +19,7 @@ func (c *Client) AssociateSubnetCidrBlock(ctx context.Context, params *Associate
 		params = &AssociateSubnetCidrBlockInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "AssociateSubnetCidrBlock", params, optFns, addOperationAssociateSubnetCidrBlockMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "AssociateSubnetCidrBlock", params, optFns, c.addOperationAssociateSubnetCidrBlockMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -40,11 +40,13 @@ type AssociateSubnetCidrBlockInput struct {
 	//
 	// This member is required.
 	SubnetId *string
+
+	noSmithyDocumentSerde
 }
 
 type AssociateSubnetCidrBlockOutput struct {
 
-	// Information about the IPv6 CIDR block association.
+	// Information about the IPv6 association.
 	Ipv6CidrBlockAssociation *types.SubnetIpv6CidrBlockAssociation
 
 	// The ID of the subnet.
@@ -52,9 +54,11 @@ type AssociateSubnetCidrBlockOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationAssociateSubnetCidrBlockMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationAssociateSubnetCidrBlockMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpAssociateSubnetCidrBlock{}, middleware.After)
 	if err != nil {
 		return err
@@ -103,6 +107,9 @@ func addOperationAssociateSubnetCidrBlockMiddlewares(stack *middleware.Stack, op
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opAssociateSubnetCidrBlock(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

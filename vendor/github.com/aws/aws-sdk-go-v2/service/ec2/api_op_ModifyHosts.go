@@ -25,7 +25,7 @@ func (c *Client) ModifyHosts(ctx context.Context, params *ModifyHostsInput, optF
 		params = &ModifyHostsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ModifyHosts", params, optFns, addOperationModifyHostsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ModifyHosts", params, optFns, c.addOperationModifyHostsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -45,9 +45,13 @@ type ModifyHostsInput struct {
 	// Specify whether to enable or disable auto-placement.
 	AutoPlacement types.AutoPlacement
 
-	// Indicates whether to enable or disable host recovery for the Dedicated Host. For
-	// more information, see  Host recovery
-	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-hosts-recovery.html)
+	// Indicates whether to enable or disable host maintenance for the Dedicated Host.
+	// For more information, see Host maintenance (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-hosts-maintenance.html)
+	// in the Amazon EC2 User Guide.
+	HostMaintenance types.HostMaintenance
+
+	// Indicates whether to enable or disable host recovery for the Dedicated Host.
+	// For more information, see Host recovery (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-hosts-recovery.html)
 	// in the Amazon EC2 User Guide.
 	HostRecovery types.HostRecovery
 
@@ -65,6 +69,8 @@ type ModifyHostsInput struct {
 	// current instance family, omit this parameter and specify InstanceFamily instead.
 	// You cannot specify InstanceType and InstanceFamily in the same request.
 	InstanceType *string
+
+	noSmithyDocumentSerde
 }
 
 type ModifyHostsOutput struct {
@@ -78,9 +84,11 @@ type ModifyHostsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationModifyHostsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationModifyHostsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpModifyHosts{}, middleware.After)
 	if err != nil {
 		return err
@@ -129,6 +137,9 @@ func addOperationModifyHostsMiddlewares(stack *middleware.Stack, options Options
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opModifyHosts(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

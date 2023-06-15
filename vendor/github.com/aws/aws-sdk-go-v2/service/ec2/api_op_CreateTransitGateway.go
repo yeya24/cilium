@@ -14,10 +14,10 @@ import (
 // Creates a transit gateway. You can use a transit gateway to interconnect your
 // virtual private clouds (VPC) and on-premises networks. After the transit gateway
 // enters the available state, you can attach your VPCs and VPN connections to the
-// transit gateway. To attach your VPCs, use CreateTransitGatewayVpcAttachment. To
+// transit gateway. To attach your VPCs, use CreateTransitGatewayVpcAttachment . To
 // attach a VPN connection, use CreateCustomerGateway to create a customer gateway
 // and specify the ID of the customer gateway and the ID of the transit gateway in
-// a call to CreateVpnConnection. When you create a transit gateway, we create a
+// a call to CreateVpnConnection . When you create a transit gateway, we create a
 // default transit gateway route table and use it as the default association route
 // table and the default propagation route table. You can use
 // CreateTransitGatewayRouteTable to create additional transit gateway route
@@ -32,7 +32,7 @@ func (c *Client) CreateTransitGateway(ctx context.Context, params *CreateTransit
 		params = &CreateTransitGatewayInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateTransitGateway", params, optFns, addOperationCreateTransitGatewayMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateTransitGateway", params, optFns, c.addOperationCreateTransitGatewayMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -49,8 +49,8 @@ type CreateTransitGatewayInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// The transit gateway options.
@@ -58,6 +58,8 @@ type CreateTransitGatewayInput struct {
 
 	// The tags to apply to the transit gateway.
 	TagSpecifications []types.TagSpecification
+
+	noSmithyDocumentSerde
 }
 
 type CreateTransitGatewayOutput struct {
@@ -67,9 +69,11 @@ type CreateTransitGatewayOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateTransitGatewayMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateTransitGatewayMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateTransitGateway{}, middleware.After)
 	if err != nil {
 		return err
@@ -115,6 +119,9 @@ func addOperationCreateTransitGatewayMiddlewares(stack *middleware.Stack, option
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opCreateTransitGateway(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
