@@ -17,7 +17,7 @@ func (c *Client) DeleteRouteTable(ctx context.Context, params *DeleteRouteTableI
 		params = &DeleteRouteTableInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DeleteRouteTable", params, optFns, addOperationDeleteRouteTableMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DeleteRouteTable", params, optFns, c.addOperationDeleteRouteTableMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -36,17 +36,21 @@ type DeleteRouteTableInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type DeleteRouteTableOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDeleteRouteTableMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDeleteRouteTableMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDeleteRouteTable{}, middleware.After)
 	if err != nil {
 		return err
@@ -95,6 +99,9 @@ func addOperationDeleteRouteTableMiddlewares(stack *middleware.Stack, options Op
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDeleteRouteTable(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

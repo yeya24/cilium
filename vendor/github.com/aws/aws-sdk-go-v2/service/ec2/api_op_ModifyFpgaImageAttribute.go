@@ -17,7 +17,7 @@ func (c *Client) ModifyFpgaImageAttribute(ctx context.Context, params *ModifyFpg
 		params = &ModifyFpgaImageAttributeInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ModifyFpgaImageAttribute", params, optFns, addOperationModifyFpgaImageAttributeMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ModifyFpgaImageAttribute", params, optFns, c.addOperationModifyFpgaImageAttributeMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -42,8 +42,8 @@ type ModifyFpgaImageAttributeInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// The load permission for the AFI.
@@ -63,9 +63,11 @@ type ModifyFpgaImageAttributeInput struct {
 	// attribute.
 	UserGroups []string
 
-	// The AWS account IDs. This parameter is valid only when modifying the
-	// loadPermission attribute.
+	// The Amazon Web Services account IDs. This parameter is valid only when
+	// modifying the loadPermission attribute.
 	UserIds []string
+
+	noSmithyDocumentSerde
 }
 
 type ModifyFpgaImageAttributeOutput struct {
@@ -75,9 +77,11 @@ type ModifyFpgaImageAttributeOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationModifyFpgaImageAttributeMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationModifyFpgaImageAttributeMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpModifyFpgaImageAttribute{}, middleware.After)
 	if err != nil {
 		return err
@@ -126,6 +130,9 @@ func addOperationModifyFpgaImageAttributeMiddlewares(stack *middleware.Stack, op
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opModifyFpgaImageAttribute(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

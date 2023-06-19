@@ -17,7 +17,7 @@ func (c *Client) DeleteTrafficMirrorTarget(ctx context.Context, params *DeleteTr
 		params = &DeleteTrafficMirrorTargetInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DeleteTrafficMirrorTarget", params, optFns, addOperationDeleteTrafficMirrorTargetMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DeleteTrafficMirrorTarget", params, optFns, c.addOperationDeleteTrafficMirrorTargetMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -36,9 +36,11 @@ type DeleteTrafficMirrorTargetInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type DeleteTrafficMirrorTargetOutput struct {
@@ -48,9 +50,11 @@ type DeleteTrafficMirrorTargetOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDeleteTrafficMirrorTargetMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDeleteTrafficMirrorTargetMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDeleteTrafficMirrorTarget{}, middleware.After)
 	if err != nil {
 		return err
@@ -99,6 +103,9 @@ func addOperationDeleteTrafficMirrorTargetMiddlewares(stack *middleware.Stack, o
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDeleteTrafficMirrorTarget(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

@@ -18,7 +18,7 @@ func (c *Client) DescribeLocalGatewayVirtualInterfaces(ctx context.Context, para
 		params = &DescribeLocalGatewayVirtualInterfacesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeLocalGatewayVirtualInterfaces", params, optFns, addOperationDescribeLocalGatewayVirtualInterfacesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeLocalGatewayVirtualInterfaces", params, optFns, c.addOperationDescribeLocalGatewayVirtualInterfacesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -32,11 +32,21 @@ type DescribeLocalGatewayVirtualInterfacesInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// One or more filters.
+	//   - local-address - The local address.
+	//   - local-bgp-asn - The Border Gateway Protocol (BGP) Autonomous System Number
+	//   (ASN) of the local gateway.
+	//   - local-gateway-id - The ID of the local gateway.
+	//   - local-gateway-virtual-interface-id - The ID of the virtual interface.
+	//   - owner-id - The ID of the Amazon Web Services account that owns the local
+	//   gateway virtual interface.
+	//   - peer-address - The peer address.
+	//   - peer-bgp-asn - The peer BGP ASN.
+	//   - vlan - The ID of the VLAN.
 	Filters []types.Filter
 
 	// The IDs of the virtual interfaces.
@@ -48,6 +58,8 @@ type DescribeLocalGatewayVirtualInterfacesInput struct {
 
 	// The token for the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeLocalGatewayVirtualInterfacesOutput struct {
@@ -61,9 +73,11 @@ type DescribeLocalGatewayVirtualInterfacesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeLocalGatewayVirtualInterfacesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeLocalGatewayVirtualInterfacesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeLocalGatewayVirtualInterfaces{}, middleware.After)
 	if err != nil {
 		return err
@@ -109,6 +123,9 @@ func addOperationDescribeLocalGatewayVirtualInterfacesMiddlewares(stack *middlew
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDescribeLocalGatewayVirtualInterfaces(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
@@ -174,12 +191,13 @@ func NewDescribeLocalGatewayVirtualInterfacesPaginator(client DescribeLocalGatew
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeLocalGatewayVirtualInterfacesPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeLocalGatewayVirtualInterfaces page.
@@ -206,7 +224,10 @@ func (p *DescribeLocalGatewayVirtualInterfacesPaginator) NextPage(ctx context.Co
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

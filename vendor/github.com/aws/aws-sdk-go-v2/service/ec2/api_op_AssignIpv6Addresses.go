@@ -15,16 +15,19 @@ import (
 // IPv6 addresses to be automatically assigned from within the subnet's IPv6 CIDR
 // block range. You can assign as many IPv6 addresses to a network interface as you
 // can assign private IPv4 addresses, and the limit varies per instance type. For
-// information, see IP Addresses Per Network Interface Per Instance Type
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#AvailableIpPerENI)
+// information, see IP Addresses Per Network Interface Per Instance Type (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#AvailableIpPerENI)
 // in the Amazon Elastic Compute Cloud User Guide. You must specify either the IPv6
-// addresses or the IPv6 address count in the request.
+// addresses or the IPv6 address count in the request. You can optionally use
+// Prefix Delegation on the network interface. You must specify either the IPV6
+// Prefix Delegation prefixes, or the IPv6 Prefix Delegation count. For
+// information, see Assigning prefixes to Amazon EC2 network interfaces (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-prefix-eni.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 func (c *Client) AssignIpv6Addresses(ctx context.Context, params *AssignIpv6AddressesInput, optFns ...func(*Options)) (*AssignIpv6AddressesOutput, error) {
 	if params == nil {
 		params = &AssignIpv6AddressesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "AssignIpv6Addresses", params, optFns, addOperationAssignIpv6AddressesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "AssignIpv6Addresses", params, optFns, c.addOperationAssignIpv6AddressesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -48,9 +51,20 @@ type AssignIpv6AddressesInput struct {
 	// this option if specifying specific IPv6 addresses.
 	Ipv6AddressCount *int32
 
-	// One or more specific IPv6 addresses to be assigned to the network interface. You
-	// can't use this option if you're specifying a number of IPv6 addresses.
+	// The IPv6 addresses to be assigned to the network interface. You can't use this
+	// option if you're specifying a number of IPv6 addresses.
 	Ipv6Addresses []string
+
+	// The number of IPv6 prefixes that Amazon Web Services automatically assigns to
+	// the network interface. You cannot use this option if you use the Ipv6Prefixes
+	// option.
+	Ipv6PrefixCount *int32
+
+	// One or more IPv6 prefixes assigned to the network interface. You cannot use
+	// this option if you use the Ipv6PrefixCount option.
+	Ipv6Prefixes []string
+
+	noSmithyDocumentSerde
 }
 
 type AssignIpv6AddressesOutput struct {
@@ -60,14 +74,19 @@ type AssignIpv6AddressesOutput struct {
 	// included.
 	AssignedIpv6Addresses []string
 
+	// The IPv6 prefixes that are assigned to the network interface.
+	AssignedIpv6Prefixes []string
+
 	// The ID of the network interface.
 	NetworkInterfaceId *string
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationAssignIpv6AddressesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationAssignIpv6AddressesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpAssignIpv6Addresses{}, middleware.After)
 	if err != nil {
 		return err
@@ -116,6 +135,9 @@ func addOperationAssignIpv6AddressesMiddlewares(stack *middleware.Stack, options
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opAssignIpv6Addresses(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

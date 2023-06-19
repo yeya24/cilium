@@ -10,16 +10,16 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Deletes the specified set of DHCP options. You must disassociate the set of DHCP
-// options before you can delete it. You can disassociate the set of DHCP options
-// by associating either a new set of options or the default set of options with
-// the VPC.
+// Deletes the specified set of DHCP options. You must disassociate the set of
+// DHCP options before you can delete it. You can disassociate the set of DHCP
+// options by associating either a new set of options or the default set of options
+// with the VPC.
 func (c *Client) DeleteDhcpOptions(ctx context.Context, params *DeleteDhcpOptionsInput, optFns ...func(*Options)) (*DeleteDhcpOptionsOutput, error) {
 	if params == nil {
 		params = &DeleteDhcpOptionsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DeleteDhcpOptions", params, optFns, addOperationDeleteDhcpOptionsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DeleteDhcpOptions", params, optFns, c.addOperationDeleteDhcpOptionsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -38,17 +38,21 @@ type DeleteDhcpOptionsInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type DeleteDhcpOptionsOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDeleteDhcpOptionsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDeleteDhcpOptionsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDeleteDhcpOptions{}, middleware.After)
 	if err != nil {
 		return err
@@ -97,6 +101,9 @@ func addOperationDeleteDhcpOptionsMiddlewares(stack *middleware.Stack, options O
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDeleteDhcpOptions(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

@@ -19,7 +19,7 @@ func (c *Client) DescribeVpcEndpointConnections(ctx context.Context, params *Des
 		params = &DescribeVpcEndpointConnectionsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeVpcEndpointConnections", params, optFns, addOperationDescribeVpcEndpointConnectionsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeVpcEndpointConnections", params, optFns, c.addOperationDescribeVpcEndpointConnectionsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -33,23 +33,18 @@ type DescribeVpcEndpointConnectionsInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
-	// One or more filters.
-	//
-	// * service-id - The ID of the service.
-	//
-	// *
-	// vpc-endpoint-owner - The AWS account number of the owner of the endpoint.
-	//
-	// *
-	// vpc-endpoint-state - The state of the endpoint (pendingAcceptance | pending |
-	// available | deleting | deleted | rejected | failed).
-	//
-	// * vpc-endpoint-id - The ID
-	// of the endpoint.
+	// The filters.
+	//   - ip-address-type - The IP address type ( ipv4 | ipv6 ).
+	//   - service-id - The ID of the service.
+	//   - vpc-endpoint-owner - The ID of the Amazon Web Services account ID that owns
+	//   the endpoint.
+	//   - vpc-endpoint-state - The state of the endpoint ( pendingAcceptance | pending
+	//   | available | deleting | deleted | rejected | failed ).
+	//   - vpc-endpoint-id - The ID of the endpoint.
 	Filters []types.Filter
 
 	// The maximum number of results to return for the request in a single page. The
@@ -60,6 +55,8 @@ type DescribeVpcEndpointConnectionsInput struct {
 
 	// The token to retrieve the next page of results.
 	NextToken *string
+
+	noSmithyDocumentSerde
 }
 
 type DescribeVpcEndpointConnectionsOutput struct {
@@ -68,14 +65,16 @@ type DescribeVpcEndpointConnectionsOutput struct {
 	// there are no more results to return.
 	NextToken *string
 
-	// Information about one or more VPC endpoint connections.
+	// Information about the VPC endpoint connections.
 	VpcEndpointConnections []types.VpcEndpointConnection
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeVpcEndpointConnectionsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeVpcEndpointConnectionsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeVpcEndpointConnections{}, middleware.After)
 	if err != nil {
 		return err
@@ -121,6 +120,9 @@ func addOperationDescribeVpcEndpointConnectionsMiddlewares(stack *middleware.Sta
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDescribeVpcEndpointConnections(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
@@ -188,12 +190,13 @@ func NewDescribeVpcEndpointConnectionsPaginator(client DescribeVpcEndpointConnec
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeVpcEndpointConnectionsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeVpcEndpointConnections page.
@@ -220,7 +223,10 @@ func (p *DescribeVpcEndpointConnectionsPaginator) NextPage(ctx context.Context, 
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

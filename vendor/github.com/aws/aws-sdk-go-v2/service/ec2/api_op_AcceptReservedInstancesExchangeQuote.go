@@ -18,7 +18,7 @@ func (c *Client) AcceptReservedInstancesExchangeQuote(ctx context.Context, param
 		params = &AcceptReservedInstancesExchangeQuoteInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "AcceptReservedInstancesExchangeQuote", params, optFns, addOperationAcceptReservedInstancesExchangeQuoteMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "AcceptReservedInstancesExchangeQuote", params, optFns, c.addOperationAcceptReservedInstancesExchangeQuoteMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -39,16 +39,18 @@ type AcceptReservedInstancesExchangeQuoteInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// The configuration of the target Convertible Reserved Instance to exchange for
 	// your current Convertible Reserved Instances.
 	TargetConfigurations []types.TargetConfigurationRequest
+
+	noSmithyDocumentSerde
 }
 
-// The result of the exchange and whether it was successful.
+// The result of the exchange and whether it was successful .
 type AcceptReservedInstancesExchangeQuoteOutput struct {
 
 	// The ID of the successful exchange.
@@ -56,9 +58,11 @@ type AcceptReservedInstancesExchangeQuoteOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationAcceptReservedInstancesExchangeQuoteMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationAcceptReservedInstancesExchangeQuoteMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpAcceptReservedInstancesExchangeQuote{}, middleware.After)
 	if err != nil {
 		return err
@@ -107,6 +111,9 @@ func addOperationAcceptReservedInstancesExchangeQuoteMiddlewares(stack *middlewa
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opAcceptReservedInstancesExchangeQuote(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

@@ -14,15 +14,14 @@ import (
 // Exports a running or stopped instance to an Amazon S3 bucket. For information
 // about the supported operating systems, image formats, and known limitations for
 // the types of instances you can export, see Exporting an instance as a VM Using
-// VM Import/Export
-// (https://docs.aws.amazon.com/vm-import/latest/userguide/vmexport.html) in the VM
-// Import/Export User Guide.
+// VM Import/Export (https://docs.aws.amazon.com/vm-import/latest/userguide/vmexport.html)
+// in the VM Import/Export User Guide.
 func (c *Client) CreateInstanceExportTask(ctx context.Context, params *CreateInstanceExportTaskInput, optFns ...func(*Options)) (*CreateInstanceExportTaskOutput, error) {
 	if params == nil {
 		params = &CreateInstanceExportTaskInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateInstanceExportTask", params, optFns, addOperationCreateInstanceExportTaskMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateInstanceExportTask", params, optFns, c.addOperationCreateInstanceExportTaskMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -55,6 +54,8 @@ type CreateInstanceExportTaskInput struct {
 
 	// The tags to apply to the export instance task during creation.
 	TagSpecifications []types.TagSpecification
+
+	noSmithyDocumentSerde
 }
 
 type CreateInstanceExportTaskOutput struct {
@@ -64,9 +65,11 @@ type CreateInstanceExportTaskOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateInstanceExportTaskMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateInstanceExportTaskMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateInstanceExportTask{}, middleware.After)
 	if err != nil {
 		return err
@@ -115,6 +118,9 @@ func addOperationCreateInstanceExportTaskMiddlewares(stack *middleware.Stack, op
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opCreateInstanceExportTask(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

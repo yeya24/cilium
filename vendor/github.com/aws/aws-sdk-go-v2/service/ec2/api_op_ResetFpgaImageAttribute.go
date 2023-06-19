@@ -18,7 +18,7 @@ func (c *Client) ResetFpgaImageAttribute(ctx context.Context, params *ResetFpgaI
 		params = &ResetFpgaImageAttributeInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ResetFpgaImageAttribute", params, optFns, addOperationResetFpgaImageAttributeMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ResetFpgaImageAttribute", params, optFns, c.addOperationResetFpgaImageAttributeMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -40,9 +40,11 @@ type ResetFpgaImageAttributeInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type ResetFpgaImageAttributeOutput struct {
@@ -52,9 +54,11 @@ type ResetFpgaImageAttributeOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationResetFpgaImageAttributeMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationResetFpgaImageAttributeMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpResetFpgaImageAttribute{}, middleware.After)
 	if err != nil {
 		return err
@@ -103,6 +107,9 @@ func addOperationResetFpgaImageAttributeMiddlewares(stack *middleware.Stack, opt
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opResetFpgaImageAttribute(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

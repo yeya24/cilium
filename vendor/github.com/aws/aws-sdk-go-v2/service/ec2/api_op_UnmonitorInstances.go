@@ -12,15 +12,14 @@ import (
 )
 
 // Disables detailed monitoring for a running instance. For more information, see
-// Monitoring your instances and volumes
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-cloudwatch.html) in
-// the Amazon EC2 User Guide.
+// Monitoring your instances and volumes (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-cloudwatch.html)
+// in the Amazon EC2 User Guide.
 func (c *Client) UnmonitorInstances(ctx context.Context, params *UnmonitorInstancesInput, optFns ...func(*Options)) (*UnmonitorInstancesOutput, error) {
 	if params == nil {
 		params = &UnmonitorInstancesInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "UnmonitorInstances", params, optFns, addOperationUnmonitorInstancesMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "UnmonitorInstances", params, optFns, c.addOperationUnmonitorInstancesMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -39,9 +38,11 @@ type UnmonitorInstancesInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type UnmonitorInstancesOutput struct {
@@ -51,9 +52,11 @@ type UnmonitorInstancesOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationUnmonitorInstancesMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationUnmonitorInstancesMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpUnmonitorInstances{}, middleware.After)
 	if err != nil {
 		return err
@@ -102,6 +105,9 @@ func addOperationUnmonitorInstancesMiddlewares(stack *middleware.Stack, options 
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opUnmonitorInstances(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

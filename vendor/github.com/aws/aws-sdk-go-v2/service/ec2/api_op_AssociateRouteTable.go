@@ -16,15 +16,14 @@ import (
 // causes traffic from the subnet or gateway to be routed according to the routes
 // in the route table. The action returns an association ID, which you need in
 // order to disassociate the route table later. A route table can be associated
-// with multiple subnets. For more information, see Route Tables
-// (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html) in the
-// Amazon Virtual Private Cloud User Guide.
+// with multiple subnets. For more information, see Route tables (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html)
+// in the Amazon Virtual Private Cloud User Guide.
 func (c *Client) AssociateRouteTable(ctx context.Context, params *AssociateRouteTableInput, optFns ...func(*Options)) (*AssociateRouteTableOutput, error) {
 	if params == nil {
 		params = &AssociateRouteTableInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "AssociateRouteTable", params, optFns, addOperationAssociateRouteTableMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "AssociateRouteTable", params, optFns, c.addOperationAssociateRouteTableMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -43,8 +42,8 @@ type AssociateRouteTableInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// The ID of the internet gateway or virtual private gateway.
@@ -52,12 +51,14 @@ type AssociateRouteTableInput struct {
 
 	// The ID of the subnet.
 	SubnetId *string
+
+	noSmithyDocumentSerde
 }
 
 type AssociateRouteTableOutput struct {
 
-	// The route table association ID. This ID is required for disassociating the route
-	// table.
+	// The route table association ID. This ID is required for disassociating the
+	// route table.
 	AssociationId *string
 
 	// The state of the association.
@@ -65,9 +66,11 @@ type AssociateRouteTableOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationAssociateRouteTableMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationAssociateRouteTableMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpAssociateRouteTable{}, middleware.After)
 	if err != nil {
 		return err
@@ -116,6 +119,9 @@ func addOperationAssociateRouteTableMiddlewares(stack *middleware.Stack, options
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opAssociateRouteTable(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
