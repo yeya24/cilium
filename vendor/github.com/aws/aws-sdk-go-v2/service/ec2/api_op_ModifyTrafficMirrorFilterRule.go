@@ -18,7 +18,7 @@ func (c *Client) ModifyTrafficMirrorFilterRule(ctx context.Context, params *Modi
 		params = &ModifyTrafficMirrorFilterRuleInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ModifyTrafficMirrorFilterRule", params, optFns, addOperationModifyTrafficMirrorFilterRuleMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ModifyTrafficMirrorFilterRule", params, optFns, c.addOperationModifyTrafficMirrorFilterRuleMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -46,16 +46,16 @@ type ModifyTrafficMirrorFilterRuleInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// The protocol, for example TCP, to assign to the Traffic Mirror rule.
 	Protocol *int32
 
-	// The properties that you want to remove from the Traffic Mirror filter rule. When
-	// you remove a property from a Traffic Mirror filter rule, the property is set to
-	// the default.
+	// The properties that you want to remove from the Traffic Mirror filter rule.
+	// When you remove a property from a Traffic Mirror filter rule, the property is
+	// set to the default.
 	RemoveFields []types.TrafficMirrorFilterRuleField
 
 	// The action to assign to the rule.
@@ -72,8 +72,10 @@ type ModifyTrafficMirrorFilterRuleInput struct {
 	// The port range to assign to the Traffic Mirror rule.
 	SourcePortRange *types.TrafficMirrorPortRangeRequest
 
-	// The type of traffic (ingress | egress) to assign to the rule.
+	// The type of traffic to assign to the rule.
 	TrafficDirection types.TrafficDirection
+
+	noSmithyDocumentSerde
 }
 
 type ModifyTrafficMirrorFilterRuleOutput struct {
@@ -83,9 +85,11 @@ type ModifyTrafficMirrorFilterRuleOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationModifyTrafficMirrorFilterRuleMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationModifyTrafficMirrorFilterRuleMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpModifyTrafficMirrorFilterRule{}, middleware.After)
 	if err != nil {
 		return err
@@ -134,6 +138,9 @@ func addOperationModifyTrafficMirrorFilterRuleMiddlewares(stack *middleware.Stac
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opModifyTrafficMirrorFilterRule(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

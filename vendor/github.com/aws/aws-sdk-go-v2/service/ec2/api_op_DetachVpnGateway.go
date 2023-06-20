@@ -10,8 +10,8 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Detaches a virtual private gateway from a VPC. You do this if you're planning to
-// turn off the VPC and not use it anymore. You can confirm a virtual private
+// Detaches a virtual private gateway from a VPC. You do this if you're planning
+// to turn off the VPC and not use it anymore. You can confirm a virtual private
 // gateway has been completely detached from a VPC by describing the virtual
 // private gateway (any attachments to the virtual private gateway are also
 // described). You must wait for the attachment's state to switch to detached
@@ -22,7 +22,7 @@ func (c *Client) DetachVpnGateway(ctx context.Context, params *DetachVpnGatewayI
 		params = &DetachVpnGatewayInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DetachVpnGateway", params, optFns, addOperationDetachVpnGatewayMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DetachVpnGateway", params, optFns, c.addOperationDetachVpnGatewayMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -47,17 +47,21 @@ type DetachVpnGatewayInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	noSmithyDocumentSerde
 }
 
 type DetachVpnGatewayOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDetachVpnGatewayMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDetachVpnGatewayMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDetachVpnGateway{}, middleware.After)
 	if err != nil {
 		return err
@@ -106,6 +110,9 @@ func addOperationDetachVpnGatewayMiddlewares(stack *middleware.Stack, options Op
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDetachVpnGateway(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {

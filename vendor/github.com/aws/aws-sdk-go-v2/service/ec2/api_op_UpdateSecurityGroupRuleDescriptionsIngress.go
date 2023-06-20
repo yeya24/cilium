@@ -13,15 +13,14 @@ import (
 
 // Updates the description of an ingress (inbound) security group rule. You can
 // replace an existing description, or add a description to a rule that did not
-// have one previously. You specify the description as part of the IP permissions
-// structure. You can remove a description for a security group rule by omitting
-// the description parameter in the request.
+// have one previously. You can remove a description for a security group rule by
+// omitting the description parameter in the request.
 func (c *Client) UpdateSecurityGroupRuleDescriptionsIngress(ctx context.Context, params *UpdateSecurityGroupRuleDescriptionsIngressInput, optFns ...func(*Options)) (*UpdateSecurityGroupRuleDescriptionsIngressOutput, error) {
 	if params == nil {
 		params = &UpdateSecurityGroupRuleDescriptionsIngressInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "UpdateSecurityGroupRuleDescriptionsIngress", params, optFns, addOperationUpdateSecurityGroupRuleDescriptionsIngressMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "UpdateSecurityGroupRuleDescriptionsIngress", params, optFns, c.addOperationUpdateSecurityGroupRuleDescriptionsIngressMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -33,15 +32,10 @@ func (c *Client) UpdateSecurityGroupRuleDescriptionsIngress(ctx context.Context,
 
 type UpdateSecurityGroupRuleDescriptionsIngressInput struct {
 
-	// The IP permissions for the security group rule.
-	//
-	// This member is required.
-	IpPermissions []types.IpPermission
-
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// The ID of the security group. You must specify either the security group ID or
@@ -50,8 +44,19 @@ type UpdateSecurityGroupRuleDescriptionsIngressInput struct {
 	GroupId *string
 
 	// [EC2-Classic, default VPC] The name of the security group. You must specify
-	// either the security group ID or the security group name in the request.
+	// either the security group ID or the security group name in the request. For
+	// security groups in a nondefault VPC, you must specify the security group ID.
 	GroupName *string
+
+	// The IP permissions for the security group rule. You must specify either IP
+	// permissions or a description.
+	IpPermissions []types.IpPermission
+
+	// [VPC only] The description for the ingress security group rules. You must
+	// specify either a description or IP permissions.
+	SecurityGroupRuleDescriptions []types.SecurityGroupRuleDescription
+
+	noSmithyDocumentSerde
 }
 
 type UpdateSecurityGroupRuleDescriptionsIngressOutput struct {
@@ -61,9 +66,11 @@ type UpdateSecurityGroupRuleDescriptionsIngressOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationUpdateSecurityGroupRuleDescriptionsIngressMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationUpdateSecurityGroupRuleDescriptionsIngressMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpUpdateSecurityGroupRuleDescriptionsIngress{}, middleware.After)
 	if err != nil {
 		return err
@@ -108,10 +115,10 @@ func addOperationUpdateSecurityGroupRuleDescriptionsIngressMiddlewares(stack *mi
 	if err = smithyhttp.AddCloseResponseBodyMiddleware(stack); err != nil {
 		return err
 	}
-	if err = addOpUpdateSecurityGroupRuleDescriptionsIngressValidationMiddleware(stack); err != nil {
+	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opUpdateSecurityGroupRuleDescriptionsIngress(options.Region), middleware.Before); err != nil {
 		return err
 	}
-	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opUpdateSecurityGroupRuleDescriptionsIngress(options.Region), middleware.Before); err != nil {
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
