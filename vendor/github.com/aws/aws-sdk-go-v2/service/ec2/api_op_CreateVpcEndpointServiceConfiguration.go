@@ -4,41 +4,36 @@ package ec2
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
 	"github.com/aws/aws-sdk-go-v2/aws/signer/v4"
+	internalauth "github.com/aws/aws-sdk-go-v2/internal/auth"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	smithyendpoints "github.com/aws/smithy-go/endpoints"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Creates a VPC endpoint service configuration to which service consumers (AWS
-// accounts, IAM users, and IAM roles) can connect. To create an endpoint service
-// configuration, you must first create one of the following for your service:
+// Creates a VPC endpoint service to which service consumers (Amazon Web Services
+// accounts, users, and IAM roles) can connect. Before you create an endpoint
+// service, you must create one of the following for your service:
+//   - A Network Load Balancer (https://docs.aws.amazon.com/elasticloadbalancing/latest/network/)
+//     . Service consumers connect to your service using an interface endpoint.
+//   - A Gateway Load Balancer (https://docs.aws.amazon.com/elasticloadbalancing/latest/gateway/)
+//     . Service consumers connect to your service using a Gateway Load Balancer
+//     endpoint.
 //
-// * A
-// Network Load Balancer
-// (https://docs.aws.amazon.com/elasticloadbalancing/latest/network/introduction.html).
-// Service consumers connect to your service using an interface endpoint.
-//
-// * A
-// Gateway Load Balancer
-// (https://docs.aws.amazon.com/elasticloadbalancing/latest/gateway/introduction.html).
-// Service consumers connect to your service using a Gateway Load Balancer
-// endpoint.
-//
-// For more information, see VPC Endpoint Services
-// (https://docs.aws.amazon.com/vpc/latest/userguide/endpoint-service.html) in the
-// Amazon Virtual Private Cloud User Guide. If you set the private DNS name, you
-// must prove that you own the private DNS domain name. For more information, see
-// VPC Endpoint Service Private DNS Name Verification
-// (https://docs.aws.amazon.com/vpc/latest/userguide/endpoint-services-dns-validation.html)
-// in the Amazon Virtual Private Cloud User Guide.
+// If you set the private DNS name, you must prove that you own the private DNS
+// domain name. For more information, see the Amazon Web Services PrivateLink Guide (https://docs.aws.amazon.com/vpc/latest/privatelink/)
+// .
 func (c *Client) CreateVpcEndpointServiceConfiguration(ctx context.Context, params *CreateVpcEndpointServiceConfigurationInput, optFns ...func(*Options)) (*CreateVpcEndpointServiceConfigurationOutput, error) {
 	if params == nil {
 		params = &CreateVpcEndpointServiceConfigurationInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "CreateVpcEndpointServiceConfiguration", params, optFns, addOperationCreateVpcEndpointServiceConfigurationMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "CreateVpcEndpointServiceConfiguration", params, optFns, c.addOperationCreateVpcEndpointServiceConfigurationMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -51,33 +46,37 @@ func (c *Client) CreateVpcEndpointServiceConfiguration(ctx context.Context, para
 type CreateVpcEndpointServiceConfigurationInput struct {
 
 	// Indicates whether requests from service consumers to create an endpoint to your
-	// service must be accepted. To accept a request, use AcceptVpcEndpointConnections.
+	// service must be accepted manually.
 	AcceptanceRequired *bool
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency of
-	// the request. For more information, see How to Ensure Idempotency
-	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html).
+	// the request. For more information, see How to ensure idempotency (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html)
+	// .
 	ClientToken *string
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
-	// The Amazon Resource Names (ARNs) of one or more Gateway Load Balancers.
+	// The Amazon Resource Names (ARNs) of the Gateway Load Balancers.
 	GatewayLoadBalancerArns []string
 
-	// The Amazon Resource Names (ARNs) of one or more Network Load Balancers for your
-	// service.
+	// The Amazon Resource Names (ARNs) of the Network Load Balancers.
 	NetworkLoadBalancerArns []string
 
 	// (Interface endpoint configuration) The private DNS name to assign to the VPC
 	// endpoint service.
 	PrivateDnsName *string
 
+	// The supported IP address types. The possible values are ipv4 and ipv6 .
+	SupportedIpAddressTypes []string
+
 	// The tags to associate with the service.
 	TagSpecifications []types.TagSpecification
+
+	noSmithyDocumentSerde
 }
 
 type CreateVpcEndpointServiceConfigurationOutput struct {
@@ -91,15 +90,20 @@ type CreateVpcEndpointServiceConfigurationOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationCreateVpcEndpointServiceConfigurationMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationCreateVpcEndpointServiceConfigurationMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpCreateVpcEndpointServiceConfiguration{}, middleware.After)
 	if err != nil {
 		return err
 	}
 	err = stack.Deserialize.Add(&awsEc2query_deserializeOpCreateVpcEndpointServiceConfiguration{}, middleware.After)
 	if err != nil {
+		return err
+	}
+	if err = addlegacyEndpointContextSetter(stack, options); err != nil {
 		return err
 	}
 	if err = addSetLoggerMiddleware(stack, options); err != nil {
@@ -129,7 +133,7 @@ func addOperationCreateVpcEndpointServiceConfigurationMiddlewares(stack *middlew
 	if err = awsmiddleware.AddRecordResponseTiming(stack); err != nil {
 		return err
 	}
-	if err = addClientUserAgent(stack); err != nil {
+	if err = addClientUserAgent(stack, options); err != nil {
 		return err
 	}
 	if err = smithyhttp.AddErrorCloseResponseBodyMiddleware(stack); err != nil {
@@ -138,7 +142,13 @@ func addOperationCreateVpcEndpointServiceConfigurationMiddlewares(stack *middlew
 	if err = smithyhttp.AddCloseResponseBodyMiddleware(stack); err != nil {
 		return err
 	}
+	if err = addCreateVpcEndpointServiceConfigurationResolveEndpointMiddleware(stack, options); err != nil {
+		return err
+	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opCreateVpcEndpointServiceConfiguration(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
@@ -148,6 +158,9 @@ func addOperationCreateVpcEndpointServiceConfigurationMiddlewares(stack *middlew
 		return err
 	}
 	if err = addRequestResponseLogging(stack, options); err != nil {
+		return err
+	}
+	if err = addendpointDisableHTTPSMiddleware(stack, options); err != nil {
 		return err
 	}
 	return nil
@@ -160,4 +173,127 @@ func newServiceMetadataMiddleware_opCreateVpcEndpointServiceConfiguration(region
 		SigningName:   "ec2",
 		OperationName: "CreateVpcEndpointServiceConfiguration",
 	}
+}
+
+type opCreateVpcEndpointServiceConfigurationResolveEndpointMiddleware struct {
+	EndpointResolver EndpointResolverV2
+	BuiltInResolver  builtInParameterResolver
+}
+
+func (*opCreateVpcEndpointServiceConfigurationResolveEndpointMiddleware) ID() string {
+	return "ResolveEndpointV2"
+}
+
+func (m *opCreateVpcEndpointServiceConfigurationResolveEndpointMiddleware) HandleSerialize(ctx context.Context, in middleware.SerializeInput, next middleware.SerializeHandler) (
+	out middleware.SerializeOutput, metadata middleware.Metadata, err error,
+) {
+	if awsmiddleware.GetRequiresLegacyEndpoints(ctx) {
+		return next.HandleSerialize(ctx, in)
+	}
+
+	req, ok := in.Request.(*smithyhttp.Request)
+	if !ok {
+		return out, metadata, fmt.Errorf("unknown transport type %T", in.Request)
+	}
+
+	if m.EndpointResolver == nil {
+		return out, metadata, fmt.Errorf("expected endpoint resolver to not be nil")
+	}
+
+	params := EndpointParameters{}
+
+	m.BuiltInResolver.ResolveBuiltIns(&params)
+
+	var resolvedEndpoint smithyendpoints.Endpoint
+	resolvedEndpoint, err = m.EndpointResolver.ResolveEndpoint(ctx, params)
+	if err != nil {
+		return out, metadata, fmt.Errorf("failed to resolve service endpoint, %w", err)
+	}
+
+	req.URL = &resolvedEndpoint.URI
+
+	for k := range resolvedEndpoint.Headers {
+		req.Header.Set(
+			k,
+			resolvedEndpoint.Headers.Get(k),
+		)
+	}
+
+	authSchemes, err := internalauth.GetAuthenticationSchemes(&resolvedEndpoint.Properties)
+	if err != nil {
+		var nfe *internalauth.NoAuthenticationSchemesFoundError
+		if errors.As(err, &nfe) {
+			// if no auth scheme is found, default to sigv4
+			signingName := "ec2"
+			signingRegion := m.BuiltInResolver.(*builtInResolver).Region
+			ctx = awsmiddleware.SetSigningName(ctx, signingName)
+			ctx = awsmiddleware.SetSigningRegion(ctx, signingRegion)
+
+		}
+		var ue *internalauth.UnSupportedAuthenticationSchemeSpecifiedError
+		if errors.As(err, &ue) {
+			return out, metadata, fmt.Errorf(
+				"This operation requests signer version(s) %v but the client only supports %v",
+				ue.UnsupportedSchemes,
+				internalauth.SupportedSchemes,
+			)
+		}
+	}
+
+	for _, authScheme := range authSchemes {
+		switch authScheme.(type) {
+		case *internalauth.AuthenticationSchemeV4:
+			v4Scheme, _ := authScheme.(*internalauth.AuthenticationSchemeV4)
+			var signingName, signingRegion string
+			if v4Scheme.SigningName == nil {
+				signingName = "ec2"
+			} else {
+				signingName = *v4Scheme.SigningName
+			}
+			if v4Scheme.SigningRegion == nil {
+				signingRegion = m.BuiltInResolver.(*builtInResolver).Region
+			} else {
+				signingRegion = *v4Scheme.SigningRegion
+			}
+			if v4Scheme.DisableDoubleEncoding != nil {
+				// The signer sets an equivalent value at client initialization time.
+				// Setting this context value will cause the signer to extract it
+				// and override the value set at client initialization time.
+				ctx = internalauth.SetDisableDoubleEncoding(ctx, *v4Scheme.DisableDoubleEncoding)
+			}
+			ctx = awsmiddleware.SetSigningName(ctx, signingName)
+			ctx = awsmiddleware.SetSigningRegion(ctx, signingRegion)
+			break
+		case *internalauth.AuthenticationSchemeV4A:
+			v4aScheme, _ := authScheme.(*internalauth.AuthenticationSchemeV4A)
+			if v4aScheme.SigningName == nil {
+				v4aScheme.SigningName = aws.String("ec2")
+			}
+			if v4aScheme.DisableDoubleEncoding != nil {
+				// The signer sets an equivalent value at client initialization time.
+				// Setting this context value will cause the signer to extract it
+				// and override the value set at client initialization time.
+				ctx = internalauth.SetDisableDoubleEncoding(ctx, *v4aScheme.DisableDoubleEncoding)
+			}
+			ctx = awsmiddleware.SetSigningName(ctx, *v4aScheme.SigningName)
+			ctx = awsmiddleware.SetSigningRegion(ctx, v4aScheme.SigningRegionSet[0])
+			break
+		case *internalauth.AuthenticationSchemeNone:
+			break
+		}
+	}
+
+	return next.HandleSerialize(ctx, in)
+}
+
+func addCreateVpcEndpointServiceConfigurationResolveEndpointMiddleware(stack *middleware.Stack, options Options) error {
+	return stack.Serialize.Insert(&opCreateVpcEndpointServiceConfigurationResolveEndpointMiddleware{
+		EndpointResolver: options.EndpointResolverV2,
+		BuiltInResolver: &builtInResolver{
+			Region:       options.Region,
+			UseDualStack: options.EndpointOptions.UseDualStackEndpoint,
+			UseFIPS:      options.EndpointOptions.UseFIPSEndpoint,
+			Endpoint:     options.BaseEndpoint,
+		},
+	}, "ResolveEndpoint", middleware.After)
 }
