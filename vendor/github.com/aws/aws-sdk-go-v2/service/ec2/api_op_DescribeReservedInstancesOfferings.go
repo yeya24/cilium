@@ -4,10 +4,14 @@ package ec2
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
 	"github.com/aws/aws-sdk-go-v2/aws/signer/v4"
+	internalauth "github.com/aws/aws-sdk-go-v2/internal/auth"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	smithyendpoints "github.com/aws/smithy-go/endpoints"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
@@ -19,15 +23,14 @@ import (
 // the actual time used. If you have listed your own Reserved Instances for sale in
 // the Reserved Instance Marketplace, they will be excluded from these results.
 // This is to ensure that you do not purchase your own Reserved Instances. For more
-// information, see Reserved Instance Marketplace
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ri-market-general.html) in
-// the Amazon EC2 User Guide.
+// information, see Reserved Instance Marketplace (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ri-market-general.html)
+// in the Amazon EC2 User Guide.
 func (c *Client) DescribeReservedInstancesOfferings(ctx context.Context, params *DescribeReservedInstancesOfferingsInput, optFns ...func(*Options)) (*DescribeReservedInstancesOfferingsOutput, error) {
 	if params == nil {
 		params = &DescribeReservedInstancesOfferingsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DescribeReservedInstancesOfferings", params, optFns, addOperationDescribeReservedInstancesOfferingsMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeReservedInstancesOfferings", params, optFns, c.addOperationDescribeReservedInstancesOfferingsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -45,49 +48,31 @@ type DescribeReservedInstancesOfferingsInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// One or more filters.
-	//
-	// * availability-zone - The Availability Zone where the
-	// Reserved Instance can be used.
-	//
-	// * duration - The duration of the Reserved
-	// Instance (for example, one year or three years), in seconds (31536000 |
-	// 94608000).
-	//
-	// * fixed-price - The purchase price of the Reserved Instance (for
-	// example, 9800.0).
-	//
-	// * instance-type - The instance type that is covered by the
-	// reservation.
-	//
-	// * marketplace - Set to true to show only Reserved Instance
-	// Marketplace offerings. When this filter is not used, which is the default
-	// behavior, all offerings from both AWS and the Reserved Instance Marketplace are
-	// listed.
-	//
-	// * product-description - The Reserved Instance product platform
-	// description. Instances that include (Amazon VPC) in the product platform
-	// description will only be displayed to EC2-Classic account holders and are for
-	// use with Amazon VPC. (Linux/UNIX | Linux/UNIX (Amazon VPC) | SUSE Linux | SUSE
-	// Linux (Amazon VPC) | Red Hat Enterprise Linux | Red Hat Enterprise Linux (Amazon
-	// VPC) | Red Hat Enterprise Linux with HA (Amazon VPC) | Windows | Windows (Amazon
-	// VPC) | Windows with SQL Server Standard | Windows with SQL Server Standard
-	// (Amazon VPC) | Windows with SQL Server Web |  Windows with SQL Server Web
-	// (Amazon VPC) | Windows with SQL Server Enterprise | Windows with SQL Server
-	// Enterprise (Amazon VPC))
-	//
-	// * reserved-instances-offering-id - The Reserved
-	// Instances offering ID.
-	//
-	// * scope - The scope of the Reserved Instance
-	// (Availability Zone or Region).
-	//
-	// * usage-price - The usage price of the Reserved
-	// Instance, per hour (for example, 0.84).
+	//   - availability-zone - The Availability Zone where the Reserved Instance can be
+	//   used.
+	//   - duration - The duration of the Reserved Instance (for example, one year or
+	//   three years), in seconds ( 31536000 | 94608000 ).
+	//   - fixed-price - The purchase price of the Reserved Instance (for example,
+	//   9800.0).
+	//   - instance-type - The instance type that is covered by the reservation.
+	//   - marketplace - Set to true to show only Reserved Instance Marketplace
+	//   offerings. When this filter is not used, which is the default behavior, all
+	//   offerings from both Amazon Web Services and the Reserved Instance Marketplace
+	//   are listed.
+	//   - product-description - The Reserved Instance product platform description (
+	//   Linux/UNIX | Linux with SQL Server Standard | Linux with SQL Server Web |
+	//   Linux with SQL Server Enterprise | SUSE Linux | Red Hat Enterprise Linux |
+	//   Red Hat Enterprise Linux with HA | Windows | Windows with SQL Server Standard
+	//   | Windows with SQL Server Web | Windows with SQL Server Enterprise ).
+	//   - reserved-instances-offering-id - The Reserved Instances offering ID.
+	//   - scope - The scope of the Reserved Instance ( Availability Zone or Region ).
+	//   - usage-price - The usage price of the Reserved Instance, per hour (for
+	//   example, 0.84).
 	Filters []types.Filter
 
 	// Include Reserved Instance Marketplace offerings in the response.
@@ -100,18 +85,17 @@ type DescribeReservedInstancesOfferingsInput struct {
 	// Default: default
 	InstanceTenancy types.Tenancy
 
-	// The instance type that the reservation will cover (for example, m1.small). For
-	// more information, see Instance types
-	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html) in the
-	// Amazon EC2 User Guide.
+	// The instance type that the reservation will cover (for example, m1.small ). For
+	// more information, see Instance types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html)
+	// in the Amazon EC2 User Guide.
 	InstanceType types.InstanceType
 
 	// The maximum duration (in seconds) to filter when searching for offerings.
 	// Default: 94608000 (3 years)
 	MaxDuration *int64
 
-	// The maximum number of instances to filter when searching for offerings. Default:
-	// 20
+	// The maximum number of instances to filter when searching for offerings.
+	// Default: 20
 	MaxInstanceCount *int32
 
 	// The maximum number of results to return for the request in a single page. The
@@ -126,7 +110,7 @@ type DescribeReservedInstancesOfferingsInput struct {
 	// The token to retrieve the next page of results.
 	NextToken *string
 
-	// The offering class of the Reserved Instance. Can be standard or convertible.
+	// The offering class of the Reserved Instance. Can be standard or convertible .
 	OfferingClass types.OfferingClassType
 
 	// The Reserved Instance offering type. If you are using tools that predate the
@@ -140,6 +124,8 @@ type DescribeReservedInstancesOfferingsInput struct {
 
 	// One or more Reserved Instances offering IDs.
 	ReservedInstancesOfferingIds []string
+
+	noSmithyDocumentSerde
 }
 
 // Contains the output of DescribeReservedInstancesOfferings.
@@ -154,15 +140,20 @@ type DescribeReservedInstancesOfferingsOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationDescribeReservedInstancesOfferingsMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeReservedInstancesOfferingsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpDescribeReservedInstancesOfferings{}, middleware.After)
 	if err != nil {
 		return err
 	}
 	err = stack.Deserialize.Add(&awsEc2query_deserializeOpDescribeReservedInstancesOfferings{}, middleware.After)
 	if err != nil {
+		return err
+	}
+	if err = addlegacyEndpointContextSetter(stack, options); err != nil {
 		return err
 	}
 	if err = addSetLoggerMiddleware(stack, options); err != nil {
@@ -192,7 +183,7 @@ func addOperationDescribeReservedInstancesOfferingsMiddlewares(stack *middleware
 	if err = awsmiddleware.AddRecordResponseTiming(stack); err != nil {
 		return err
 	}
-	if err = addClientUserAgent(stack); err != nil {
+	if err = addClientUserAgent(stack, options); err != nil {
 		return err
 	}
 	if err = smithyhttp.AddErrorCloseResponseBodyMiddleware(stack); err != nil {
@@ -201,7 +192,13 @@ func addOperationDescribeReservedInstancesOfferingsMiddlewares(stack *middleware
 	if err = smithyhttp.AddCloseResponseBodyMiddleware(stack); err != nil {
 		return err
 	}
+	if err = addDescribeReservedInstancesOfferingsResolveEndpointMiddleware(stack, options); err != nil {
+		return err
+	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDescribeReservedInstancesOfferings(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
@@ -211,6 +208,9 @@ func addOperationDescribeReservedInstancesOfferingsMiddlewares(stack *middleware
 		return err
 	}
 	if err = addRequestResponseLogging(stack, options); err != nil {
+		return err
+	}
+	if err = addendpointDisableHTTPSMiddleware(stack, options); err != nil {
 		return err
 	}
 	return nil
@@ -268,12 +268,13 @@ func NewDescribeReservedInstancesOfferingsPaginator(client DescribeReservedInsta
 		client:    client,
 		params:    params,
 		firstPage: true,
+		nextToken: params.NextToken,
 	}
 }
 
 // HasMorePages returns a boolean indicating whether more pages are available
 func (p *DescribeReservedInstancesOfferingsPaginator) HasMorePages() bool {
-	return p.firstPage || p.nextToken != nil
+	return p.firstPage || (p.nextToken != nil && len(*p.nextToken) != 0)
 }
 
 // NextPage retrieves the next DescribeReservedInstancesOfferings page.
@@ -300,7 +301,10 @@ func (p *DescribeReservedInstancesOfferingsPaginator) NextPage(ctx context.Conte
 	prevToken := p.nextToken
 	p.nextToken = result.NextToken
 
-	if p.options.StopOnDuplicateToken && prevToken != nil && p.nextToken != nil && *prevToken == *p.nextToken {
+	if p.options.StopOnDuplicateToken &&
+		prevToken != nil &&
+		p.nextToken != nil &&
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 
@@ -314,4 +318,127 @@ func newServiceMetadataMiddleware_opDescribeReservedInstancesOfferings(region st
 		SigningName:   "ec2",
 		OperationName: "DescribeReservedInstancesOfferings",
 	}
+}
+
+type opDescribeReservedInstancesOfferingsResolveEndpointMiddleware struct {
+	EndpointResolver EndpointResolverV2
+	BuiltInResolver  builtInParameterResolver
+}
+
+func (*opDescribeReservedInstancesOfferingsResolveEndpointMiddleware) ID() string {
+	return "ResolveEndpointV2"
+}
+
+func (m *opDescribeReservedInstancesOfferingsResolveEndpointMiddleware) HandleSerialize(ctx context.Context, in middleware.SerializeInput, next middleware.SerializeHandler) (
+	out middleware.SerializeOutput, metadata middleware.Metadata, err error,
+) {
+	if awsmiddleware.GetRequiresLegacyEndpoints(ctx) {
+		return next.HandleSerialize(ctx, in)
+	}
+
+	req, ok := in.Request.(*smithyhttp.Request)
+	if !ok {
+		return out, metadata, fmt.Errorf("unknown transport type %T", in.Request)
+	}
+
+	if m.EndpointResolver == nil {
+		return out, metadata, fmt.Errorf("expected endpoint resolver to not be nil")
+	}
+
+	params := EndpointParameters{}
+
+	m.BuiltInResolver.ResolveBuiltIns(&params)
+
+	var resolvedEndpoint smithyendpoints.Endpoint
+	resolvedEndpoint, err = m.EndpointResolver.ResolveEndpoint(ctx, params)
+	if err != nil {
+		return out, metadata, fmt.Errorf("failed to resolve service endpoint, %w", err)
+	}
+
+	req.URL = &resolvedEndpoint.URI
+
+	for k := range resolvedEndpoint.Headers {
+		req.Header.Set(
+			k,
+			resolvedEndpoint.Headers.Get(k),
+		)
+	}
+
+	authSchemes, err := internalauth.GetAuthenticationSchemes(&resolvedEndpoint.Properties)
+	if err != nil {
+		var nfe *internalauth.NoAuthenticationSchemesFoundError
+		if errors.As(err, &nfe) {
+			// if no auth scheme is found, default to sigv4
+			signingName := "ec2"
+			signingRegion := m.BuiltInResolver.(*builtInResolver).Region
+			ctx = awsmiddleware.SetSigningName(ctx, signingName)
+			ctx = awsmiddleware.SetSigningRegion(ctx, signingRegion)
+
+		}
+		var ue *internalauth.UnSupportedAuthenticationSchemeSpecifiedError
+		if errors.As(err, &ue) {
+			return out, metadata, fmt.Errorf(
+				"This operation requests signer version(s) %v but the client only supports %v",
+				ue.UnsupportedSchemes,
+				internalauth.SupportedSchemes,
+			)
+		}
+	}
+
+	for _, authScheme := range authSchemes {
+		switch authScheme.(type) {
+		case *internalauth.AuthenticationSchemeV4:
+			v4Scheme, _ := authScheme.(*internalauth.AuthenticationSchemeV4)
+			var signingName, signingRegion string
+			if v4Scheme.SigningName == nil {
+				signingName = "ec2"
+			} else {
+				signingName = *v4Scheme.SigningName
+			}
+			if v4Scheme.SigningRegion == nil {
+				signingRegion = m.BuiltInResolver.(*builtInResolver).Region
+			} else {
+				signingRegion = *v4Scheme.SigningRegion
+			}
+			if v4Scheme.DisableDoubleEncoding != nil {
+				// The signer sets an equivalent value at client initialization time.
+				// Setting this context value will cause the signer to extract it
+				// and override the value set at client initialization time.
+				ctx = internalauth.SetDisableDoubleEncoding(ctx, *v4Scheme.DisableDoubleEncoding)
+			}
+			ctx = awsmiddleware.SetSigningName(ctx, signingName)
+			ctx = awsmiddleware.SetSigningRegion(ctx, signingRegion)
+			break
+		case *internalauth.AuthenticationSchemeV4A:
+			v4aScheme, _ := authScheme.(*internalauth.AuthenticationSchemeV4A)
+			if v4aScheme.SigningName == nil {
+				v4aScheme.SigningName = aws.String("ec2")
+			}
+			if v4aScheme.DisableDoubleEncoding != nil {
+				// The signer sets an equivalent value at client initialization time.
+				// Setting this context value will cause the signer to extract it
+				// and override the value set at client initialization time.
+				ctx = internalauth.SetDisableDoubleEncoding(ctx, *v4aScheme.DisableDoubleEncoding)
+			}
+			ctx = awsmiddleware.SetSigningName(ctx, *v4aScheme.SigningName)
+			ctx = awsmiddleware.SetSigningRegion(ctx, v4aScheme.SigningRegionSet[0])
+			break
+		case *internalauth.AuthenticationSchemeNone:
+			break
+		}
+	}
+
+	return next.HandleSerialize(ctx, in)
+}
+
+func addDescribeReservedInstancesOfferingsResolveEndpointMiddleware(stack *middleware.Stack, options Options) error {
+	return stack.Serialize.Insert(&opDescribeReservedInstancesOfferingsResolveEndpointMiddleware{
+		EndpointResolver: options.EndpointResolverV2,
+		BuiltInResolver: &builtInResolver{
+			Region:       options.Region,
+			UseDualStack: options.EndpointOptions.UseDualStackEndpoint,
+			UseFIPS:      options.EndpointOptions.UseFIPSEndpoint,
+			Endpoint:     options.BaseEndpoint,
+		},
+	}, "ResolveEndpoint", middleware.After)
 }
