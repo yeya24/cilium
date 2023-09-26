@@ -4,23 +4,27 @@ package ec2
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
 	"github.com/aws/aws-sdk-go-v2/aws/signer/v4"
+	internalauth "github.com/aws/aws-sdk-go-v2/internal/auth"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	smithyendpoints "github.com/aws/smithy-go/endpoints"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
 // Imports a disk into an EBS snapshot. For more information, see Importing a disk
-// as a snapshot using VM Import/Export
-// (https://docs.aws.amazon.com/vm-import/latest/userguide/vmimport-import-snapshot.html)
+// as a snapshot using VM Import/Export (https://docs.aws.amazon.com/vm-import/latest/userguide/vmimport-import-snapshot.html)
 // in the VM Import/Export User Guide.
 func (c *Client) ImportSnapshot(ctx context.Context, params *ImportSnapshotInput, optFns ...func(*Options)) (*ImportSnapshotOutput, error) {
 	if params == nil {
 		params = &ImportSnapshotInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ImportSnapshot", params, optFns, addOperationImportSnapshotMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ImportSnapshot", params, optFns, c.addOperationImportSnapshotMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -46,49 +50,36 @@ type ImportSnapshotInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
 
 	// Specifies whether the destination snapshot of the imported image should be
-	// encrypted. The default CMK for EBS is used unless you specify a non-default AWS
-	// Key Management Service (AWS KMS) CMK using KmsKeyId. For more information, see
-	// Amazon EBS Encryption
-	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html) in the
-	// Amazon Elastic Compute Cloud User Guide.
+	// encrypted. The default KMS key for EBS is used unless you specify a non-default
+	// KMS key using KmsKeyId . For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+	// in the Amazon Elastic Compute Cloud User Guide.
 	Encrypted *bool
 
-	// An identifier for the symmetric AWS Key Management Service (AWS KMS) customer
-	// master key (CMK) to use when creating the encrypted snapshot. This parameter is
-	// only required if you want to use a non-default CMK; if this parameter is not
-	// specified, the default CMK for EBS is used. If a KmsKeyId is specified, the
-	// Encrypted flag must also be set. The CMK identifier may be provided in any of
-	// the following formats:
-	//
-	// * Key ID
-	//
-	// * Key alias. The alias ARN contains the
-	// arn:aws:kms namespace, followed by the Region of the CMK, the AWS account ID of
-	// the CMK owner, the alias namespace, and then the CMK alias. For example,
-	// arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
-	//
-	// * ARN using key ID. The
-	// ID ARN contains the arn:aws:kms namespace, followed by the Region of the CMK,
-	// the AWS account ID of the CMK owner, the key namespace, and then the CMK ID. For
-	// example,
-	// arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
-	//
-	// *
-	// ARN using key alias. The alias ARN contains the arn:aws:kms namespace, followed
-	// by the Region of the CMK, the AWS account ID of the CMK owner, the alias
-	// namespace, and then the CMK alias. For example,
-	// arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
-	//
-	// AWS parses KmsKeyId
-	// asynchronously, meaning that the action you call may appear to complete even
-	// though you provided an invalid identifier. This action will eventually report
-	// failure. The specified CMK must exist in the Region that the snapshot is being
-	// copied to. Amazon EBS does not support asymmetric CMKs.
+	// An identifier for the symmetric KMS key to use when creating the encrypted
+	// snapshot. This parameter is only required if you want to use a non-default KMS
+	// key; if this parameter is not specified, the default KMS key for EBS is used. If
+	// a KmsKeyId is specified, the Encrypted flag must also be set. The KMS key
+	// identifier may be provided in any of the following formats:
+	//   - Key ID
+	//   - Key alias
+	//   - ARN using key ID. The ID ARN contains the arn:aws:kms namespace, followed by
+	//   the Region of the key, the Amazon Web Services account ID of the key owner, the
+	//   key namespace, and then the key ID. For example,
+	//   arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
+	//   - ARN using key alias. The alias ARN contains the arn:aws:kms namespace,
+	//   followed by the Region of the key, the Amazon Web Services account ID of the key
+	//   owner, the alias namespace, and then the key alias. For example,
+	//   arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
+	// Amazon Web Services parses KmsKeyId asynchronously, meaning that the action you
+	// call may appear to complete even though you provided an invalid identifier. This
+	// action will eventually report failure. The specified KMS key must exist in the
+	// Region that the snapshot is being copied to. Amazon EBS does not support
+	// asymmetric KMS keys.
 	KmsKeyId *string
 
 	// The name of the role to use when not using the default role, 'vmimport'.
@@ -96,6 +87,8 @@ type ImportSnapshotInput struct {
 
 	// The tags to apply to the import snapshot task during creation.
 	TagSpecifications []types.TagSpecification
+
+	noSmithyDocumentSerde
 }
 
 type ImportSnapshotOutput struct {
@@ -114,15 +107,20 @@ type ImportSnapshotOutput struct {
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationImportSnapshotMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationImportSnapshotMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpImportSnapshot{}, middleware.After)
 	if err != nil {
 		return err
 	}
 	err = stack.Deserialize.Add(&awsEc2query_deserializeOpImportSnapshot{}, middleware.After)
 	if err != nil {
+		return err
+	}
+	if err = addlegacyEndpointContextSetter(stack, options); err != nil {
 		return err
 	}
 	if err = addSetLoggerMiddleware(stack, options); err != nil {
@@ -152,7 +150,7 @@ func addOperationImportSnapshotMiddlewares(stack *middleware.Stack, options Opti
 	if err = awsmiddleware.AddRecordResponseTiming(stack); err != nil {
 		return err
 	}
-	if err = addClientUserAgent(stack); err != nil {
+	if err = addClientUserAgent(stack, options); err != nil {
 		return err
 	}
 	if err = smithyhttp.AddErrorCloseResponseBodyMiddleware(stack); err != nil {
@@ -161,7 +159,13 @@ func addOperationImportSnapshotMiddlewares(stack *middleware.Stack, options Opti
 	if err = smithyhttp.AddCloseResponseBodyMiddleware(stack); err != nil {
 		return err
 	}
+	if err = addImportSnapshotResolveEndpointMiddleware(stack, options); err != nil {
+		return err
+	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opImportSnapshot(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
@@ -171,6 +175,9 @@ func addOperationImportSnapshotMiddlewares(stack *middleware.Stack, options Opti
 		return err
 	}
 	if err = addRequestResponseLogging(stack, options); err != nil {
+		return err
+	}
+	if err = addendpointDisableHTTPSMiddleware(stack, options); err != nil {
 		return err
 	}
 	return nil
@@ -183,4 +190,127 @@ func newServiceMetadataMiddleware_opImportSnapshot(region string) *awsmiddleware
 		SigningName:   "ec2",
 		OperationName: "ImportSnapshot",
 	}
+}
+
+type opImportSnapshotResolveEndpointMiddleware struct {
+	EndpointResolver EndpointResolverV2
+	BuiltInResolver  builtInParameterResolver
+}
+
+func (*opImportSnapshotResolveEndpointMiddleware) ID() string {
+	return "ResolveEndpointV2"
+}
+
+func (m *opImportSnapshotResolveEndpointMiddleware) HandleSerialize(ctx context.Context, in middleware.SerializeInput, next middleware.SerializeHandler) (
+	out middleware.SerializeOutput, metadata middleware.Metadata, err error,
+) {
+	if awsmiddleware.GetRequiresLegacyEndpoints(ctx) {
+		return next.HandleSerialize(ctx, in)
+	}
+
+	req, ok := in.Request.(*smithyhttp.Request)
+	if !ok {
+		return out, metadata, fmt.Errorf("unknown transport type %T", in.Request)
+	}
+
+	if m.EndpointResolver == nil {
+		return out, metadata, fmt.Errorf("expected endpoint resolver to not be nil")
+	}
+
+	params := EndpointParameters{}
+
+	m.BuiltInResolver.ResolveBuiltIns(&params)
+
+	var resolvedEndpoint smithyendpoints.Endpoint
+	resolvedEndpoint, err = m.EndpointResolver.ResolveEndpoint(ctx, params)
+	if err != nil {
+		return out, metadata, fmt.Errorf("failed to resolve service endpoint, %w", err)
+	}
+
+	req.URL = &resolvedEndpoint.URI
+
+	for k := range resolvedEndpoint.Headers {
+		req.Header.Set(
+			k,
+			resolvedEndpoint.Headers.Get(k),
+		)
+	}
+
+	authSchemes, err := internalauth.GetAuthenticationSchemes(&resolvedEndpoint.Properties)
+	if err != nil {
+		var nfe *internalauth.NoAuthenticationSchemesFoundError
+		if errors.As(err, &nfe) {
+			// if no auth scheme is found, default to sigv4
+			signingName := "ec2"
+			signingRegion := m.BuiltInResolver.(*builtInResolver).Region
+			ctx = awsmiddleware.SetSigningName(ctx, signingName)
+			ctx = awsmiddleware.SetSigningRegion(ctx, signingRegion)
+
+		}
+		var ue *internalauth.UnSupportedAuthenticationSchemeSpecifiedError
+		if errors.As(err, &ue) {
+			return out, metadata, fmt.Errorf(
+				"This operation requests signer version(s) %v but the client only supports %v",
+				ue.UnsupportedSchemes,
+				internalauth.SupportedSchemes,
+			)
+		}
+	}
+
+	for _, authScheme := range authSchemes {
+		switch authScheme.(type) {
+		case *internalauth.AuthenticationSchemeV4:
+			v4Scheme, _ := authScheme.(*internalauth.AuthenticationSchemeV4)
+			var signingName, signingRegion string
+			if v4Scheme.SigningName == nil {
+				signingName = "ec2"
+			} else {
+				signingName = *v4Scheme.SigningName
+			}
+			if v4Scheme.SigningRegion == nil {
+				signingRegion = m.BuiltInResolver.(*builtInResolver).Region
+			} else {
+				signingRegion = *v4Scheme.SigningRegion
+			}
+			if v4Scheme.DisableDoubleEncoding != nil {
+				// The signer sets an equivalent value at client initialization time.
+				// Setting this context value will cause the signer to extract it
+				// and override the value set at client initialization time.
+				ctx = internalauth.SetDisableDoubleEncoding(ctx, *v4Scheme.DisableDoubleEncoding)
+			}
+			ctx = awsmiddleware.SetSigningName(ctx, signingName)
+			ctx = awsmiddleware.SetSigningRegion(ctx, signingRegion)
+			break
+		case *internalauth.AuthenticationSchemeV4A:
+			v4aScheme, _ := authScheme.(*internalauth.AuthenticationSchemeV4A)
+			if v4aScheme.SigningName == nil {
+				v4aScheme.SigningName = aws.String("ec2")
+			}
+			if v4aScheme.DisableDoubleEncoding != nil {
+				// The signer sets an equivalent value at client initialization time.
+				// Setting this context value will cause the signer to extract it
+				// and override the value set at client initialization time.
+				ctx = internalauth.SetDisableDoubleEncoding(ctx, *v4aScheme.DisableDoubleEncoding)
+			}
+			ctx = awsmiddleware.SetSigningName(ctx, *v4aScheme.SigningName)
+			ctx = awsmiddleware.SetSigningRegion(ctx, v4aScheme.SigningRegionSet[0])
+			break
+		case *internalauth.AuthenticationSchemeNone:
+			break
+		}
+	}
+
+	return next.HandleSerialize(ctx, in)
+}
+
+func addImportSnapshotResolveEndpointMiddleware(stack *middleware.Stack, options Options) error {
+	return stack.Serialize.Insert(&opImportSnapshotResolveEndpointMiddleware{
+		EndpointResolver: options.EndpointResolverV2,
+		BuiltInResolver: &builtInResolver{
+			Region:       options.Region,
+			UseDualStack: options.EndpointOptions.UseDualStackEndpoint,
+			UseFIPS:      options.EndpointOptions.UseFIPSEndpoint,
+			Endpoint:     options.BaseEndpoint,
+		},
+	}, "ResolveEndpoint", middleware.After)
 }
