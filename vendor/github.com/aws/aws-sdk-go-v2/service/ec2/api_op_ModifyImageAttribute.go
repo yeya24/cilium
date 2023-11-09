@@ -4,26 +4,31 @@ package ec2
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
 	"github.com/aws/aws-sdk-go-v2/aws/signer/v4"
+	internalauth "github.com/aws/aws-sdk-go-v2/internal/auth"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	smithyendpoints "github.com/aws/smithy-go/endpoints"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
 // Modifies the specified attribute of the specified AMI. You can specify only one
-// attribute at a time. You can use the Attribute parameter to specify the
-// attribute or one of the following parameters: Description, LaunchPermission, or
-// ProductCode. AWS Marketplace product codes cannot be modified. Images with an
-// AWS Marketplace product code cannot be made public. To enable the
-// SriovNetSupport enhanced networking attribute of an image, enable
-// SriovNetSupport on an instance and create an AMI from the instance.
+// attribute at a time. To specify the attribute, you can use the Attribute
+// parameter, or one of the following parameters: Description , ImdsSupport , or
+// LaunchPermission . Images with an Amazon Web Services Marketplace product code
+// cannot be made public. To enable the SriovNetSupport enhanced networking
+// attribute of an image, enable SriovNetSupport on an instance and create an AMI
+// from the instance.
 func (c *Client) ModifyImageAttribute(ctx context.Context, params *ModifyImageAttributeInput, optFns ...func(*Options)) (*ModifyImageAttributeOutput, error) {
 	if params == nil {
 		params = &ModifyImageAttributeInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "ModifyImageAttribute", params, optFns, addOperationModifyImageAttributeMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "ModifyImageAttribute", params, optFns, c.addOperationModifyImageAttributeMiddlewares)
 	if err != nil {
 		return nil, err
 	}
@@ -41,8 +46,8 @@ type ModifyImageAttributeInput struct {
 	// This member is required.
 	ImageId *string
 
-	// The name of the attribute to modify. The valid values are description,
-	// launchPermission, and productCodes.
+	// The name of the attribute to modify. Valid values: description | imdsSupport |
+	// launchPermission
 	Attribute *string
 
 	// A new description for the AMI.
@@ -50,46 +55,70 @@ type ModifyImageAttributeInput struct {
 
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have the
-	// required permissions, the error response is DryRunOperation. Otherwise, it is
-	// UnauthorizedOperation.
+	// required permissions, the error response is DryRunOperation . Otherwise, it is
+	// UnauthorizedOperation .
 	DryRun *bool
+
+	// Set to v2.0 to indicate that IMDSv2 is specified in the AMI. Instances launched
+	// from this AMI will have HttpTokens automatically set to required so that, by
+	// default, the instance requires that IMDSv2 is used when requesting instance
+	// metadata. In addition, HttpPutResponseHopLimit is set to 2 . For more
+	// information, see Configure the AMI (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-IMDS-new-instances.html#configure-IMDS-new-instances-ami-configuration)
+	// in the Amazon EC2 User Guide. Do not use this parameter unless your AMI software
+	// supports IMDSv2. After you set the value to v2.0 , you can't undo it. The only
+	// way to “reset” your AMI is to create a new AMI from the underlying snapshot.
+	ImdsSupport *types.AttributeValue
 
 	// A new launch permission for the AMI.
 	LaunchPermission *types.LaunchPermissionModifications
 
-	// The operation type. This parameter can be used only when the Attribute parameter
-	// is launchPermission.
+	// The operation type. This parameter can be used only when the Attribute
+	// parameter is launchPermission .
 	OperationType types.OperationType
 
-	// The DevPay product codes. After you add a product code to an AMI, it can't be
-	// removed.
+	// The Amazon Resource Name (ARN) of an organization. This parameter can be used
+	// only when the Attribute parameter is launchPermission .
+	OrganizationArns []string
+
+	// The Amazon Resource Name (ARN) of an organizational unit (OU). This parameter
+	// can be used only when the Attribute parameter is launchPermission .
+	OrganizationalUnitArns []string
+
+	// Not supported.
 	ProductCodes []string
 
-	// The user groups. This parameter can be used only when the Attribute parameter is
-	// launchPermission.
+	// The user groups. This parameter can be used only when the Attribute parameter
+	// is launchPermission .
 	UserGroups []string
 
-	// The AWS account IDs. This parameter can be used only when the Attribute
-	// parameter is launchPermission.
+	// The Amazon Web Services account IDs. This parameter can be used only when the
+	// Attribute parameter is launchPermission .
 	UserIds []string
 
 	// The value of the attribute being modified. This parameter can be used only when
-	// the Attribute parameter is description or productCodes.
+	// the Attribute parameter is description or imdsSupport .
 	Value *string
+
+	noSmithyDocumentSerde
 }
 
 type ModifyImageAttributeOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
+
+	noSmithyDocumentSerde
 }
 
-func addOperationModifyImageAttributeMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationModifyImageAttributeMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	err = stack.Serialize.Add(&awsEc2query_serializeOpModifyImageAttribute{}, middleware.After)
 	if err != nil {
 		return err
 	}
 	err = stack.Deserialize.Add(&awsEc2query_deserializeOpModifyImageAttribute{}, middleware.After)
 	if err != nil {
+		return err
+	}
+	if err = addlegacyEndpointContextSetter(stack, options); err != nil {
 		return err
 	}
 	if err = addSetLoggerMiddleware(stack, options); err != nil {
@@ -119,7 +148,7 @@ func addOperationModifyImageAttributeMiddlewares(stack *middleware.Stack, option
 	if err = awsmiddleware.AddRecordResponseTiming(stack); err != nil {
 		return err
 	}
-	if err = addClientUserAgent(stack); err != nil {
+	if err = addClientUserAgent(stack, options); err != nil {
 		return err
 	}
 	if err = smithyhttp.AddErrorCloseResponseBodyMiddleware(stack); err != nil {
@@ -128,10 +157,16 @@ func addOperationModifyImageAttributeMiddlewares(stack *middleware.Stack, option
 	if err = smithyhttp.AddCloseResponseBodyMiddleware(stack); err != nil {
 		return err
 	}
+	if err = addModifyImageAttributeResolveEndpointMiddleware(stack, options); err != nil {
+		return err
+	}
 	if err = addOpModifyImageAttributeValidationMiddleware(stack); err != nil {
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opModifyImageAttribute(options.Region), middleware.Before); err != nil {
+		return err
+	}
+	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addRequestIDRetrieverMiddleware(stack); err != nil {
@@ -141,6 +176,9 @@ func addOperationModifyImageAttributeMiddlewares(stack *middleware.Stack, option
 		return err
 	}
 	if err = addRequestResponseLogging(stack, options); err != nil {
+		return err
+	}
+	if err = addendpointDisableHTTPSMiddleware(stack, options); err != nil {
 		return err
 	}
 	return nil
@@ -153,4 +191,127 @@ func newServiceMetadataMiddleware_opModifyImageAttribute(region string) *awsmidd
 		SigningName:   "ec2",
 		OperationName: "ModifyImageAttribute",
 	}
+}
+
+type opModifyImageAttributeResolveEndpointMiddleware struct {
+	EndpointResolver EndpointResolverV2
+	BuiltInResolver  builtInParameterResolver
+}
+
+func (*opModifyImageAttributeResolveEndpointMiddleware) ID() string {
+	return "ResolveEndpointV2"
+}
+
+func (m *opModifyImageAttributeResolveEndpointMiddleware) HandleSerialize(ctx context.Context, in middleware.SerializeInput, next middleware.SerializeHandler) (
+	out middleware.SerializeOutput, metadata middleware.Metadata, err error,
+) {
+	if awsmiddleware.GetRequiresLegacyEndpoints(ctx) {
+		return next.HandleSerialize(ctx, in)
+	}
+
+	req, ok := in.Request.(*smithyhttp.Request)
+	if !ok {
+		return out, metadata, fmt.Errorf("unknown transport type %T", in.Request)
+	}
+
+	if m.EndpointResolver == nil {
+		return out, metadata, fmt.Errorf("expected endpoint resolver to not be nil")
+	}
+
+	params := EndpointParameters{}
+
+	m.BuiltInResolver.ResolveBuiltIns(&params)
+
+	var resolvedEndpoint smithyendpoints.Endpoint
+	resolvedEndpoint, err = m.EndpointResolver.ResolveEndpoint(ctx, params)
+	if err != nil {
+		return out, metadata, fmt.Errorf("failed to resolve service endpoint, %w", err)
+	}
+
+	req.URL = &resolvedEndpoint.URI
+
+	for k := range resolvedEndpoint.Headers {
+		req.Header.Set(
+			k,
+			resolvedEndpoint.Headers.Get(k),
+		)
+	}
+
+	authSchemes, err := internalauth.GetAuthenticationSchemes(&resolvedEndpoint.Properties)
+	if err != nil {
+		var nfe *internalauth.NoAuthenticationSchemesFoundError
+		if errors.As(err, &nfe) {
+			// if no auth scheme is found, default to sigv4
+			signingName := "ec2"
+			signingRegion := m.BuiltInResolver.(*builtInResolver).Region
+			ctx = awsmiddleware.SetSigningName(ctx, signingName)
+			ctx = awsmiddleware.SetSigningRegion(ctx, signingRegion)
+
+		}
+		var ue *internalauth.UnSupportedAuthenticationSchemeSpecifiedError
+		if errors.As(err, &ue) {
+			return out, metadata, fmt.Errorf(
+				"This operation requests signer version(s) %v but the client only supports %v",
+				ue.UnsupportedSchemes,
+				internalauth.SupportedSchemes,
+			)
+		}
+	}
+
+	for _, authScheme := range authSchemes {
+		switch authScheme.(type) {
+		case *internalauth.AuthenticationSchemeV4:
+			v4Scheme, _ := authScheme.(*internalauth.AuthenticationSchemeV4)
+			var signingName, signingRegion string
+			if v4Scheme.SigningName == nil {
+				signingName = "ec2"
+			} else {
+				signingName = *v4Scheme.SigningName
+			}
+			if v4Scheme.SigningRegion == nil {
+				signingRegion = m.BuiltInResolver.(*builtInResolver).Region
+			} else {
+				signingRegion = *v4Scheme.SigningRegion
+			}
+			if v4Scheme.DisableDoubleEncoding != nil {
+				// The signer sets an equivalent value at client initialization time.
+				// Setting this context value will cause the signer to extract it
+				// and override the value set at client initialization time.
+				ctx = internalauth.SetDisableDoubleEncoding(ctx, *v4Scheme.DisableDoubleEncoding)
+			}
+			ctx = awsmiddleware.SetSigningName(ctx, signingName)
+			ctx = awsmiddleware.SetSigningRegion(ctx, signingRegion)
+			break
+		case *internalauth.AuthenticationSchemeV4A:
+			v4aScheme, _ := authScheme.(*internalauth.AuthenticationSchemeV4A)
+			if v4aScheme.SigningName == nil {
+				v4aScheme.SigningName = aws.String("ec2")
+			}
+			if v4aScheme.DisableDoubleEncoding != nil {
+				// The signer sets an equivalent value at client initialization time.
+				// Setting this context value will cause the signer to extract it
+				// and override the value set at client initialization time.
+				ctx = internalauth.SetDisableDoubleEncoding(ctx, *v4aScheme.DisableDoubleEncoding)
+			}
+			ctx = awsmiddleware.SetSigningName(ctx, *v4aScheme.SigningName)
+			ctx = awsmiddleware.SetSigningRegion(ctx, v4aScheme.SigningRegionSet[0])
+			break
+		case *internalauth.AuthenticationSchemeNone:
+			break
+		}
+	}
+
+	return next.HandleSerialize(ctx, in)
+}
+
+func addModifyImageAttributeResolveEndpointMiddleware(stack *middleware.Stack, options Options) error {
+	return stack.Serialize.Insert(&opModifyImageAttributeResolveEndpointMiddleware{
+		EndpointResolver: options.EndpointResolverV2,
+		BuiltInResolver: &builtInResolver{
+			Region:       options.Region,
+			UseDualStack: options.EndpointOptions.UseDualStackEndpoint,
+			UseFIPS:      options.EndpointOptions.UseFIPSEndpoint,
+			Endpoint:     options.BaseEndpoint,
+		},
+	}, "ResolveEndpoint", middleware.After)
 }
