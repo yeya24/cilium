@@ -19,7 +19,7 @@ const (
 	none     operationType = "none" // not specified in ctx
 )
 
-var operationTypeEnum []operationType = []operationType{request, response, none}
+var operationTypeEnum = []operationType{request, response, none}
 
 // WithOperationRequest returns a new context with operationType request
 // in context value
@@ -27,7 +27,7 @@ func WithOperationRequest(ctx context.Context) context.Context {
 	return withOperation(ctx, request)
 }
 
-// WithOperationRequest returns a new context with operationType response
+// WithOperationResponse returns a new context with operationType response
 // in context value
 func WithOperationResponse(ctx context.Context) context.Context {
 	return withOperation(ctx, response)
